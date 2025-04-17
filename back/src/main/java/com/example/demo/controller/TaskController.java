@@ -9,25 +9,29 @@ import com.aizuda.bpm.engine.entity.*;
 import com.aizuda.bpm.engine.model.ModelHelper;
 import com.aizuda.bpm.engine.model.NodeModel;
 import com.aizuda.bpm.engine.model.ProcessModel;
+import com.aizuda.bpm.mybatisplus.mapper.FlwTaskActorMapper;
+import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.demo.common.pojo.CommonResult;
-import lombok.AllArgsConstructor;
+import com.example.demo.service.TaskService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-import javax.jws.WebParam;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/task")
-@AllArgsConstructor
-@Slf4j
+@RequiredArgsConstructor
 public class TaskController {
-    protected static FlowCreator testCreator = FlowCreator.of("20240815", "田重辉");
-    protected FlowLongEngine flowLongEngine;
+    private final static FlowCreator testCreator = FlowCreator.of("20240815", "田重辉");
+    private final FlowLongEngine flowLongEngine;
+    private final TaskService taskService;
 
     /**
      * 根据流程对象保存流程实例
@@ -334,6 +338,46 @@ public class TaskController {
     public CommonResult<Boolean> transfer(@PathVariable Long businessKey, @RequestBody String taskKey) {
         flowLongEngine.taskService()
                 .transferTask(null, testCreator, testCreator);
+        return null;
+    }
+
+    /**
+     * 审批列表
+     */
+    @GetMapping("/count")
+    public CommonResult<JSONObject> getTaskCount() {
+        return CommonResult.success(taskService.getTaskCount());
+    }
+
+    /**
+     * 待我处理
+     */
+    @GetMapping("/todoList")
+    public CommonResult<IPage<FlwTask>> todoList(Page page) {
+        return CommonResult.success(taskService.todoList(page));
+    }
+
+    /**
+     * 已处理的
+     */
+    @GetMapping("/doneList")
+    public CommonResult<List<FlwTask>> doneList() {
+        return null;
+    }
+
+    /**
+     * 我发起的
+     */
+    @GetMapping("/submitList")
+    public CommonResult<List<FlwInstance>> submitList() {
+        return null;
+    }
+
+    /**
+     * 抄送我的
+     */
+    @GetMapping("/aboutList")
+    public CommonResult<List<FlwTask>> aboutList() {
         return null;
     }
 
