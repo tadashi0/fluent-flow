@@ -15,7 +15,7 @@
         </repository>
     </repositories>
     <groupId>com.example</groupId>
-    <artifactId>demo</artifactId>
+    <artifactId>service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>demo</name>
     <description>Demo project for Spring Boot</description>
