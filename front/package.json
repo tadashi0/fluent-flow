@@ -10,12 +10,14 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.1.0",
+    "axios": "^1.8.4",
     "element-plus": "^2.3.12",
     "html2canvas": "^1.4.1",
     "install": "^0.13.0",
     "json-editor-vue3": "^1.0.8",
     "vue": "^3.3.4",
-    "vue-clipboard3": "^2.0.0"
+    "vue-clipboard3": "^2.0.0",
+    "vue-router": "^4.5.0"
   },
   "devDependencies": {
     "@originjs/vite-plugin-commonjs": "^1.0.3",

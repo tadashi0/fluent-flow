@@ -14,5 +14,14 @@ export default defineConfig({
     alias: {
       '@': pathResolve('src')
     }
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://172.16.2.148:8080',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
   }
 })

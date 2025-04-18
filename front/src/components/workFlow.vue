@@ -1,91 +1,37 @@
 <template>
-  <el-affix
-    :offset="16"
-    style="height: 74px; width: 100%">
+  <el-affix :offset="16" style="height: 74px; width: 100%">
     <div class="btn-container">
-      <el-button
-        type="primary"
-        @click="() => (drawer = true)">
-        查看 JSON
-      </el-button>
-      <el-button
-        type="primary"
-        @click="saveAsPng">
-        保存图片
-      </el-button>
       <div class="slider">
-        <el-button
-          type="primary"
-          icon="el-icon-minus"
-          style="margin-right: 16px; width: 32px"
-          @click="zoom -= 0.1" />
-        <el-slider
-          v-model="zoom"
-          :marks="marks"
-          :min="0.1"
-          :max="5"
-          :step="0.1"
-          height="200px" />
-        <el-button
-          type="primary"
-          icon="el-icon-plus"
-          style="margin-left: 16px; width: 32px"
-          @click="zoom += 0.1" />
+        <el-button type="primary" icon="el-icon-minus" style="margin-right: 16px; width: 32px" @click="zoom -= 0.1" />
+        <el-slider v-model="zoom" :marks="marks" :min="0.1" :max="5" :step="0.1" height="200px" />
+        <el-button type="primary" icon="el-icon-plus" style="margin-left: 16px; width: 32px" @click="zoom += 0.1" />
       </div>
     </div>
   </el-affix>
-  <div
-    class="affix-container"
-    :style="`transform: scale(${zoom})`"
-    style="transform-origin: 0 0">
-    <sc-workflow
-      class="workflow"
-      ref="workflowRef"
-      id="content-to-capture"
-      v-model="data.nodeConfig" />
-    <el-drawer
-      v-model="drawer"
-      size="500px"
-      class="drawer"
-      :append-to-body="true"
-      :modal="false"
-      :with-header="false">
-      <div style="height: 100vh">
-        <div style="padding: 1px; background-color: #3883fa">
-          <el-button
-            type="primary"
-            plain
-            @click="copyParseJson">
-            复制格式化后的 JSON
-          </el-button>
-          <el-button
-            type="primary"
-            plain
-            @click="copyJson">
-            复制压缩后的 JSON
-          </el-button>
-          <el-button
-            type="primary"
-            plain
-            @click="drawer = false">
-            关闭弹窗
-          </el-button>
-        </div>
-        <json-editor-vue
-          class="editor"
-          language="zh-CN"
-          current-mode="view"
-          v-model="data" />
-      </div>
-    </el-drawer>
+  <div class="affix-container" :style="`transform: scale(${zoom})`" style="transform-origin: 0 0">
+    <sc-workflow class="workflow" ref="workflowRef" id="content-to-capture" v-model="data.nodeConfig" />
   </div>
 </template>
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import html2canvas from 'html2canvas'
-import useClipboard from 'vue-clipboard3'
+import { ref, reactive, onMounted, watch, computed } from 'vue'
 import scWorkflow from '@/components/scWorkflow/index.vue'
 
+const props = defineProps({
+  processKey: {
+    type: String,
+    required: true
+  },
+  processName: {
+    type: String,
+    required: true
+  },
+  modelContent: {
+    type: Object,
+    default: null
+  }
+})
+
+// 缩放控制
 const zoom = ref(1)
 const marks = reactive({
   0.1: 'min',
@@ -96,139 +42,66 @@ const marks = reactive({
   5: 'max'
 })
 
-const drawer = ref(false)
-
-const data = ref({
-  id: 1,
-  name: '请假审批',
-  key: 'k0001',
+// 流程数据
+const defaultData = computed(() => ({
+  name: props.processName,
+  key: props.processKey,
   nodeConfig: {
-    nodeName: '发起人',
-    nodeKey: 'flk0001',
+    nodeName: "发起人",
+    nodeKey: "flk001",
     type: 0,
     nodeAssigneeList: [],
     childNode: {
-      nodeName: '条件路由',
-      nodeKey: 'flk00101',
-      type: 4,
-      conditionNodes: [
-        {
-          nodeName: '长期',
-          nodeKey: 'flk1001',
-          type: 3,
-          priorityLevel: 1,
-          conditionMode: 1,
-          conditionList: [
-            [
-              {
-                label: '请假天数',
-                field: 'day',
-                operator: '>',
-                value: '7'
-              }
-            ]
-          ],
-          childNode: {
-            nodeName: '领导审批',
-            nodeKey: 'flk0002',
-            type: 1,
-            setType: 1,
-            nodeAssigneeList: [
-              {
-                id: '360000197302144442',
-                name: '何敏'
-              }
-            ],
-            examineLevel: 1,
-            directorLevel: 1,
-            selectMode: 1,
-            termAuto: false,
-            term: 0,
-            termMode: 1,
-            examineMode: 1,
-            directorMode: 0
-          }
-        },
-        {
-          nodeName: '短期',
-          nodeKey: 'flk2001',
-          type: 3,
-          priorityLevel: 2,
-          conditionMode: 1,
-          conditionList: [],
-          childNode: {
-            nodeName: '直接主管审批',
-            nodeKey: 'flk0003',
-            type: 1,
-            setType: 2,
-            nodeAssigneeList: [],
-            examineLevel: 1,
-            directorLevel: 1,
-            selectMode: 1,
-            termAuto: false,
-            term: 0,
-            termMode: 1,
-            examineMode: 1,
-            directorMode: 0
-          }
-        }
-      ],
+      nodeName: "审核人",
+      nodeKey: "flk002",
+      type: 1,
+      setType: 4,
+      examineLevel: 1,
+      examineMode: 1,
+      directorLevel: 1,
+      directorMode: 0,
+      selectMode: 1,
+      termAuto: false,
+      term: 0,
+      termMode: 1,
       childNode: {
-        nodeName: '抄送人',
-        nodeKey: 'flk3001',
-        type: 2,
-        userSelectFlag: true,
-        nodeAssigneeList: [
-          {
-            id: '220000200908305857',
-            name: '何秀英'
-          }
-        ]
+        nodeName: "审核人",
+        nodeKey: "flk003",
+        type: 1,
+        setType: 4,
+        examineLevel: 1,
+        examineMode: 1,
+        directorLevel: 1,
+        directorMode: 0,
+        selectMode: 1,
+        termAuto: false,
+        term: 0,
+        termMode: 1
       }
     }
   }
-})
+}))
 
-const { toClipboard } = useClipboard()
+const data = ref(defaultData.value)
 
-const copyParseJson = async () => {
-  await toClipboard(JSON.stringify(data.value, null, '  '))
-}
-
-const copyJson = async () => {
-  await toClipboard(JSON.stringify(data.value))
-}
-
-const handleWeel = (e) => {
-  e.preventDefault()
-  if (e.wheelDelta < 0) {
-    zoom.value -= 0.1
+watch(() => props.modelContent, (newContent) => {
+  if (newContent) {
+    data.value = JSON.parse(newContent)
   } else {
-    zoom.value += 0.1
+    data.value = defaultData.value
   }
+}, { immediate: true })
 
-  if (zoom.value <= 0.1) {
-    zoom.value = 0.1
-  } else if (zoom.value >= 5) {
-    zoom.value = 5
-  }
+// 组件引用
+const workflowRef = ref(null)
+
+// 暴露方法
+const getWorkflowData = () => {
+  return JSON.stringify(data.value)
 }
 
-const saveAsPng = async () => {
-  const element = document.getElementById('content-to-capture')
-  element.parentElement.style.transform = 'scale(1)'
-  const canvas = await html2canvas(element, {
-    backgroundColor: '#efefef'
-  })
-  const image = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream')
-  let link = document.createElement('a')
-  link.download = `flowlong-${Date.now()}.png`
-  link.href = image
-  link.click()
-}
-
-onMounted(() => {
-  document.getElementById('app').onwheel = (e) => handleWeel(e)
+defineExpose({
+  getWorkflowData
 })
 </script>
 
@@ -246,6 +119,9 @@ body {
   display: flex;
   justify-content: center;
   flex-direction: row-reverse;
+  overflow: auto;
+  height: calc(100vh - 100px);
+  overflow: visible;
 }
 
 .editor {
@@ -264,7 +140,7 @@ body {
   padding: 10px;
 }
 
-.jsoneditor-menu > button.jsoneditor-copy {
+.jsoneditor-menu>button.jsoneditor-copy {
   background-position: -48px 0px;
 }
 
@@ -276,11 +152,13 @@ body {
   display: flex;
   height: 42px;
   margin-left: 16px;
+  justify-content: flex-end;
 }
 
 .slider {
-  margin-left: 16px;
   width: 300px;
   display: flex;
+  margin-left: 0;
+  margin-right: 16px;
 }
 </style>
