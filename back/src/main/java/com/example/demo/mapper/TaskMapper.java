@@ -89,7 +89,7 @@ public interface TaskMapper {
             "            FROM flw_his_task t" +
             "            WHERE t.instance_id = hi.id" +
             "        )" +
-            "        ELSE TIMESTAMPDIFF(SECOND, hi.create_time, NOW()) * 1000" +
+            "        ELSE TIMESTAMPDIFF(SECOND, ht.create_time, NOW()) * 1000" +
             "    END AS duration " +
             "FROM flw_his_task_actor hta " +
             "JOIN flw_his_task ht ON hta.task_id = ht.id " +
