@@ -7,7 +7,7 @@ spring:
         master:
           lazy: true
           driver-class-name: com.mysql.cj.jdbc.Driver
-          url: jdbc:mysql://172.16.1.63:3306/workflow-center?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true
+          url: jdbc:mysql://172.16.1.63:3306/chonghui?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true
           username: root
           password: amxk@2022
 #        slave:

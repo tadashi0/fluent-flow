@@ -9,11 +9,14 @@ import com.aizuda.bpm.engine.entity.*;
 import com.aizuda.bpm.engine.model.ModelHelper;
 import com.aizuda.bpm.engine.model.NodeModel;
 import com.aizuda.bpm.engine.model.ProcessModel;
-import com.aizuda.bpm.mybatisplus.mapper.FlwTaskActorMapper;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.demo.common.pojo.CommonResult;
+import com.example.demo.entity.AboutListVO;
+import com.example.demo.entity.DoneListVO;
+import com.example.demo.entity.SubmitListVO;
+import com.example.demo.entity.TodoListVO;
 import com.example.demo.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -342,18 +345,18 @@ public class TaskController {
     }
 
     /**
-     * 审批列表
+     * 任务统计
      */
     @GetMapping("/count")
-    public CommonResult<JSONObject> getTaskCount() {
-        return CommonResult.success(taskService.getTaskCount());
+    public CommonResult<JSONObject> taskCount() {
+        return CommonResult.success(taskService.taskCount());
     }
 
     /**
      * 待我处理
      */
     @GetMapping("/todoList")
-    public CommonResult<IPage<FlwTask>> todoList(Page page) {
+    public CommonResult<IPage<TodoListVO>> todoList(Page page) {
         return CommonResult.success(taskService.todoList(page));
     }
 
@@ -361,24 +364,24 @@ public class TaskController {
      * 已处理的
      */
     @GetMapping("/doneList")
-    public CommonResult<List<FlwTask>> doneList() {
-        return null;
+    public CommonResult<IPage<DoneListVO>> doneList(Page page) {
+        return CommonResult.success(taskService.doneList(page));
     }
 
     /**
      * 我发起的
      */
     @GetMapping("/submitList")
-    public CommonResult<List<FlwInstance>> submitList() {
-        return null;
+    public CommonResult<IPage<SubmitListVO>> submitList(Page page) {
+        return CommonResult.success(taskService.submitList(page));
     }
 
     /**
      * 抄送我的
      */
     @GetMapping("/aboutList")
-    public CommonResult<List<FlwTask>> aboutList() {
-        return null;
+    public CommonResult<IPage<AboutListVO>> aboutList(Page page) {
+        return CommonResult.success(taskService.aboutList(page));
     }
 
 }
