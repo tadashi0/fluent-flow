@@ -21,7 +21,7 @@ public class TodoListVO {
     // 任务ID
     Long taskId;
     //审批类型
-    Integer performType;
+    String processName;
     //发起人
     String startName;
     //提交时间

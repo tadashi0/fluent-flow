@@ -286,6 +286,7 @@ public class TaskController {
                                                 if(TaskType.major.eq(parentNode.getType())){
                                                     flowLongEngine.executeJumpTask(task.getParentTaskId(), parentNode.getNodeKey(), testCreator, null, TaskType.reApproveJump)
                                                                     .ifPresent(e1 -> {
+                                                                        // 需要改变一下流程实例的状态为reject
                                                                         result.set(true);
                                                                     });
                                                 }else {
@@ -337,11 +338,10 @@ public class TaskController {
     /**
      * 根据businessKey转交任务
      */
-    @PutMapping("/transfer/{businessKey}")
-    public CommonResult<Boolean> transfer(@PathVariable Long businessKey, @RequestBody String taskKey) {
-        flowLongEngine.taskService()
-                .transferTask(null, testCreator, testCreator);
-        return null;
+    @PutMapping("/transfer/{taskId}")
+    public CommonResult<Boolean> transfer(@PathVariable Long taskId) {
+        return CommonResult.success(flowLongEngine.taskService()
+                .transferTask(taskId, testCreator, testCreator));
     }
 
     /**

@@ -36,7 +36,7 @@ public interface TaskMapper {
     @Select("<script>" +
             "SELECT " +
             "  ta.task_id, " +
-            "  t.perform_type, " +
+            "  ei.process_name, " +
             "  hta.actor_name AS startName, " +
             "  ht.finish_time AS submitTime, " +
             "  t.task_name AS currentNode, " +
@@ -47,6 +47,7 @@ public interface TaskMapper {
             "LEFT JOIN flw_his_task ht ON ta.instance_id = ht.instance_id AND ht.parent_task_id = 0 " +
             "LEFT JOIN flw_his_task_actor hta ON ht.id = hta.task_id " +
             "LEFT JOIN flw_his_instance hi ON t.instance_id = hi.id " +
+            "LEFT JOIN flw_ext_instance ei ON t.instance_id = ei.id " +
             "WHERE ta.actor_id = #{userId} " +
             "<if test='tenantId != null'> AND t.tenant_id = #{tenantId} </if>" +
             "ORDER BY t.create_time DESC" +
@@ -55,7 +56,7 @@ public interface TaskMapper {
 
     @Select("<script>" +
             "SELECT" +
-            "  a.task_id, b.perform_type," +
+            "  a.task_id, ei.process_name," +
             "  (SELECT hta_start.actor_name " +
             "   FROM flw_his_task ht_start " +
             "   JOIN flw_his_task_actor hta_start ON ht_start.id = hta_start.task_id " +
@@ -67,6 +68,7 @@ public interface TaskMapper {
             "  b.finish_time, b.duration, b.task_state " +
             "FROM flw_his_task_actor a " +
             "JOIN flw_his_task b ON a.task_id = b.id " +
+            "LEFT JOIN flw_ext_instance ei ON b.instance_id = ei.id " +
             "WHERE a.actor_id = #{userId} " +
             "  AND b.perform_type = 1 " +
             "<if test='tenantId != null'> AND b.tenant_id = #{tenantId} </if>" +
@@ -77,7 +79,7 @@ public interface TaskMapper {
     @Select("<script>" +
             "SELECT" +
             "    ht.id AS taskId," +
-            "    ht.perform_type AS performType," +
+            "    ei.process_name," +
             "    hta.actor_name AS startName," +
             "    hi.create_time AS submitTime," +
             "    hi.end_time AS endTime," +
@@ -94,6 +96,7 @@ public interface TaskMapper {
             "FROM flw_his_task_actor hta " +
             "JOIN flw_his_task ht ON hta.task_id = ht.id " +
             "JOIN flw_his_instance hi ON ht.instance_id = hi.id " +
+            "LEFT JOIN flw_ext_instance ei ON ht.instance_id = ei.id " +
             "WHERE hta.actor_id = #{userId} " +
             "    AND ht.parent_task_id = 0 " +
             "<if test='tenantId != null'> AND hi.tenant_id = #{tenantId} </if>" +
@@ -105,7 +108,7 @@ public interface TaskMapper {
     @Select("<script>" +
             "SELECT" +
             "  a.task_id, " +
-            "  b.perform_type, " +
+            "  ei.process_name, " +
             "  (SELECT hta.actor_name " +
             "   FROM flw_his_task ht_start " +
             "   JOIN flw_his_task_actor hta ON ht_start.id = hta.task_id " +
@@ -127,6 +130,7 @@ public interface TaskMapper {
             "FROM flw_his_task_actor a " +
             "JOIN flw_his_task b ON a.task_id = b.id " +
             "JOIN flw_his_instance hi ON b.instance_id = hi.id " +
+            "LEFT JOIN flw_ext_instance ei ON b.instance_id = ei.id " +
             "WHERE a.actor_id = #{userId} " +
             "  AND a.weight = 6 " +
             "<if test='tenantId != null'> AND hi.tenant_id = #{tenantId} </if>" +

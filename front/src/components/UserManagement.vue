@@ -184,11 +184,11 @@ const handleTransfer = async () => {
 };
 const handleReclaim = async () => {
     // 实现回退逻辑
-    const res = await reclaimProcess('1910583688204849154', 'flk0002')
+    const res = await reclaimProcess('1913184125662040065', 'flk002')
     // 判断res.data是否为true。如果为true，则表示审批通过，将formData.status设置为2（通过）
     if (res.data) {
         const index = userList.value.findIndex((item) => item.id === formData.id)
-        userList.value[index] = {...formData, status: 0 }
+        userList.value[index] = {...formData, status: 1 }
     }
     console.log("回退结果", res)
     dialogVisible.value = false
