@@ -41,4 +41,11 @@ public class GlobalExceptionHandler {
         return CommonResult.error(GlobalErrorCodeConstants.INTERNAL_SERVER_ERROR,"系统开小差了, 请稍后再试");
     }
 
+    @ExceptionHandler(FlowLongException.class)
+    public CommonResult handleFlowLongException(FlowLongException e, HttpServletRequest request) {
+        String requestURI = request.getRequestURI();
+        log.error("请求地址'{}',发生系统异常.", requestURI, e);
+        return CommonResult.error(GlobalErrorCodeConstants.INTERNAL_SERVER_ERROR,e.getMessage());
+    }
+
 }

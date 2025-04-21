@@ -14,7 +14,11 @@ import java.util.Date;
 @Accessors(chain = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AboutListVO {
+    // 实例ID
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    Long instanceId;
     // 任务ID
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     Long taskId;
     // 审批类型
     String processName;

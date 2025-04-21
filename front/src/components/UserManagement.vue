@@ -58,7 +58,7 @@
                     <el-input v-model="formData.phoneNumber" />
                 </el-form-item>
             </el-form>
-            <ApproveFlow v-if="formData.status > 0" :businessKey="formData.id" />
+            <ApproveFlow v-if="[1, 2, 3].includes(formData.status)" :businessKey="formData.id" />
             <StartFlow v-else :processKey="props.processKey" :businessKey="formData.id"
                 v-model:flowData="props.flowData" />
             <template #footer>
@@ -184,7 +184,7 @@ const handleTransfer = async () => {
 };
 const handleReclaim = async () => {
     // 实现回退逻辑
-    const res = await reclaimProcess('1913184125662040065', 'flk002')
+    const res = await reclaimProcess(formData.id, 'flk001')
     // 判断res.data是否为true。如果为true，则表示审批通过，将formData.status设置为2（通过）
     if (res.data) {
         const index = userList.value.findIndex((item) => item.id === formData.id)
@@ -319,12 +319,13 @@ const saveForm = async () => {
     if (formData.id) {
         // 编辑逻辑
         const index = userList.value.findIndex((item) => item.id === formData.id)
-        userList.value[index] = { ...formData }
+        userList.value[index] = { ...formData, status: 0}
     } else {
         // 新增逻辑
         formData.id = Date.now() // 假设 id 是当前时间戳，实际情况可能需要根据业务逻辑调整
         userList.value.push({
             ...formData,
+            status: 0,
             gmt_created: new Date().toISOString(),
             gmt_modified: new Date().toISOString()
         })

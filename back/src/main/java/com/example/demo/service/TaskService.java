@@ -1,6 +1,5 @@
 package com.example.demo.service;
 
-import com.aizuda.bpm.engine.entity.FlwTask;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -21,7 +20,7 @@ import com.example.demo.entity.TodoListVO;
 
     IPage<DoneListVO> doneList(Page page);
 
-    IPage<SubmitListVO> submitList(Page page);
+    IPage<SubmitListVO> submitList(boolean isAll, Page page);
 
     IPage<AboutListVO> aboutList(Page page);
 }

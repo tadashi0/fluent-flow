@@ -15,7 +15,7 @@
 
 <script setup>
 import { defineProps, ref, computed, watchEffect, watch, reactive } from 'vue';
-import { getInstanceModel, getProcessState, getTaskList } from '@/api/process'
+import { getInstanceModel, getInstanceInfo, getTaskList, getBackList } from '@/api/process'
 import NodeRenderer from './NodeRenderer.vue';
 
 const props = defineProps({
@@ -35,15 +35,18 @@ const state = ref(-1)
 watchEffect(async () => {
   try {
     // 并发请求所有接口
-    const [statusResult, res, taskResult] = await Promise.all([
-      getProcessState(props.businessKey),
+    const [instanceInfoResult, modelResult, taskResult] = await Promise.all([
+      getInstanceInfo(props.businessKey),
       getInstanceModel(props.businessKey),
-      getTaskList(props.businessKey)
+      getTaskList(props.businessKey),
     ])
-    
+
     // 处理数据逻辑
-    state.value = statusResult.data
-    const processModel = JSON.parse(res.data)
+    const {instanceId, instanceState } = instanceInfoResult.data
+    const backListResult = await getBackList(instanceId)
+    console.log('backListResult: ', backListResult)
+    state.value = instanceState
+    const processModel = JSON.parse(modelResult.data)
     traverseNode(processModel.nodeConfig, taskResult.data)
     flowData.value = processModel
   } catch (error) {
@@ -72,7 +75,7 @@ const getProcessStateText = () => {
     0: '暂存待审',
     1: '审批中',
     2: '审批通过',
-    3: '审批拒绝',
+    3: '审批拒绝【 驳回结束流程 】',
     4: '撤销审批',
     5: '超时结束',
     6: '强制终止',

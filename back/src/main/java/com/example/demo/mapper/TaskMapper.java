@@ -21,20 +21,24 @@ public interface TaskMapper {
 
     @Select("<script>" +
             "SELECT " +
-            "  COUNT(DISTINCT ta.id) AS todo, " +
-            "  COUNT(DISTINCT CASE WHEN ht.task_type = 1 THEN hta.task_id END) AS done, " +
-            "  COUNT(DISTINCT CASE WHEN ht.task_type = 0 THEN hta.task_id END) AS submit, " +
-            "  COUNT(DISTINCT CASE WHEN ht.task_type = 2 THEN hta.task_id END) AS about " +
-            "FROM flw_task_actor ta " +
-            "LEFT JOIN flw_his_task_actor hta ON ta.actor_id = hta.actor_id " +
-            "LEFT JOIN flw_his_task ht ON hta.task_id = ht.id " +
-            "WHERE ta.actor_id = #{userId} " +
-            "<if test='tenantId != null'> AND b.tenant_id = #{tenantId} </if>" +
+            "  (SELECT COUNT(DISTINCT ta.task_id) " +  // 待办数：独立子查询，避免关联历史表
+            "   FROM flw_task_actor ta " +
+            "   WHERE ta.actor_id = #{userId} " +
+            "     <if test='tenantId != null'> AND ta.tenant_id = #{tenantId} </if>" +
+            "  ) AS todo, " +
+            "  COUNT(DISTINCT CASE WHEN ht.perform_type = 1 THEN hta.task_id END) AS done, " +  // 已办数
+            "  COUNT(DISTINCT CASE WHEN ht.perform_type = 0 THEN hta.task_id END) AS submit, " + // 提交数
+            "  COUNT(DISTINCT CASE WHEN ht.perform_type = 9 THEN hta.task_id END) AS about " +   // 抄送数
+            "FROM flw_his_task_actor hta " +
+            "JOIN flw_his_task ht ON hta.task_id = ht.id " +  // 历史表联查
+            "WHERE hta.actor_id = #{userId} " +
+            "  <if test='tenantId != null'> AND hta.tenant_id = #{tenantId} </if>" +
             "</script>")
     Map<String, Long> taskCount(@Param("userId") String userId, @Param("tenantId") String tenantId);
 
     @Select("<script>" +
             "SELECT " +
+            "  hi.id AS instanceId, " +
             "  ta.task_id, " +
             "  ei.process_name, " +
             "  hta.actor_name AS startName, " +
@@ -56,6 +60,7 @@ public interface TaskMapper {
 
     @Select("<script>" +
             "SELECT" +
+            "  ei.id AS instanceId," +
             "  a.task_id, ei.process_name," +
             "  (SELECT hta_start.actor_name " +
             "   FROM flw_his_task ht_start " +
@@ -78,6 +83,7 @@ public interface TaskMapper {
 
     @Select("<script>" +
             "SELECT" +
+            "    hi.id AS instanceId," +
             "    ht.id AS taskId," +
             "    ei.process_name," +
             "    hta.actor_name AS startName," +
@@ -97,8 +103,8 @@ public interface TaskMapper {
             "JOIN flw_his_task ht ON hta.task_id = ht.id " +
             "JOIN flw_his_instance hi ON ht.instance_id = hi.id " +
             "LEFT JOIN flw_ext_instance ei ON ht.instance_id = ei.id " +
-            "WHERE hta.actor_id = #{userId} " +
-            "    AND ht.parent_task_id = 0 " +
+            "WHERE ht.parent_task_id = 0 " +
+            "<if test='userId != null'> AND hta.actor_id = #{userId} </if>" +
             "<if test='tenantId != null'> AND hi.tenant_id = #{tenantId} </if>" +
             "ORDER BY hi.create_time DESC" +
             "</script>")
@@ -107,6 +113,7 @@ public interface TaskMapper {
 
     @Select("<script>" +
             "SELECT" +
+            "  hi.id AS instanceId, " +
             "  a.task_id, " +
             "  ei.process_name, " +
             "  (SELECT hta.actor_name " +

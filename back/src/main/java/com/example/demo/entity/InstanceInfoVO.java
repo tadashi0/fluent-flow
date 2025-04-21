@@ -16,27 +16,10 @@ import java.util.Date;
 @Data
 @Accessors(chain = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class DoneListVO {
+public class InstanceInfoVO {
     // 实例ID
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     Long instanceId;
-    // 任务ID
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
-    Long taskId;
-    // 审批类型
-    String processName;
-    // 发起人
-    String startName;
-    // 当前节点
-    String currentNode;
-    // 开始时间
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    Date startTime;
-    // 结束时间
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    Date finishTime;
-    // 已耗时（毫秒）
-    Long duration;
     // 审批状态
     Integer taskState;
 }

@@ -4,7 +4,7 @@
       <router-link to="/user" class="nav-item">用户管理</router-link>
       <!-- <router-link to="/workflow" class="nav-item">流程设计</router-link> -->
       <router-link to="/process" class="nav-item">流程设置</router-link>
-      <router-link to="/board" class="nav-item">工作台</router-link>
+      <router-link to="/board" class="nav-item">审批列表</router-link>
       <router-link to="/todo" class="nav-item">待我处理</router-link>
       <router-link to="/done" class="nav-item">我已处理</router-link>
       <router-link to="/submit" class="nav-item">我发起的</router-link>

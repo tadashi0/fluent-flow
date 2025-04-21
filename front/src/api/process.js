@@ -64,6 +64,14 @@ export const startProcess = (businessKey, data) => {
   })
 }
 
+// 根据instanceId获取可回退节点列表
+export const getBackList = (businessKey) => {
+  return request({
+    url: `/task/getBackList/${businessKey}`,
+    method: 'get'
+  })
+}
+
 // 根据businessKey获取历史流程实例模型
 export const getInstanceModel = (businessKey) => {
   return request({
@@ -73,9 +81,9 @@ export const getInstanceModel = (businessKey) => {
 }
 
 // 根据businessKey获取流程状态
-export const getProcessState = (businessKey) => {
+export const getInstanceInfo = (businessKey) => {
   return request({
-    url: `/task/getProcessState/${businessKey}`,
+    url: `/task/getInstanceInfo/${businessKey}`,
     method: 'get'
   })
 }
@@ -123,10 +131,10 @@ export const terminateProcess = (businessKey, data) => {
   })
 }
 
-// 根据任务ID和节点key回退流程
-export const reclaimProcess = (taskId, taskKey) => {
+// 根据businessKey和taskKey回退流程
+export const reclaimProcess = (businessKey, taskKey) => {
   return request({
-    url: `/task/reclaim/${taskId}`,
+    url: `/task/reclaim/${businessKey}`,
     method: 'put',
     data: {
       taskKey
@@ -159,9 +167,9 @@ export const doneList = () => {
 }
 
 // 我发起的
-export const submitList = () => {
+export const submitList = (isAll) => {
   return request({
-    url: '/task/submitList',
+    url: `/task/submitList/${isAll || false}`,
     method: 'get'
   })
 }
