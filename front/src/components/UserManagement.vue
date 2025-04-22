@@ -58,36 +58,19 @@
                     <el-input v-model="formData.phoneNumber" />
                 </el-form-item>
             </el-form>
-            <ApproveFlow v-if="[1, 2, 3].includes(formData.status)" :businessKey="formData.id" />
-            <StartFlow v-else :processKey="props.processKey" :businessKey="formData.id"
-                v-model:flowData="props.flowData" />
-            <template #footer>
-                <div class="dialog-footer">
-                    <div v-if="formData.status === 1">
-                        <el-button @click="dialogVisible = false">取消</el-button>
-                        <el-dropdown placement="top">
-                            <el-button>更多</el-button>
-                            <template #dropdown>
-                                <el-dropdown-menu>
-                                    <el-dropdown-item><el-button type="info"
-                                            @click="handleTransfer">转交</el-button></el-dropdown-item>
-                                    <el-dropdown-item><el-button type="warning"
-                                            @click="handleReclaim">回退</el-button></el-dropdown-item>
-                                    <el-dropdown-item><el-button type="danger"
-                                            @click="handleTerminate">终止</el-button></el-dropdown-item>
-                                </el-dropdown-menu>
-                            </template>
-                        </el-dropdown>
-                        <el-button type="danger" @click="handleReject">驳回</el-button>
-                        <el-button type="primary" @click="handleApprove">同意</el-button>
-                    </div>
-                    <div v-else>
-                        <el-button @click="dialogVisible = false">取消</el-button>
-                        <el-button @click="saveForm">保存</el-button>
-                        <el-button type="primary" @click="submitForm">提交</el-button>
-                    </div>
-                </div>
-            </template>
+            <ApproveFlow 
+            v-if="[1, 2, 3].includes(formData.status)" 
+            :businessKey="formData.id" 
+            @cancel="dialogVisible = false"
+            />
+            <StartFlow 
+                v-else 
+                :processKey="props.processKey" 
+                :businessKey="formData.id"
+                :on-submit="handleSubmit"
+                :on-save="handleSave"
+                @cancel="dialogVisible = false"
+            />
         </el-dialog>
 
         <el-drawer v-model="drawerVisible" :title="drawerTitle" size="50%">
@@ -104,12 +87,17 @@
                 <el-descriptions-item label="修改时间">{{ currentUser.gmt_modified }}</el-descriptions-item>
             </el-descriptions>
 
-            <ApproveFlow v-if="currentUser.status > 0" :businessKey="currentUser.id" />
-            <StartFlow v-else :processKey="props.processKey" :businessKey="currentUser.id"
-                v-model:flowData="props.flowData" :mode="'preview'"/>
-            <!-- // 如果currentUser.status不为1，显示编辑按钮
-            <StartFlow v-else :processKey="props.processKey" :businessKey="formData.id"
-                v-model:flowData="props.flowData" /> -->
+            <ApproveFlow 
+            v-if="currentUser.status > 0" 
+            :businessKey="currentUser.id"
+            :mode="'perview'"
+             />
+            <StartFlow 
+            v-else 
+            :processKey="props.processKey" 
+            :businessKey="formData.id"
+            :mode="'perview'"
+            />
         </el-drawer>
     </div>
 </template>
@@ -183,16 +171,8 @@ const handleTransfer = async () => {
     // 实现转交逻辑
 };
 const handleReclaim = async () => {
-    // 实现回退逻辑
-    const res = await reclaimProcess(formData.id, 'flk001')
-    // 判断res.data是否为true。如果为true，则表示审批通过，将formData.status设置为2（通过）
-    if (res.data) {
-        const index = userList.value.findIndex((item) => item.id === formData.id)
-        userList.value[index] = {...formData, status: 1 }
-    }
-    console.log("回退结果", res)
-    dialogVisible.value = false
-    ElMessage.success('回退成功')
+    // await updateUserStatus(formData.id, 1) // 更新为审核不通过状态
+    console.log("回退", formData.id)
 };
 const handleRevoke = async (row) => {
     // 实现撤销逻辑
@@ -205,41 +185,22 @@ const handleRevoke = async (row) => {
     ElMessage.success('撤销成功')
 };
 const handleTerminate = async () => {
-    // 实现终止逻辑
-    const index = userList.value.findIndex((item) => item.id === formData.id)
-    userList.value[index] = {...formData, status: 3 }
-    saveToLocalStorage()
-    const res = await terminateProcess(formData.id)
-    console.log("终止结果", res)
-    dialogVisible.value = false
-    ElMessage.success('终止成功')
+    await updateUserStatus(formData.id, 3) // 更新为审核不通过状态
 }
 const handleReject = async () => {
-    // 实现驳回逻辑
-    const res = await rejectProcess(formData.id)
-    // 判断res.data是否为true。如果为true，则表示审批通过，将formData.status设置为2（通过）
-    if (res.data) {
-        const index = userList.value.findIndex((item) => item.id === formData.id)
-        userList.value[index] = {...formData, status: 4 }
-        saveToLocalStorage()
-    }
-    console.log("驳回结果", res)
-    dialogVisible.value = false
-    ElMessage.success('驳回成功')
+    await updateUserStatus(formData.id, 4) // 更新为已驳回状态
 };
+
 const handleApprove = async () => {
-    // 实现同意逻辑
-    const res = await approveProcess(formData.id)
-    // 判断res.data是否为true。如果为true，则表示审批通过，将formData.status设置为2（通过）
-    if (res.data) {
-        const index = userList.value.findIndex((item) => item.id === formData.id)
-        userList.value[index] = {...formData, status: 2 }
-        saveToLocalStorage()
-    }
-    console.log("审批结果", res)
-    dialogVisible.value = false
-    ElMessage.success('审批成功')
-};
+    await updateUserStatus(formData.id, 2) // 更新为审核通过状态
+}
+
+const updateUserStatus = (id, status) => {
+  const index = userList.value.findIndex(item => item.id === id)
+  userList.value[index].status = status
+  userList.value[index].gmt_modified = new Date().toISOString()
+  saveToLocalStorage()
+}
 
 const handleCreate = () => {
     Object.assign(formData, {
@@ -315,7 +276,7 @@ const loadFromLocalStorage = () => {
     }
 }
 
-const saveForm = async () => {
+const handleSave = async () => {
     if (formData.id) {
         // 编辑逻辑
         const index = userList.value.findIndex((item) => item.id === formData.id)
@@ -331,14 +292,10 @@ const saveForm = async () => {
         })
     }
     saveToLocalStorage()
-    const res = await saveProcess(formData.id, props)
-    console.log('res', res)
-    dialogVisible.value = false
-    ElMessage.success('保存成功')
+    return {id: formData.id}
 }
 
-const submitForm = async () => {
-   
+const handleSubmit = async () => {
     if (formData.id) {
         // 编辑逻辑
         const index = userList.value.findIndex((item) => item.id === formData.id)
@@ -354,12 +311,7 @@ const submitForm = async () => {
         })
     }
     saveToLocalStorage()
-    const res = await startProcess(formData.id, props)
-    if (!res.data) {
-        return 
-    }
-    dialogVisible.value = false
-    ElMessage.success('提交成功')
+    return {id: formData.id}
 }
 </script>
 

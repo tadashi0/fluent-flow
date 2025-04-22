@@ -143,11 +143,17 @@ public class TaskController {
      */
     @GetMapping("/getBackList/{instanceId}")
     public CommonResult<List<FlwHisTask>> getBackList(@PathVariable Long instanceId) {
+
         Optional<List<FlwHisTask>> optional = flowLongEngine.queryService()
                 .getHisTasksByInstanceId(instanceId);
 
+        Optional<List<FlwTask>> optionalFlwTasks = flowLongEngine.queryService()
+                .getActiveTasksByInstanceId(instanceId);
+
         return optional.map(e -> CommonResult.success(e.stream()
-                        .filter(task -> TaskType.approval.eq(task.getTaskType()))
+                        .filter(task -> TaskType.approval.eq(task.getTaskType())
+                                && TaskState.complete.eq(task.getTaskState())
+                                && !optionalFlwTasks.get().stream().map(FlwTask::getTaskKey).collect(Collectors.toList()).contains(task.getTaskKey()))
                         .sorted(Comparator.comparing(FlwHisTask::getId))
                         .collect(Collectors.toList())))
                 .orElseGet(() -> CommonResult.success(Arrays.asList()));
@@ -270,7 +276,7 @@ public class TaskController {
      * 根据businessKey同意流程
      */
     @PutMapping("/approve/{businessKey}")
-    public CommonResult<Boolean> approve(@PathVariable Long businessKey) {
+    public CommonResult<Boolean> approve(@PathVariable Long businessKey, @RequestBody ActionDTO data) {
         AtomicReference<Boolean> result = new AtomicReference<>(false);
         flowLongEngine.queryService()
                 .getInstancesByBusinessKey(String.valueOf(businessKey))
@@ -280,7 +286,8 @@ public class TaskController {
                                 flowLongEngine.queryService().getActiveTasksByInstanceId(instance.getId())
                                         .ifPresent(task -> {
                                             FlwTask flwTask = task.get(0);
-                                            flowLongEngine.executeTask(flwTask.getId(), testCreator);
+                                            flowLongEngine.createCcTask(flwTask, data.getCcUsers(), testCreator);
+                                            flowLongEngine.executeTask(flwTask.getId(), testCreator, data.getVariable());
                                             ProcessModel processModel = flowLongEngine.queryService()
                                                     .getExtInstance(instance.getId()).model();
                                             List<NodeModel> nextChildNodes = ModelHelper.getNextChildNodes(flowLongEngine.getContext(), new Execution(testCreator, null),
@@ -403,12 +410,13 @@ public class TaskController {
     }
 
     /**
-     * 根据businessKey转交任务
+     * 根据businessKey和转交人转交任务
      */
-    @PutMapping("/transfer/{taskId}")
-    public CommonResult<Boolean> transfer(@PathVariable Long taskId) {
-        return CommonResult.success(flowLongEngine.taskService()
-                .transferTask(taskId, testCreator, testCreator));
+    @PutMapping("/transfer/{businessKey}")
+    public CommonResult<Boolean> transfer(@PathVariable Long businessKey, FlowCreator flowCreator) {
+        //return CommonResult.success(flowLongEngine.taskService()
+        //        .transferTask(taskId, testCreator, flowCreator));
+        return null;
     }
 
     /**

@@ -29,8 +29,8 @@
             <div v-if="task.duration" class="task-history-duration">
               处理耗时: {{ formatDuration(task.duration) }}
             </div>
-            <div v-if="task.variable" class="task-history-opinion">
-              {{ JSON.parse(task.variable)?.opinion || '' }}
+            <div v-if="task.variable" class="task-history-comment">
+              {{ JSON.parse(task.variable)?.comment || '' }}
             </div>
           </div>
         </div>
@@ -87,8 +87,8 @@
             <div v-if="task.duration" class="task-history-duration">
               处理耗时: {{ formatDuration(task.duration) }}
             </div>
-            <div v-if="task.variable" class="task-history-opinion">
-              {{ JSON.parse(task.variable)?.opinion || '' }}
+            <div v-if="task.variable" class="task-history-comment">
+              {{ JSON.parse(task.variable)?.comment || '' }}
             </div>
             <div v-if="task.expireTime" class="task-history-expire">
               期望完成时间: {{ task.expireTime }}
@@ -367,10 +367,10 @@ const userRoleSelector = ref(null);
 const currentEditingNode = ref(null);
 
 // 尝试从父组件注入更新函数
-const updateFlowData = inject('updateFlowData', null);
+const updateNodeConfig = inject('updateNodeConfig', null);
 
 // 为子组件提供更新函数
-provide('updateFlowData', updateFlowData);
+provide('updateNodeConfig', updateNodeConfig);
 
 // 获取状态指示器的类名
 const getStatusIndicatorClass = (node) => {
@@ -498,7 +498,7 @@ const handleSelectorClosed = () => {
   const selectedItems = userRoleSelector.value.value;
   
   // 更新流程数据
-  if (updateFlowData && selectedItems.length > 0) {
+  if (updateNodeConfig && selectedItems.length > 0) {
     // 创建一个更新函数，描述如何更新当前节点
     const updateFn = (rootNode) => {
       // 辅助函数用于递归查找和更新节点
@@ -560,7 +560,7 @@ const handleSelectorClosed = () => {
     };
     
     // 调用父组件提供的更新函数
-    updateFlowData(updateFn, []);
+    updateNodeConfig(updateFn, []);
   }
   
   // 重置当前编辑节点
@@ -986,7 +986,7 @@ const getRouteTarget = (nodeKey) => {
   margin-bottom: 3px;
 }
 
-.task-history-opinion {
+.task-history-comment {
   background-color: #f5f7fa;
   padding: 5px 8px;
   border-radius: 4px;

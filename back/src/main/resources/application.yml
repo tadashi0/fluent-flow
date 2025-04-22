@@ -50,3 +50,9 @@ mybatis-plus:
   global-config:
     banner: false # ???????Logo
     map-underscore-to-camel-case: true
+# FlowLong Config
+flowlong:
+  remind:
+    cron: "*/5 * * * * ?"
+  eventing:
+    task: true

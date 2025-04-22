@@ -45,7 +45,7 @@ export const saveProcess = (businessKey, data) => {
     method: 'post',
     data: {
       processKey: data.processKey,
-      modelContent: JSON.stringify(data.flowData)
+      modelContent: data.modelContent
     }
   })
 }
@@ -59,7 +59,7 @@ export const startProcess = (businessKey, data) => {
     method: 'post',
     data: {
       processKey: data.processKey,
-      modelContent: JSON.stringify(data.flowData)
+      modelContent: data.modelContent
     }
   })
 }
@@ -139,6 +139,15 @@ export const reclaimProcess = (businessKey, taskKey) => {
     data: {
       taskKey
     }
+  })
+}
+
+// 根据businessKey和转交人转交任务
+export const transferProcess = (businessKey, data) => {
+  return request({
+    url: `/task/transfer/${businessKey}`,
+    method: 'put',
+    data
   })
 }
 
