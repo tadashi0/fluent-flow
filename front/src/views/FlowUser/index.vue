@@ -68,7 +68,7 @@
                 </span>
                 </el-tooltip>
               </template>
-              <span v-else class="handler-text">
+              <span v-else>
                 -
               </span>
           </template>
