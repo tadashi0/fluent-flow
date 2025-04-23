@@ -87,7 +87,7 @@
             <div v-if="task.duration" class="task-history-duration">
               处理耗时: {{ formatDuration(task.duration) }}
             </div>
-            <div v-if="task.variable" class="task-history-comment">
+            <div v-if="task.variable && task.taskState !== 0" class="task-history-comment">
               {{ JSON.parse(task.variable)?.comment || '' }}
             </div>
             <div v-if="task.expireTime" class="task-history-expire">

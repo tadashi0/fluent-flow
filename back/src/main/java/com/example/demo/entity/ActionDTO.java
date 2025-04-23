@@ -20,14 +20,18 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ActionDTO {
     // 评论意见
-    JSONObject variable;
+    String comment;
 
     // 抄送人列表
     List<NodeAssignee> ccUsers;
 
     // 转交人列表
-    List<FlowCreator> transferUsers;
+    FlowCreator transferUsers;
 
     // 回退节点
     String reclaimNodeKey;
+
+    public JSONObject getVariable() {
+        return new JSONObject(){{put("comment", comment);}};
+    }
 }

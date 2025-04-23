@@ -20,8 +20,8 @@ const router = createRouter({
     },
     {
       path: '/user',
-      name: 'UserManagement',
-      component: () => import('@/components/UserManagement.vue')
+      name: 'FlowUser',
+      component: () => import('@/views/FlowUser/index.vue')
     },
     {
       path: '/process',

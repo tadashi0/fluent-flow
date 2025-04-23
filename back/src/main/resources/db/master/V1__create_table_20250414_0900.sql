@@ -218,21 +218,4 @@ CREATE TABLE `flw_task_actor` (
   CONSTRAINT `fk_task_actor_task_id` FOREIGN KEY (`task_id`) REFERENCES `flw_task` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='任务参与者表';
 
--- ----------------------------
--- Table structure for user
--- ----------------------------
-DROP TABLE IF EXISTS `user`;
-CREATE TABLE `user` (
-  `id` bigint(11) NOT NULL COMMENT '主键',
-  `name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '姓名',
-  `age` int(3) DEFAULT NULL COMMENT '年龄',
-  `phone_number` int(11) DEFAULT NULL COMMENT '电话',
-  `status` tinyint(1) DEFAULT NULL COMMENT '状态',
-  `gmt_created` timestamp NULL DEFAULT NULL COMMENT '创建时间',
-  `gmt_modified` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-SET FOREIGN_KEY_CHECKS = 1;
-
 INSERT INTO `flw_process` (`id`, `tenant_id`, `create_id`, `create_by`, `create_time`, `process_key`, `process_name`, `process_icon`, `process_type`, `process_version`, `instance_url`, `remark`, `use_scope`, `process_state`, `model_content`, `sort`) VALUES (1910267986054934530, NULL, '20240815', '田重辉', '2025-04-10 17:45:54', 'user', '用户流程', NULL, NULL, 13, NULL, '用户流程', 0, 1, '{\"name\":\"用户流程\",\"key\":\"user\",\"nodeConfig\":{\"nodeName\":\"发起人\",\"nodeKey\":\"flk001\",\"type\":0,\"nodeAssigneeList\":[],\"childNode\":{\"nodeName\":\"审核人1\",\"nodeKey\":\"flk002\",\"type\":1,\"setType\":4,\"examineLevel\":1,\"examineMode\":1,\"directorLevel\":1,\"directorMode\":0,\"selectMode\":1,\"termAuto\":false,\"term\":0,\"termMode\":1,\"childNode\":{\"nodeName\":\"审核人2\",\"nodeKey\":\"flk003\",\"type\":1,\"setType\":1,\"examineLevel\":1,\"examineMode\":1,\"directorLevel\":1,\"directorMode\":0,\"selectMode\":2,\"termAuto\":false,\"term\":0,\"termMode\":1,\"nodeAssigneeList\":[{\"id\":\"20240815\",\"name\":\"田重辉\"}]}}}}', 0);

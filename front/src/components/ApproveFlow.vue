@@ -3,9 +3,7 @@
     <div class="process-info">
       流程审批状态（流程{{getProcessStateText()}}）
     </div>
-    <div class="workflow">
-      <node-renderer :node="modelContent.nodeConfig" />
-    </div>
+    <node-renderer :node="modelContent.nodeConfig" />
     
     <!-- 审批操作按钮组 -->
     <div class="modal-footer" v-if="mode === 'edit'">
@@ -131,23 +129,18 @@ const handleActionConfirm = async (data) => {
     emit('refresh');
   } catch (error) {
     console.error('操作失败:', error);
-    ElMessage.error('操作失败');
   }
 };
 
 // 同意操作
 const handleApprove = async (data) => {
   try {
-    const res = await approveProcess({
-      businessKey: data.businessKey,
-      comment: data.comment,
-      ccUsers: data.ccUsers
+    await approveProcess(data.businessKey,{
+        comment: data.comment,
+        ccUsers: data.ccUsers
     });
-    
-    if (res.data) {
-      ElMessage.success('审批成功');
-      handleCancel();
-    }
+    ElMessage.success('审批成功');
+    handleCancel();
   } catch (error) {
     console.error('审批操作失败:', error);
     throw error;
@@ -157,16 +150,12 @@ const handleApprove = async (data) => {
 // 驳回操作
 const handleReject = async (data) => {
   try {
-    const res = await rejectProcess({
-      businessKey: data.businessKey,
+    await rejectProcess(data.businessKey, {
       comment: data.comment,
       ccUsers: data.ccUsers
     });
-    
-    if (res.data) {
-      ElMessage.success('驳回成功');
-      handleCancel();
-    }
+    ElMessage.success('驳回成功');
+    handleCancel();
   } catch (error) {
     console.error('驳回操作失败:', error);
     throw error;
@@ -176,17 +165,14 @@ const handleReject = async (data) => {
 // 转交操作
 const handleTransfer = async (data) => {
   try {
-    const res = await transferProcess({
-      businessKey: data.businessKey,
+    const { id, name} = data.transferUser
+    await transferProcess(data.businessKey, {
       comment: data.comment,
       ccUsers: data.ccUsers,
-      transferUserId: data.transferUser
+      transferUsers: {createId: id, createBy: name}
     });
-    
-    if (res.data) {
-      ElMessage.success('转交成功');
-      handleCancel();
-    }
+    ElMessage.success('转交成功');
+    handleCancel();
   } catch (error) {
     console.error('转交操作失败:', error);
     throw error;
@@ -196,17 +182,13 @@ const handleTransfer = async (data) => {
 // 回退操作
 const handleReclaim = async (data) => {
   try {
-    const res = await reclaimProcess({
-      businessKey: data.businessKey,
+    await reclaimProcess(data.businessKey, {
       comment: data.comment,
       ccUsers: data.ccUsers,
-      reclaimNodeKey: data.reclaimNode
+      reclaimNodeKey: data.reclaimNode?.taskKey,
     });
-    
-    if (res.data) {
-      ElMessage.success(`已回退到 ${data.reclaimNodeName} 节点`);
-      handleCancel();
-    }
+    ElMessage.success(`已回退到 ${data.reclaimNode?.taskName} 节点`);
+    handleCancel();
   } catch (error) {
     console.error('回退操作失败:', error);
     throw error;
@@ -216,16 +198,12 @@ const handleReclaim = async (data) => {
 // 终止操作
 const handleTerminate = async (data) => {
   try {
-    const res = await terminateProcess({
-      businessKey: data.businessKey,
+    const res = await terminateProcess(data.businessKey, {
       comment: data.comment,
       ccUsers: data.ccUsers
     });
-    
-    if (res.data) {
-      ElMessage.success('终止成功');
-      handleCancel();
-    }
+    ElMessage.success('终止成功');
+    handleCancel();
   } catch (error) {
     console.error('终止操作失败:', error);
     throw error;
@@ -286,6 +264,9 @@ const traverseNode = (node, taskList) => {
     if (task) {
       node.taskState = task.taskState;
       node.taskList = list;
+
+      console.log('节点信息:', node);
+      console.log('任务信息:', list);
     }
   }
 };
@@ -294,6 +275,7 @@ const traverseNode = (node, taskList) => {
 <style scoped>
 .process-approval {
   padding: 20px;
+  padding-bottom: 0px;
 }
 
 .process-info {
@@ -302,16 +284,11 @@ const traverseNode = (node, taskList) => {
   margin-bottom: 20px;
 }
 
-.workflow {
-  margin: 20px 0;
-}
-
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 20px;
 }
 </style>
 

@@ -147,11 +147,6 @@ const currentSelectorField = ref('');
 // 已选抄送人列表
 const selectedCCUserList = computed(() => formData.ccUsers);
 
-// 已选转交人列表
-const selectedTransferUserList = computed(() => 
-  formData.transferUser ? [formData.transferUser] : []
-);
-
 // 打开用户选择器
 const openUserSelector = (field) => {
   currentSelectorField.value = field;
@@ -249,6 +244,10 @@ const handleConfirm = () => {
       ? { id: formData.transferUser.id, name: formData.transferUser.name }
       : null;
   }
+
+  if (props.actionType === 'reclaim') {
+    result.reclaimNode = props.reclaimNodes.find(node => node.taskKey === formData.reclaimNode)
+  }
   
   // 触发确认事件，传递数据
   emit('confirm', result);
@@ -263,7 +262,7 @@ watch(() => props.visible, (newVal) => {
     formData.comment = '';
     formData.ccUsers = [];
     formData.transferUser = '';
-    formData.reclaimNode = props.reclaimNodes[0]?.taskKey || '';
+    formData.reclaimNode = props.reclaimNodes?.[0]?.taskKey || {};
   }
 });
 </script>

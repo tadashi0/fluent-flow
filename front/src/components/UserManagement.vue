@@ -41,7 +41,6 @@
                         </div>
                         <el-button size="small" type="primary" @click="handleDetail(row)">详情</el-button>
                     </div>
-
                 </template>
             </el-table-column>
         </el-table>
@@ -58,18 +57,14 @@
                     <el-input v-model="formData.phoneNumber" />
                 </el-form-item>
             </el-form>
-            <ApproveFlow 
-            v-if="[1, 2, 3].includes(formData.status)" 
-            :businessKey="formData.id" 
-            @cancel="dialogVisible = false"
-            />
-            <StartFlow 
-                v-else 
-                :processKey="props.processKey" 
+            <WorkFlowPro
+                :processKey="props.processKey"
                 :businessKey="formData.id"
+                :status="formData.status"
                 :on-submit="handleSubmit"
                 :on-save="handleSave"
                 @cancel="dialogVisible = false"
+                @refresh="loadFromLocalStorage"
             />
         </el-dialog>
 
@@ -86,17 +81,10 @@
                 <el-descriptions-item label="创建时间">{{ currentUser.gmt_created }}</el-descriptions-item>
                 <el-descriptions-item label="修改时间">{{ currentUser.gmt_modified }}</el-descriptions-item>
             </el-descriptions>
-
-            <ApproveFlow 
-            v-if="currentUser.status > 0" 
-            :businessKey="currentUser.id"
-            :mode="'perview'"
-             />
-            <StartFlow 
-            v-else 
-            :processKey="props.processKey" 
-            :businessKey="formData.id"
-            :mode="'perview'"
+            <WorkFlowPro
+                :businessKey="formData.id"
+                :status="currentUser.status"
+                :readonly="true"
             />
         </el-drawer>
     </div>
@@ -107,6 +95,7 @@ import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import StartFlow from '@/components/StartFlow.vue'
 import ApproveFlow from '@/components/ApproveFlow.vue'
+import WorkFlowPro from '@/components/WorkFlowPro.vue'
 import { saveProcess, startProcess, revokeProcess, approveProcess, terminateProcess, rejectProcess, reclaimProcess} from '@/api/process'
 
 const props = reactive({
@@ -270,6 +259,7 @@ const saveToLocalStorage = () => {
 }
 
 const loadFromLocalStorage = () => {
+    console.log("加载数据")
     const data = localStorage.getItem('userManagementData')
     if (data) {
         userList.value = JSON.parse(data)

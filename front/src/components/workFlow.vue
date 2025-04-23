@@ -52,7 +52,7 @@ const defaultData = computed(() => ({
     type: 0,
     nodeAssigneeList: [],
     childNode: {
-      nodeName: "审核人",
+      nodeName: "审批人1",
       nodeKey: "flk002",
       type: 1,
       setType: 4,
@@ -65,7 +65,7 @@ const defaultData = computed(() => ({
       term: 0,
       termMode: 1,
       childNode: {
-        nodeName: "审核人",
+        nodeName: "审批人2",
         nodeKey: "flk003",
         type: 1,
         setType: 4,

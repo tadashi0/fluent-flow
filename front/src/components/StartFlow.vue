@@ -27,7 +27,7 @@ const props = defineProps({
   onSave: Function
 });
 
-const emit = defineEmits(['cancel'])
+const emit = defineEmits(['cancel', 'refresh'])
 
 const modelContent = ref({})
 
@@ -38,14 +38,15 @@ const handleCancel = () => {
 const handleSave = async () => {
   try {
     // 1. 先调用父组件保存逻辑
-    const parentResult = await props.onSave()
+    const businessKey = await props.onSave()
     // 2. 执行子组件保存逻辑
     const data = {
       processKey: props.processKey,
       modelContent: JSON.stringify(modelContent.value)
     }
-    await saveProcess(parentResult.id, data)
+    await saveProcess(businessKey, data)
     handleCancel()
+    emit('refresh');
     ElMessage.success('保存成功')
   } catch (error) {
     console.error('保存失败:', error)
@@ -55,18 +56,19 @@ const handleSave = async () => {
 const handleSubmit = async () => {
   try {
     // 1. 先调用父组件提交逻辑
-    const parentResult = await props.onSubmit()
+    const businessKey = await props.onSubmit()
     
     // 2. 执行子组件提交逻辑
     const data = {
       processKey: props.processKey,
       modelContent: JSON.stringify(modelContent.value)
     }
-    await startProcess(parentResult.id, data)
+    await startProcess(businessKey, data)
     handleCancel()
-    ElMessage.success('提交成功')
+    emit('refresh');
+    ElMessage.success('流程发起成功')
   } catch (error) {
-    console.error('提交失败:', error)
+    console.error('流程发起失败:', error)
   }
 }
 

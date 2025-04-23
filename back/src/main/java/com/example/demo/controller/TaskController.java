@@ -4,6 +4,7 @@ import com.aizuda.bpm.engine.FlowLongEngine;
 import com.aizuda.bpm.engine.core.Execution;
 import com.aizuda.bpm.engine.core.FlowCreator;
 import com.aizuda.bpm.engine.core.enums.InstanceState;
+import com.aizuda.bpm.engine.core.enums.PerformType;
 import com.aizuda.bpm.engine.core.enums.TaskState;
 import com.aizuda.bpm.engine.core.enums.TaskType;
 import com.aizuda.bpm.engine.entity.*;
@@ -216,7 +217,7 @@ public class TaskController {
                     flowLongEngine.queryService()
                             .getHisTasksByInstanceId(instance.getId())
                             .map(taskList -> taskList.stream()
-                                    //.filter(task -> task.getTaskState() != TaskState.revoke.getValue())
+                                    .filter(task -> PerformType.copy.ne(task.getPerformType()))
                                     .map(task -> {
                                         flowLongEngine.queryService()
                                                 .getHisTaskActorsByTaskId(task.getId())
@@ -231,11 +232,13 @@ public class TaskController {
                                     .collect(Collectors.toList()))
                             .ifPresent(collect::addAll);
                     List<FlwHisTask> flwTaskList = flowLongEngine.queryService()
-                            .getTasksByInstanceId(instance.getId())
+                            .getActiveTasksByInstanceId(instance.getId())
+                            .get()
                             .stream()
                             .map(task -> {
                                 flowLongEngine.queryService()
-                                        .getTaskActorsByTaskId(task.getId())
+                                        .getActiveTaskActorsByTaskId(task.getId())
+                                        .get()
                                         .stream()
                                         .findFirst()
                                         .ifPresent(actor -> {
@@ -287,17 +290,7 @@ public class TaskController {
                                         .ifPresent(task -> {
                                             FlwTask flwTask = task.get(0);
                                             flowLongEngine.createCcTask(flwTask, data.getCcUsers(), testCreator);
-                                            flowLongEngine.executeTask(flwTask.getId(), testCreator, data.getVariable());
-                                            ProcessModel processModel = flowLongEngine.queryService()
-                                                    .getExtInstance(instance.getId()).model();
-                                            List<NodeModel> nextChildNodes = ModelHelper.getNextChildNodes(flowLongEngine.getContext(), new Execution(testCreator, null),
-                                                    processModel.getNodeConfig(), flwTask.getTaskKey());
-                                            if (nextChildNodes.isEmpty()) {
-                                                result.set(true);
-                                            }
-                                            nextChildNodes.forEach(child -> {
-                                                result.set(!ModelHelper.checkExistApprovalNode(child));
-                                            });
+                                            result.set(flowLongEngine.executeTask(flwTask.getId(), testCreator, data.getVariable()));
                                         });
                             });
                 });
@@ -308,7 +301,7 @@ public class TaskController {
      * 根据businessKey驳回至上一步处理人
      */
     @PutMapping("/reject/{businessKey}")
-    public CommonResult<Boolean> reject(@PathVariable Long businessKey) {
+    public CommonResult<Boolean> reject(@PathVariable Long businessKey, @RequestBody ActionDTO data) {
         Optional<List<FlwInstance>> optional = flowLongEngine.queryService()
                 .getInstancesByBusinessKey(String.valueOf(businessKey));
         AtomicReference<Boolean> result = new AtomicReference<>(false);
@@ -330,9 +323,10 @@ public class TaskController {
                                                         task,
                                                         parentNode.getNodeKey(),
                                                         testCreator,
-                                                        null,
+                                                        data.getVariable(),
                                                         TaskType.major.eq(parentNode.getType())
                                                 ).ifPresent(e1 -> {
+                                                    flowLongEngine.createCcTask(task, data.getCcUsers(), testCreator);
                                                     result.set(TaskType.major.eq(parentNode.getType()));
                                                 });
                                                 //if(TaskType.major.eq(parentNode.getType())){
@@ -357,7 +351,7 @@ public class TaskController {
      * 根据businessKey终止流程
      */
     @PutMapping("/terminate/{businessKey}")
-    public CommonResult<Boolean> terminate(@PathVariable Long businessKey) {
+    public CommonResult<Boolean> terminate(@PathVariable Long businessKey, @RequestBody ActionDTO data) {
         Optional<List<FlwInstance>> optional = flowLongEngine.queryService()
                 .getInstancesByBusinessKey(String.valueOf(businessKey));
         AtomicReference<Boolean> result = new AtomicReference<>(false);
@@ -366,6 +360,11 @@ public class TaskController {
                     .ifPresent(instance -> {
                         result.set(flowLongEngine.runtimeService()
                                 .terminate(instance.getId(), testCreator));
+                        flowLongEngine.queryService()
+                                .getActiveTasksByInstanceId(instance.getId())
+                                .ifPresent(tasks -> {
+                                    flowLongEngine.createCcTask(tasks.stream().findFirst().get(), data.getCcUsers(), testCreator);
+                                });
                     });
         });
 
@@ -376,7 +375,7 @@ public class TaskController {
      * 根据businessKey和taskKey回退流程
      */
     @PutMapping("/reclaim/{businessKey}")
-    public CommonResult<Boolean> reclaim(@PathVariable Long businessKey, @RequestBody FlwTask flwTask) {
+    public CommonResult<Boolean> reclaim(@PathVariable Long businessKey, @RequestBody ActionDTO data) {
         Optional<List<FlwInstance>> optional = flowLongEngine.queryService()
                 .getInstancesByBusinessKey(String.valueOf(businessKey));
         AtomicReference<Boolean> result = new AtomicReference<>(false);
@@ -391,10 +390,11 @@ public class TaskController {
                                             .ifPresent(task -> {
                                                 flowLongEngine.executeRejectTask(
                                                         task,
-                                                        flwTask.getTaskKey(),
+                                                        data.getReclaimNodeKey(),
                                                         testCreator,
-                                                        null
+                                                        data.getVariable()
                                                 ).ifPresent(e1 -> {
+                                                    flowLongEngine.createCcTask(task, data.getCcUsers(), testCreator);
                                                     result.set(true);
                                                 });
                                             });
@@ -413,10 +413,33 @@ public class TaskController {
      * 根据businessKey和转交人转交任务
      */
     @PutMapping("/transfer/{businessKey}")
-    public CommonResult<Boolean> transfer(@PathVariable Long businessKey, FlowCreator flowCreator) {
-        //return CommonResult.success(flowLongEngine.taskService()
-        //        .transferTask(taskId, testCreator, flowCreator));
-        return null;
+    public CommonResult<Boolean> transfer(@PathVariable Long businessKey, @RequestBody ActionDTO data) {
+
+        Optional<List<FlwInstance>> optional = flowLongEngine.queryService()
+                .getInstancesByBusinessKey(String.valueOf(businessKey));
+        AtomicReference<Boolean> result = new AtomicReference<>(false);
+        optional.ifPresent(e -> {
+            e.stream().findFirst()
+                    .ifPresent(instance -> {
+                        flowLongEngine.queryService()
+                                .getActiveTasksByInstanceId(instance.getId())
+                                .ifPresent(tasks -> {
+                                    tasks.stream()
+                                            .findFirst()
+                                            .ifPresent(task -> {
+                                                result.set(flowLongEngine.taskService()
+                                                        .transferTask(task.getId(), testCreator, data.getTransferUsers()));
+                                                flowLongEngine.createCcTask(task, data.getCcUsers(), testCreator);
+                                            });
+                                });
+                    });
+        });
+        //flowLongEngine.executeJumpTask(taskId, flwTask.getTaskKey(), testCreator, null, TaskType.jump)
+        //        .ifPresent(e -> {
+        //            result.set(true);
+        //        });
+
+        return CommonResult.success(result.get());
     }
 
     /**

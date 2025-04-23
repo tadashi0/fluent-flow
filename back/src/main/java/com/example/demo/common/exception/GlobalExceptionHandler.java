@@ -32,20 +32,25 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * 流程异常
+     */
+    @ExceptionHandler(FlowLongException.class)
+    public CommonResult handleFlowLongException(FlowLongException e, HttpServletRequest request) {
+        String requestURI = request.getRequestURI();
+        log.error("请求地址'{}',发生系统异常.", requestURI, e);
+        return CommonResult.error(new ErrorCode(GlobalErrorCodeConstants.INTERNAL_SERVER_ERROR.getCode(), e.getMessage()));
+    }
+
+    /**
      * 系统异常
      */
     @ExceptionHandler(Exception.class)
     public CommonResult handleException(Exception e, HttpServletRequest request) {
         String requestURI = request.getRequestURI();
         log.error("请求地址'{}',发生系统异常.", requestURI, e);
-        return CommonResult.error(GlobalErrorCodeConstants.INTERNAL_SERVER_ERROR,"系统开小差了, 请稍后再试");
+        return CommonResult.error(new ErrorCode(GlobalErrorCodeConstants.INTERNAL_SERVER_ERROR.getCode(), "系统开小差了, 请稍后再试"));
     }
 
-    @ExceptionHandler(FlowLongException.class)
-    public CommonResult handleFlowLongException(FlowLongException e, HttpServletRequest request) {
-        String requestURI = request.getRequestURI();
-        log.error("请求地址'{}',发生系统异常.", requestURI, e);
-        return CommonResult.error(GlobalErrorCodeConstants.INTERNAL_SERVER_ERROR,e.getMessage());
-    }
+
 
 }

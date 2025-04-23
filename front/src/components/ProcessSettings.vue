@@ -127,7 +127,6 @@ const handleNodeClick = async (data) => {
     } catch (error) {
         console.error('获取流程数据失败:', error)
         processList.value = []
-        ElMessage.error('获取流程数据失败')
     }
 }
 
@@ -152,7 +151,6 @@ const handleDisable = async (row) => {
         ElMessage.success('禁用成功')
     } catch (error) {
         console.error('禁用失败:', error)
-        ElMessage.error('禁用失败')
     }
 }
 
@@ -183,10 +181,8 @@ const handleDelete = (row) => {
             ElMessage.success('删除成功')
         } catch (error) {
             console.error('删除失败:', error)
-            ElMessage.error('删除失败')
         }
     }).catch(() => {
-        ElMessage.info('已取消删除')
     })
 }
 </script>

@@ -47,7 +47,7 @@ export default {
 			var node = {}
 			if (type == 1) {
 				node = {
-					nodeName: "审核人",
+					nodeName: "审批人",
 					nodeKey: this.getNodeKey(),
 					type: 1,			//节点类型
 					setType: 1,			//审核人类型 1，选择成员 3，选择角色
