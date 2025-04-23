@@ -30,78 +30,84 @@
     </div>
 
     <!-- 数据表格 -->
-    <el-table
-      v-loading="loading"
-      :data="userList"
-      @selection-change="handleSelectionChange"
-    >
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="序号" width="55" align="center">
-        <template #default="{$index }">
-          {{ (queryParams.pageNum - 1) * queryParams.pageSize + $index + 1 }}
-        </template>
-      </el-table-column>
-      <el-table-column label="姓名" prop="name" align="center" />
-      <el-table-column label="年龄" prop="age" align="center" />
-      <el-table-column label="状态" prop="state" align="center">
-        <template #default="{ row }">
-          <el-tag :type="stateTagType[row.state]">
-            {{ stateFormat(row.state) }}
-          </el-tag>
-        </template>
-      </el-table-column>
+    <div class="table-wrapper">
+      <el-table
+        v-loading="loading"
+        :data="userList"
+        @selection-change="handleSelectionChange"
+        style="width: 100%"
+      >
+        <el-table-column type="selection" width="55" align="center" />
+        <el-table-column label="序号" width="55" align="center">
+          <template #default="{$index }">
+            {{ (queryParams.current - 1) * queryParams.size + $index + 1 }}
+          </template>
+        </el-table-column>
+        <el-table-column label="姓名" prop="name" align="center" />
+        <el-table-column label="年龄" prop="age" align="center" />
+        <el-table-column label="状态" prop="state" align="center">
+          <template #default="{ row }">
+            <el-tag :type="stateTagType[row.state]">
+              {{ stateFormat(row.state) }}
+            </el-tag>
+          </template>
+        </el-table-column>
 
-      <el-table-column label="处理环节" align="center" width="150">
-        <template #default="{ row }">
-            <template v-if="row.handler">
-              <el-tooltip 
-                :content="row.handler"
-                placement="top"
-              >
-              <span>待 
-                <span class="handler-text">
-                  {{row.handler.slice(0,2)}}...
+        <el-table-column label="处理环节" align="center" width="150">
+          <template #default="{ row }">
+              <template v-if="row.handler">
+                <el-tooltip 
+                  :content="row.handler"
+                  placement="top"
+                >
+                <span>待 
+                  <span class="handler-text">
+                    {{row.handler.slice(0,2)}}...
+                  </span>
+                  处理
                 </span>
-                 处理
+                </el-tooltip>
+              </template>
+              <span v-else class="handler-text">
+                -
               </span>
-              </el-tooltip>
-            </template>
-            <span v-else class="handler-text">
-              -
-            </span>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" align="left" width="240">
-        <template #default="{ row }">
-          <div style="display: flex; gap: 8px;">
-              <div v-if="row.state === 1">
-                  <el-button size="small" type="primary" @click="handleEdit(row)">
-                      审批
-                  </el-button>
-                  <el-button size="small" type="danger" @click="handleRevoke(row)">撤销</el-button>
-              </div>
-              <div v-else-if="[0,4].includes(row.state)">
-                  <el-button size="small" @click="handleEdit(row)">
-                      编辑
-                  </el-button>
-                  <el-button size="small" type="danger" @click="handleDelete(row)">
-                      删除
-                  </el-button>
-              </div>
-              <el-button size="small" type="primary" @click="handleDetail(row)">详情</el-button>
-          </div>
-        </template>
-      </el-table-column>
-    </el-table>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" align="left" width="240">
+          <template #default="{ row }">
+            <div style="display: flex; gap: 8px;">
+                <div v-if="row.state === 1">
+                    <el-button size="small" type="primary" @click="handleEdit(row)">
+                        审批
+                    </el-button>
+                    <el-button size="small" type="danger" @click="handleRevoke(row)">撤销</el-button>
+                </div>
+                <div v-else-if="[0,4].includes(row.state)">
+                    <el-button size="small" @click="handleEdit(row)">
+                        编辑
+                    </el-button>
+                    <el-button size="small" type="danger" @click="handleDelete(row)">
+                        删除
+                    </el-button>
+                </div>
+                <el-button size="small" type="primary" @click="handleDetail(row)">详情</el-button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
 
-    <!-- 分页 -->
-    <pagination
-      v-show="total > 0"
-      :total="total"
-      v-model:page="queryParams.pageNum"
-      v-model:limit="queryParams.pageSize"
-      @pagination="getList"
-    />
+      <div class="pagination-container">
+        <el-pagination
+          v-show="total > 0"
+          :page-size="queryParams.size"
+          layout="prev, pager, next"
+          :total="total"
+          :current-page="queryParams.current"
+          @current-change="handlePagination"
+          background
+        />
+      </div>
+    </div>
 
     <!-- 新增/编辑弹窗 -->
     <el-dialog
@@ -191,8 +197,8 @@ const total = ref(0)
 
 // 查询参数
 const queryParams = reactive({
-  pageNum: 1,
-  pageSize: 10,
+  current: 1,
+  size: 10,
   name: '',
   state: null
 })
@@ -232,13 +238,22 @@ onMounted(() => {
 const getList = async () => {
   try {
     loading.value = true
-    const res = await pageUser(queryParams)
+    const res = await pageUser({
+      ...queryParams
+    })
     userList.value = res.data.records
-    total.value = res.total
+    total.value = res.data.total
   } finally {
     loading.value = false
   }
 }
+
+// 处理分页变化
+const handlePagination = (current) => {
+  queryParams.current = Number(current);
+  queryParams.size = Number(queryParams.size); // 若 size 可调则需处理
+  getList();
+};
 
 // 状态格式化
 const stateFormat = (state) => {
@@ -247,13 +262,13 @@ const stateFormat = (state) => {
 
 // 处理搜索
 const handleQuery = () => {
-  queryParams.pageNum = 1
+  queryParams.current = 1
   getList()
 }
 
 // 重置搜索
 const resetQuery = () => {
-  queryParams.pageNum = 1
+  queryParams.current = 1
   queryParams.name = ''
   queryParams.state = null
   getList()
@@ -365,5 +380,31 @@ const handleRevoke = async (row) => {
 }
 .operation-buttons {
   margin-bottom: 10px;
+}
+
+.table-wrapper {
+  position: relative;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 260px); /* 根据实际布局调整 */
+}
+
+.el-table {
+  flex: 1;
+  overflow: auto;
+}
+
+.pagination-container {
+  position: sticky;
+  display: flex;
+  justify-content: flex-end;
+  bottom: 0;
+  background: white;
+  z-index: 2;
+  padding: 12px 16px;
+  border-top: 1px solid #ebeef5;
+  box-shadow: 0 -1px 4px rgba(0,0,0,0.05);
+  margin-top: auto;
 }
 </style>

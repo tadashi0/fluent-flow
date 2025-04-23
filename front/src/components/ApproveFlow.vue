@@ -110,22 +110,27 @@ const handleActionConfirm = async (data) => {
     switch (data.actionType) {
       case 'approve':
         await handleApprove(data);
+        ElMessage.success('审批成功');
         break;
       case 'reject':
         await handleReject(data);
+        ElMessage.success('驳回成功');
         break;
       case 'transfer':
         await handleTransfer(data);
+        ElMessage.success(`已转交给 ${data.transferUser?.name} 进行审批`);
         break;
       case 'reclaim':
         await handleReclaim(data);
+        ElMessage.success(`已回退到 ${data.reclaimNode?.taskName} 节点`);
         break;
       case 'terminate':
         await handleTerminate(data);
+        ElMessage.success('终止成功');
         break;
     }
-    
     // 刷新流程数据
+    handleCancel();
     emit('refresh');
   } catch (error) {
     console.error('操作失败:', error);
@@ -139,8 +144,6 @@ const handleApprove = async (data) => {
         comment: data.comment,
         ccUsers: data.ccUsers
     });
-    ElMessage.success('审批成功');
-    handleCancel();
   } catch (error) {
     console.error('审批操作失败:', error);
     throw error;
@@ -154,8 +157,6 @@ const handleReject = async (data) => {
       comment: data.comment,
       ccUsers: data.ccUsers
     });
-    ElMessage.success('驳回成功');
-    handleCancel();
   } catch (error) {
     console.error('驳回操作失败:', error);
     throw error;
@@ -171,8 +172,6 @@ const handleTransfer = async (data) => {
       ccUsers: data.ccUsers,
       transferUsers: {createId: id, createBy: name}
     });
-    ElMessage.success('转交成功');
-    handleCancel();
   } catch (error) {
     console.error('转交操作失败:', error);
     throw error;
@@ -187,8 +186,6 @@ const handleReclaim = async (data) => {
       ccUsers: data.ccUsers,
       reclaimNodeKey: data.reclaimNode?.taskKey,
     });
-    ElMessage.success(`已回退到 ${data.reclaimNode?.taskName} 节点`);
-    handleCancel();
   } catch (error) {
     console.error('回退操作失败:', error);
     throw error;
@@ -198,12 +195,10 @@ const handleReclaim = async (data) => {
 // 终止操作
 const handleTerminate = async (data) => {
   try {
-    const res = await terminateProcess(data.businessKey, {
+    await terminateProcess(data.businessKey, {
       comment: data.comment,
       ccUsers: data.ccUsers
     });
-    ElMessage.success('终止成功');
-    handleCancel();
   } catch (error) {
     console.error('终止操作失败:', error);
     throw error;
@@ -243,7 +238,7 @@ watchEffect(async () => {
       ]);
       
       // 处理数据逻辑
-      const { instanceId, taskState } = instanceInfoResult.data;
+      const { taskState } = instanceInfoResult.data;
       state.value = taskState;
       const processModel = JSON.parse(modelResult.data);
       traverseNode(processModel.nodeConfig, taskResult.data);

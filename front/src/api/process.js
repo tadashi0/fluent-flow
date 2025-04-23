@@ -1,9 +1,10 @@
 import request from './request'
 
-export const getProcessList = (processKey) => {
+export const getProcessList = (processKey, query) => {
   return request({
     url: `process/getList/${processKey}`,
-    method: 'get'
+    method: 'get',
+    params: query
   })
 }
 
@@ -22,17 +23,11 @@ export const createProcess = (data) => {
   })
 }
 
-export const disableProcess = (id) => {
+export const deleteProcess = (processKey, version) => {
   return request({
-    url: `/process/${id}`,
-    method: 'put'
-  })
-}
-
-export const deleteProcess = (id) => {
-  return request({
-    url: `/process/${id}`,
-    method: 'delete'
+    url: `/process/${processKey}`,
+    method: 'delete',
+    params: {version}
   })
 }
 
@@ -160,33 +155,37 @@ export const taskCount = () => {
 }
 
 // 待我处理
-export const todoList = () => {
+export const todoList = (query) => {
   return request({
     url: '/task/todoList',
-    method: 'get'
+    method: 'get',
+    params: query
   })
 }
 
 // 已办任务
-export const doneList = () => {
+export const doneList = (query) => {
   return request({
     url: '/task/doneList',
-    method: 'get'
+    method: 'get',
+    params: query
   })
 }
 
 // 我发起的
-export const submitList = (isAll) => {
+export const submitList = (isAll, query) => {
   return request({
     url: `/task/submitList/${isAll || false}`,
-    method: 'get'
+    method: 'get',
+    params: query
   })
 }
 
 // 抄送我的
-export const aboutList = () => {
+export const aboutList = (query) => {
   return request({
     url: '/task/aboutList',
-    method: 'get'
+    method: 'get',
+    params: query
   })
 }

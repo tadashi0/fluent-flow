@@ -1,10 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import WorkFlow from '@/components/workFlow.vue'
-import TodoTasks from '@/views/TodoTasks.vue'
-import DoneTasks from '@/views/DoneTasks.vue'
-import SubmitTasks from '@/views/SubmitTasks.vue'
-import AboutTasks from '@/views/AboutTasks.vue'
-import Dashboard from '@/views/Dashboard.vue'
+import TodoTasks from '@/views/ProcessCenter/TodoTasks.vue'
+import DoneTasks from '@/views/ProcessCenter/DoneTasks.vue'
+import SubmitTasks from '@/views/ProcessCenter/SubmitTasks.vue'
+import AboutTasks from '@/views/ProcessCenter/AboutTasks.vue'
+import Dashboard from '@/views/ProcessCenter/Dashboard.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -26,12 +26,12 @@ const router = createRouter({
     {
       path: '/process',
       name: 'ProcessSettings',
-      component: () => import('@/components/ProcessSettings.vue')
+      component: () => import('@/views/ProcessSettings/index.vue')
     },
     {
       path: '/process/create',
       name: 'ProcessCreate',
-      component: () => import('@/views/ProcessCreate.vue')
+      component: () => import('@/views/ProcessSettings/ProcessCreate.vue')
     },
     {
       path: '/board',

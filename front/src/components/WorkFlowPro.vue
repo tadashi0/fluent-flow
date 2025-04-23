@@ -37,10 +37,7 @@ const props = defineProps({
     type: Number,
     default: 0
   },
-  onRefresh: {
-    type: Function,
-    required: true
-  },
+  onRefresh: Function,
   onSubmit: Function,
   onSave: Function,
   readonly: Boolean

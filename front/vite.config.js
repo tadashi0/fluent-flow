@@ -16,6 +16,9 @@ export default defineConfig({
     }
   },
   server: {
+    host: '0.0.0.0', // 这个用于启动
+    port: '8092', // 指定启动端口
+    open: true, //启动后是否自动打开浏览器
     proxy: {
       '/api': {
         target: 'http://172.16.2.148:8080',
