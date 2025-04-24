@@ -23,7 +23,9 @@ public interface TaskMapper {
             "SELECT " +
             "  (SELECT COUNT(DISTINCT ta.task_id) " +  // 待办数：独立子查询，避免关联历史表
             "   FROM flw_task_actor ta " +
+            "   JOIN flw_task t ON ta.task_id = t.id " +
             "   WHERE ta.actor_id = #{userId} " +
+            "     AND t.perform_type != 0 " +
             "     <if test='tenantId != null'> AND ta.tenant_id = #{tenantId} </if>" +
             "  ) AS todo, " +
             "  COUNT(DISTINCT CASE WHEN ht.perform_type = 1 THEN hta.task_id END) AS done, " +  // 已办数
