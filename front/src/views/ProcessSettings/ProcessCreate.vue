@@ -13,7 +13,7 @@
             <!-- 第一步：基础信息 -->
             <div class="form-wrapper" v-if="step === 1">
                 <el-form :model="formData" label-width="120px">
-                    <el-form-item label="模型名称" required>
+                    <el-form-item label="流程名称" required>
                         <el-input v-model="formData.processName" placeholder="请输入流程名称" />
                     </el-form-item>
 

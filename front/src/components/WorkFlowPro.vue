@@ -8,7 +8,6 @@
         :mode="effectiveMode"
         :on-submit="onSubmit"
         :on-save="onSave"
-        :save-process-api="saveProcess"
         @cancel="handleCancel"
         @refresh="handleRefresh"
       />

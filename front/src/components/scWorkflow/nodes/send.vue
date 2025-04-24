@@ -12,7 +12,7 @@
 			</div>
 		</div>
 		<add-node v-model="nodeConfig.childNode"></add-node>
-		<el-drawer title="抄送人设置" v-model="drawer" destroy-on-close append-to-body :size="500">
+		<el-drawer title="抄送人设置" v-model="drawer" destroy-on-close append-to-body :size="500" @closed="save">
 			<template #header>
 				<div class="node-wrap-drawer__title">
 					<label @click="editTitle" v-if="!isEditTitle">{{ form.nodeName }}<el-icon
@@ -37,10 +37,6 @@
 						</el-form-item>
 					</el-form>
 				</el-main>
-				<el-footer>
-					<el-button type="primary" @click="save">保存</el-button>
-					<el-button @click="drawer = false">取消</el-button>
-				</el-footer>
 			</el-container>
 		</el-drawer>
 	</div>

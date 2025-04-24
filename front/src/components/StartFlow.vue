@@ -91,6 +91,7 @@ watchEffect(async () => {
 
 <style scoped>
 .workflow {
+  max-width: 700px;
   margin-top: 20px;
 }
 

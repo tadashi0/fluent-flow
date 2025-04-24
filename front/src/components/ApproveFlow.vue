@@ -27,9 +27,9 @@
       <el-button type="danger" @click="openActionDialog('reject')">驳回</el-button>
       <el-button type="primary" @click="openActionDialog('approve')">同意</el-button>
     </div>
-    
-    <!-- 引用审批操作弹窗组件 -->
-    <process-action-dialog
+  </div>
+      <!-- 引用审批操作弹窗组件 -->
+      <process-action-dialog
       v-model:visible="actionDialogVisible"
       :business-key="businessKey"
       :action-type="currentActionType"
@@ -37,7 +37,6 @@
       @cancel="handleActionCancel"
       @confirm="handleActionConfirm"
     />
-  </div>
 </template>
 
 <script setup>
@@ -269,6 +268,7 @@ const traverseNode = (node, taskList) => {
 
 <style scoped>
 .process-approval {
+  max-width: 700px;
   padding: 20px;
   padding-bottom: 0px;
 }
