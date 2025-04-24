@@ -6,11 +6,14 @@ import com.aizuda.bpm.mybatisplus.mapper.FlwProcessMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.toolkit.ChainWrappers;
+import com.wf.entity.TableInfoDTO;
+import com.wf.mapper.ProcessMapper;
 import com.wf.service.ProcessService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -24,6 +27,7 @@ import java.util.Objects;
 public class ProcessServiceImpl implements ProcessService {
 
     private final FlwProcessMapper processMapper;
+    private final ProcessMapper mapper;
 
     @Override
     public IPage<FlwProcess> getProcessList(String processKey, String keyword, Page page) {
@@ -36,5 +40,10 @@ public class ProcessServiceImpl implements ProcessService {
                 .page(page);
 
         return pageResult;
+    }
+
+    @Override
+    public List<TableInfoDTO> getTales(String tableName) {
+        return mapper.getTableInfoList(tableName);
     }
 }

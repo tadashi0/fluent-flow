@@ -1,5 +1,10 @@
 import request from './request'
 
+// 获取数据库表列表
+export const getTableList = (query) => {
+  return request.get('/process/tables', {params: query})
+}
+
 export const getProcessList = (processKey, query) => {
   return request.get(`process/getList/${processKey}`, {params: query})
 }

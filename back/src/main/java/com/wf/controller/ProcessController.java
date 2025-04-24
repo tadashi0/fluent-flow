@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.wf.common.exception.ServiceException;
 import com.wf.common.pojo.CommonResult;
+import com.wf.entity.TableInfoDTO;
 import com.wf.service.ProcessService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +52,7 @@ public class ProcessController {
                 .deploy(null, flwProcess.getModelContent(), testCreator, true, e -> {
                     e.setModelContent(flwProcess.getModelContent());
                     e.setProcessName(flwProcess.getProcessName());
+                    e.setProcessType(flwProcess.getProcessType());
                     e.setRemark(flwProcess.getRemark());
                 }));
     }
@@ -63,6 +65,14 @@ public class ProcessController {
         FlwProcess flwProcess = flowLongEngine.processService().getProcessByVersion(null, processKey, version);
         flowLongEngine.processService().cascadeRemove(flwProcess.getId());
         return CommonResult.success(true);
+    }
+
+    /**
+     * 获取数据库表
+     */
+    @GetMapping("tables")
+    public CommonResult<List<TableInfoDTO>> getTables(@RequestParam(required = false) String tableName) {
+        return CommonResult.success(processService.getTales(tableName));
     }
 
 }
