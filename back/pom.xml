@@ -14,10 +14,10 @@
             <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
         </repository>
     </repositories>
-    <groupId>com.example</groupId>
+    <groupId>com.wf</groupId>
     <artifactId>service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>demo</name>
+    <name>service</name>
     <description>Demo project for Spring Boot</description>
     <url/>
     <licenses>
