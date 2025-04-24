@@ -51,6 +51,7 @@
             </el-table-column>
             <el-table-column prop="processName" label="流程名称" min-width="120" align="center" />
             <el-table-column prop="processKey" label="流程标识" width="120" align="center" />
+            <el-table-column prop="processType" label="数据库表" min-width="120" align="center" />
             <el-table-column prop="processVersion" label="版本" width="100" align="center">
               <template #default="{ row }">
                 <el-tag type="success">V{{ row.processVersion }}</el-tag>

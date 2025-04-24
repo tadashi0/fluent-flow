@@ -21,6 +21,26 @@
                         <el-input v-model="formData.processKey" disabled />
                     </el-form-item>
 
+                    <el-form-item label="数据库表">
+                        <el-select 
+                            v-model="formData.processType" 
+                            placeholder="请输入关键词搜索数据库表"
+                            filterable
+                            clearable
+                            remote
+                            reserve-keyword
+                            :remote-method="handleTableSearch"
+                            :loading="tableLoading"
+                        >
+                            <el-option
+                                v-for="table in tableNames"
+                                :key="table.tableName"
+                                :label="`${table.tableName}（${table.tableComment || '无注释'}）`"
+                                :value="table.tableName"
+                            />
+                        </el-select>
+                    </el-form-item>
+
                     <el-form-item label="模型描述">
                         <el-input v-model="formData.remark" type="textarea" :rows="4" placeholder="请输入流程描述" />
                     </el-form-item>
@@ -38,15 +58,18 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import WorkFlow from '@/components/workFlow.vue'
-import { createProcess } from '@/api/process'
+import { getTableList, createProcess } from '@/api/process'
 import { ElMessage } from 'element-plus'
+import { debounce } from 'lodash-es'
 
 const route = useRoute()
 const router = useRouter()
 const step = ref(1)
+const tableNames = ref([])
+const tableLoading = ref(false)
 
 // 从路由参数获取组件名称
 const componentName = computed(() => route.query?.componentName || '')
@@ -66,6 +89,7 @@ const initFormData = computed(() => {
         return {
             processName: editData.value.processName,
             processKey: editData.value.processKey,
+            processType: editData.value.processType,
             remark: editData.value.remark || '',
             modelContent: editData.value.modelContent || ''
         }
@@ -73,6 +97,7 @@ const initFormData = computed(() => {
     return {
         processName: '',
         processKey: componentName.value,
+        processType: '',
         remark: '',
         modelContent: ''
     }
@@ -116,6 +141,26 @@ const handleSubmit = async () => {
         console.error('提交失败:', error)
     }
 }
+
+// 添加防抖搜索方法（300毫秒间隔）
+const handleTableSearch = debounce(async (query) => {
+    try {
+        tableLoading.value = true
+        const res = await getTableList({ tableName: query })
+        tableNames.value = res.data || []
+    } catch (error) {
+        console.error('搜索失败:', error)
+        ElMessage.error('表格搜索失败')
+    } finally {
+        tableLoading.value = false
+    }
+}, 300)
+
+// 在组件挂载时获取表名
+onMounted(async () => {
+    // 初始加载所有表格（传空参数）
+    handleTableSearch('')
+})
 </script>
 
 <style scoped>
