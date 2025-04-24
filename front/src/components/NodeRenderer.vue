@@ -42,7 +42,7 @@
   <div v-else-if="node.type === 1" class="workflow-item">
     <div class="workflow-icon">
       <!-- <span>审</span> -->
-      <span>{{ node.nodeAssigneeList?.[0].name?.substring(0, 1) || '审' }}</span>
+      <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
       <div v-if="node.taskState !== undefined" class="status-indicator" :class="getStatusIndicatorClass(node)"></div>
     </div>
     <div class="workflow-line"></div>
