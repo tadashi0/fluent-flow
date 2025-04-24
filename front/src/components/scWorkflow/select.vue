@@ -31,7 +31,7 @@
 				</div>
 				<div class="sc-user-select__toicon"><el-icon><el-icon-arrow-right /></el-icon></div>
 				<div class="sc-user-select__selected">
-					<header>已选 ({{selected.length}})</header>
+					<header>已选 ({{selected.length}}) <span class="mode-hint">{{ mode === 1 ? '单选模式' : '多选模式' }}</span></header>
 					<ul>
 						<el-scrollbar>
 							<li v-for="(item, index) in selected" :key="item.id">
@@ -87,150 +87,196 @@
 	</el-dialog>
 </template>
 
-<script>
-	import config from '@/config/workflow.js'
+<script setup>
+import { ref, computed, watch } from 'vue';
+import config from '@/config/workflow.js';
 
-	export default {
-		props: {
-			modelValue: { type: Boolean, default: false }
-		},
-		data() {
-			return {
-				groupProps: config.group.props,
-				userProps: config.user.props,
-				roleProps: config.role.props,
+// 定义props
+const props = defineProps({
+  modelValue: { type: Boolean, default: false }
+});
 
-				titleMap: ['人员选择', '角色选择'],
-				dialogVisible: false,
-				showGrouploading: false,
-				showUserloading: false,
-				keyword: '',
-				groupId: '',
-				pageSize: config.user.pageSize,
-				total: 0,
-				currentPage: 1,
-				group: [],
-				user: [],
-				role: [],
-				type: 1,
-				selected: [],
-				value: []
-			}
-		},
-		computed: {
-			selectedIds(){
-				return this.selected.map(t => t.id)
-			}
-		},
-		mounted() {
+// 定义emit
+const emit = defineEmits(['update:modelValue', 'closed']);
 
-		},
-		methods: {
-			//打开赋值
-			open(type, data){
-				this.type = type
-				this.value = data||[]
-				this.selected = JSON.parse(JSON.stringify(data||[]))
-				this.dialogVisible = true
+// 数据
+const dialogVisible = ref(false);
+const showGrouploading = ref(false);
+const showUserloading = ref(false);
+const keyword = ref('');
+const groupId = ref('');
+const pageSize = ref(config.user.pageSize);
+const total = ref(0);
+const currentPage = ref(1);
+const group = ref([]);
+const user = ref([]);
+const role = ref([]);
+const type = ref(1);
+const selected = ref([]);
+const value = ref([]);
+// 添加选择模式状态
+const mode = ref(2); // 默认多选
 
-				if(this.type==1){
-					this.getGroup()
-					this.getUser()
-				}else if(this.type==2){
-					this.getRole()
-				}
+// 计算属性
+const selectedIds = computed(() => {
+  return selected.value.map(t => t.id);
+});
 
-			},
-			//获取组织
-			async getGroup(){
-				this.showGrouploading = true;
-				var res = await config.group.apiObj.get();
-				this.showGrouploading = false;
-				var allNode = {[config.group.props.key]: '', [config.group.props.label]: '所有'}
-				res.data.unshift(allNode);
-				this.group = config.group.parseData(res).rows
-			},
-			//获取用户
-			async getUser(){
-				this.showUserloading = true;
-				var params = {
-					[config.user.request.keyword]: this.keyword || null,
-					[config.user.request.groupId]: this.groupId || null,
-					[config.user.request.page]: this.currentPage,
-					[config.user.request.pageSize]: this.pageSize
-				}
-				var res = await config.user.apiObj.get(params);
-				this.showUserloading = false;
-				this.user =  config.user.parseData(res).rows;
-				this.total = config.user.parseData(res).total || 0;
-				this.$refs.userScrollbar.setScrollTop(0)
-			},
-			//获取角色
-			async getRole(){
-				this.showGrouploading = true;
-				var res = await config.role.apiObj.get();
-				this.showGrouploading = false;
-				this.role = config.role.parseData(res).rows
-			},
-			//组织点击
-			groupClick(data){
-				this.keyword = ''
-				this.currentPage = 1
-				this.groupId = data[config.group.props.key]
-				this.getUser()
-			},
-			//用户点击
-			userClick(data, checked){
-				if(checked){
-					this.selected.push({
-						id: data[config.user.props.key],
-						name: data[config.user.props.label]
-					})
-				}else{
-					this.selected = this.selected.filter(item => item.id != data[config.user.props.key])
-				}
-			},
-			//用户分页点击
-			paginationChange(){
-				this.getUser()
-			},
-			//用户搜索
-			search(){
-				this.groupId = ''
-				this.$refs.groupTree.setCurrentKey(this.groupId)
-				this.currentPage = 1
-				this.getUser()
-			},
-			//删除已选
-			deleteSelected(index){
-				this.selected.splice(index,1);
-				if(this.type==1){
-					this.$refs.userTree.setCheckedKeys(this.selectedIds)
-				}else if(this.type==2){
-					this.$refs.groupTree.setCheckedKeys(this.selectedIds)
-				}
-			},
-			//角色点击
-			roleClick(data, checked){
-				if(checked){
-					this.selected.push({
-						id: data[config.role.props.key],
-						name: data[config.role.props.label]
-					})
-				}else{
-					this.selected = this.selected.filter(item => item.id != data[config.role.props.key])
-				}
-			},
-			//提交保存
-			save(){
-				this.value.splice(0,this.value.length);
-				this.selected.map(item => {
-					this.value.push(item)
-				})
-				this.dialogVisible = false
-			}
-		}
-	}
+const titleMap = ['人员选择', '角色选择'];
+const groupProps = config.group.props;
+const userProps = config.user.props;
+const roleProps = config.role.props;
+
+// refs
+const groupTree = ref(null);
+const userTree = ref(null);
+const userScrollbar = ref(null);
+
+// 监听dialogVisible变化
+watch(dialogVisible, (val) => {
+  emit('update:modelValue', val);
+});
+
+// 监听modelValue变化
+watch(() => props.modelValue, (val) => {
+  dialogVisible.value = val;
+});
+
+// 打开选择器
+const open = (selectType, data, selectMode = 2) => {
+  type.value = selectType;
+  value.value = data || [];
+  selected.value = JSON.parse(JSON.stringify(data || []));
+  // 保存选择模式 (1=单选, 2=多选)
+  mode.value = selectMode;
+  dialogVisible.value = true;
+
+  if (type.value == 1) {
+    getGroup();
+    getUser();
+  } else if (type.value == 2) {
+    getRole();
+  }
+};
+
+// 获取组织
+const getGroup = async () => {
+  showGrouploading.value = true;
+  var res = await config.group.apiObj.get();
+  showGrouploading.value = false;
+  var allNode = {[config.group.props.key]: '', [config.group.props.label]: '所有'};
+  res.data.unshift(allNode);
+  group.value = config.group.parseData(res).rows;
+};
+
+// 获取用户
+const getUser = async () => {
+  showUserloading.value = true;
+  var params = {
+    [config.user.request.keyword]: keyword.value || null,
+    [config.user.request.groupId]: groupId.value || null,
+    [config.user.request.page]: currentPage.value,
+    [config.user.request.pageSize]: pageSize.value
+  };
+  var res = await config.user.apiObj.get(params);
+  showUserloading.value = false;
+  user.value = config.user.parseData(res).rows;
+  total.value = config.user.parseData(res).total || 0;
+  userScrollbar.value.setScrollTop(0);
+};
+
+// 获取角色
+const getRole = async () => {
+  showGrouploading.value = true;
+  var res = await config.role.apiObj.get();
+  showGrouploading.value = false;
+  role.value = config.role.parseData(res).rows;
+};
+
+// 组织点击
+const groupClick = (data) => {
+  keyword.value = '';
+  currentPage.value = 1;
+  groupId.value = data[config.group.props.key];
+  getUser();
+};
+
+// 用户点击
+const userClick = (data, checked) => {
+  if (checked) {
+    // 单选模式时，清空之前的选择
+    if (mode.value === 1) {
+      selected.value = [];
+      // 如果是单选，需要重置其他节点的选中状态
+      if (userTree.value) {
+        userTree.value.setCheckedKeys([]);
+      }
+    }
+    
+    selected.value.push({
+      id: data[config.user.props.key],
+      name: data[config.user.props.label]
+    });
+    
+    // 单选模式下，选中后即可设置选中状态
+    if (mode.value === 1 && userTree.value) {
+      userTree.value.setCheckedKeys([data[config.user.props.key]]);
+    }
+  } else {
+    // 取消选中
+    selected.value = selected.value.filter(item => item.id != data[config.user.props.key]);
+  }
+};
+
+// 分页变化
+const paginationChange = () => {
+  getUser();
+};
+
+// 搜索
+const search = () => {
+  groupId.value = '';
+  groupTree.value.setCurrentKey(groupId.value);
+  currentPage.value = 1;
+  getUser();
+};
+
+// 删除已选
+const deleteSelected = (index) => {
+  selected.value.splice(index, 1);
+  if (type.value == 1) {
+    userTree.value.setCheckedKeys(selectedIds.value);
+  } else if (type.value == 2) {
+    groupTree.value.setCheckedKeys(selectedIds.value);
+  }
+};
+
+// 角色点击
+const roleClick = (data, checked) => {
+  if (checked) {
+    selected.value.push({
+      id: data[config.role.props.key],
+      name: data[config.role.props.label]
+    });
+  } else {
+    selected.value = selected.value.filter(item => item.id != data[config.role.props.key]);
+  }
+};
+
+// 保存
+const save = () => {
+  value.value.splice(0, value.value.length);
+  selected.value.forEach(item => {
+    value.value.push(item);
+  });
+  dialogVisible.value = false;
+};
+
+// 暴露方法和属性给父组件
+defineExpose({
+  open,
+  value
+});
 </script>
 
 <style scoped>
@@ -251,6 +297,14 @@
 
 	.sc-user-select__selected {height:345px;width: 200px;border: 1px solid var(--el-border-color-light);background: var(--el-color-white);}
 	.sc-user-select__selected header {height:43px;line-height: 43px;border-bottom: 1px solid var(--el-border-color-light);padding:0 15px;font-size: 12px;}
+	.mode-hint {
+		font-size: 12px;
+		color: #909399;
+		background: #f4f4f5;
+		padding: 2px 6px;
+		border-radius: 4px;
+		margin-left: 8px;
+	}
 	.sc-user-select__selected ul {height:300px;overflow: auto;}
 	.sc-user-select__selected li {display: flex;align-items: center;justify-content: space-between;padding:5px 5px 5px 15px;height:38px;}
 	.sc-user-select__selected li .name {display: flex;align-items: center;}

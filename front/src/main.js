@@ -5,11 +5,13 @@ import JsonEditorVue from 'json-editor-vue3'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import * as elIcons from '@element-plus/icons-vue'
+import router from './router'
 
 const app = createApp(App)
 
 app.use(JsonEditorVue)
 app.use(ElementPlus)
+app.use(router)
 
 // 统一注册el图标
 for (let icon in elIcons) {
