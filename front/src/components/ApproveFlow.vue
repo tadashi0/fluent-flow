@@ -54,7 +54,8 @@ const props = defineProps({
   mode: {
     type: String,
     default: 'edit'
-  }
+  },
+  onApprove: Function,
 });
 
 const emit = defineEmits(['cancel', 'refresh']);
@@ -139,6 +140,7 @@ const handleActionConfirm = async (data) => {
 // 同意操作
 const handleApprove = async (data) => {
   try {
+    await props.onApprove()
     await approveProcess(data.businessKey,{
         comment: data.comment,
         ccUsers: data.ccUsers

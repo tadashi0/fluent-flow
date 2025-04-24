@@ -16,6 +16,7 @@
         v-else
         :business-key="businessKey"
         :mode="effectiveMode"
+        :on-approve="onApprove"
         @cancel="handleCancel"
         @refresh="handleRefresh"
       />
@@ -41,6 +42,7 @@ const props = defineProps({
   onRefresh: Function,
   onSubmit: Function,
   onSave: Function,
+  onApprove: Function,
   readonly: Boolean
 })
 

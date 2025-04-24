@@ -87,7 +87,7 @@
             <div v-if="task.duration" class="task-history-duration">
               处理耗时: {{ formatDuration(task.duration) }}
             </div>
-            <div v-if="task.variable?.comment && task.taskState !== 0" class="task-history-comment">
+            <div v-if="task.variable && task.taskState !== 0" class="task-history-comment">
               {{ JSON.parse(task.variable)?.comment || '' }}
             </div>
             <div v-if="task.expireTime" class="task-history-expire">
@@ -691,7 +691,7 @@ const getLevelText = (node) => {
 };
 
 const showAssignees = (node) => {
-  return [1, 3, 4, 7, 8].includes(node.setType) && node.nodeAssigneeList?.length > 0;
+  return node.nodeAssigneeList?.length > 0;
 };
 
 const getProcessName = (callProcess) => {

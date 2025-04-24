@@ -134,7 +134,11 @@ public class FlowUserServiceImpl extends ServiceImpl<FlowUserMapper, FlowUser> i
                     wrapper.eq(Objects.nonNull(flowUser.getModifyBy()), FlowUser::getModifyBy, flowUser.getModifyBy());
                     wrapper.eq(Objects.nonNull(flowUser.getModifyTime()), FlowUser::getModifyTime, flowUser.getModifyTime());
                     wrapper.orderByDesc(FlowUser::getId);
-        return flowUserMapper.selectPage(page, wrapper);
+        IPage<FlowUser> resultPage = flowUserMapper.selectPage(page, wrapper);
+        resultPage.getRecords().forEach(e -> {
+            e.setHandlerName(e.getHandler());
+        });
+        return resultPage;
     }
 
     /**

@@ -85,10 +85,11 @@ public class ProcessListener {
 
             // 处理处理人字段
             if (eventType.eq(TaskEventType.create) || eventType.eq(TaskEventType.assignment)) {
-                String handlers = taskEvent.getTaskActors().stream()
+                String handler = taskEvent.getTaskActors().stream()
+                        //.map(FlwTaskActor::getActorId) //后续需要改成ID
                         .map(FlwTaskActor::getActorName)
                         .collect(Collectors.joining(","));
-                updates.put("handler", handlers);
+                updates.put("handler", handler);
             }
 
             // 处理complete事件的状态更新

@@ -183,7 +183,7 @@ const selectHandle = (type, data) => {
 };
 
 const changeSetType = () => {
-  form.value.nodeAssigneeList = [];
+  form.value.nodeAssigneeList = [];  
 };
 
 const toText = (nodeConfig) => {

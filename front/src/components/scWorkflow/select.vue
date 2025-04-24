@@ -67,6 +67,7 @@
 						<el-scrollbar>
 							<li v-for="(item, index) in selected" :key="item.id">
 								<span class="name">
+									<el-avatar size="small">{{item.name.substring(0,1)}}</el-avatar>
 									<label>{{item.name}}</label>
 								</span>
 								<span class="delete">

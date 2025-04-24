@@ -57,12 +57,12 @@
           <template #default="{ row }">
               <template v-if="row.handler">
                 <el-tooltip 
-                  :content="row.handler"
+                  :content="row.handlerName"
                   placement="top"
                 >
                 <span>待 
                   <span class="handler-text">
-                    {{row.handler.slice(0,2)}}...
+                    {{row.handlerName.slice(0,2)}}...
                   </span>
                   处理
                 </span>
@@ -130,6 +130,7 @@
                 :status="formData.state"
                 :on-submit="submitForm"
                 :on-save="submitForm"
+                :on-approve="submitForm"
                 @cancel="dialog.visible = false"
                 @refresh="resetQuery"
             />
