@@ -1,6 +1,7 @@
 package com.wf.listener;
 
 import com.aizuda.bpm.engine.FlowLongEngine;
+import com.aizuda.bpm.engine.assist.ObjectUtils;
 import com.aizuda.bpm.engine.core.Execution;
 import com.aizuda.bpm.engine.core.FlowCreator;
 import com.aizuda.bpm.engine.core.enums.TaskEventType;
@@ -40,6 +41,7 @@ public class ProcessListener {
         statusMap.put(TaskEventType.start, "state");
         statusMap.put(TaskEventType.recreate, "state");
         statusMap.put(TaskEventType.revoke, "state");
+        statusMap.put(TaskEventType.rejectJump, "state");
         statusMap.put(TaskEventType.reject, "state");
         statusMap.put(TaskEventType.terminate, "state");
         STATUS_MAPPING = Collections.unmodifiableMap(statusMap);
@@ -50,6 +52,7 @@ public class ProcessListener {
         valueMap.put(TaskEventType.recreate, 1);
         valueMap.put(TaskEventType.revoke, 0);
         valueMap.put(TaskEventType.reject, 4);
+        valueMap.put(TaskEventType.rejectJump, 4);
         valueMap.put(TaskEventType.terminate, 3);
         STATUS_VALUE_MAPPING = Collections.unmodifiableMap(valueMap);
     }
@@ -104,8 +107,12 @@ public class ProcessListener {
                         flwTask.getTaskKey()
                 );
 
+                Optional<List<FlwTask>> activeTaskList = flowLongEngine.queryService()
+                        .getActiveTasksByInstanceId(instanceId)
+                        .filter(ObjectUtils::isNotEmpty);
+
                 // 仅在最终步骤设置状态为2
-                if (isFinalStep(nextChildNodes)) {
+                if (isFinalStep(nextChildNodes) && !activeTaskList.isPresent()) {
                     updates.put("state", 2);
                 }
             }

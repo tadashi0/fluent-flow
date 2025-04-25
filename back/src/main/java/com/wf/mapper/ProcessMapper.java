@@ -22,7 +22,7 @@ public interface ProcessMapper {
     @Select("<script>" +
             "SELECT table_name AS tableName, table_comment AS tableComment " +
             "FROM information_schema.tables " +
-            "WHERE TABLE_SCHEMA = (SELECT DATABASE()) " +
+            "WHERE TABLE_SCHEMA = DATABASE() " +
             "AND table_name NOT LIKE 'flw%' " +
             "AND table_name NOT LIKE 'flyway%' " +
             "<if test='tableName != null'> AND table_name LIKE CONCAT('%', #{tableName}, '%') </if>" +

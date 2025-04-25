@@ -369,57 +369,10 @@ watchEffect(() => {
   if (props.node.type === 0) {
     // 发起人节点
     props.node.nodeAssigneeList.push(currentUserInfo.value);
-  } else if (props.node.type === 1) {
-    // 审批节点
-    handleApprovalNode();
+  } else if (props.node.type === 1 && props.node.setType === 5) {
+    props.node.nodeAssigneeList.push(currentUserInfo.value);
   }
 });
-
-// 处理审批节点的函数
-function handleApprovalNode() {
-  const { setType, directorMode, examineLevel, directorLevel } = props.node;
-
-  switch (setType) {
-    case 5: // 指定人员
-      props.node.nodeAssigneeList.push(currentUserInfo.value);
-      break;
-    case 2: // 指定层级主管
-      props.node.nodeAssigneeList.push(getLeaderByLevel(examineLevel));
-      break;
-    case 6: // 主管审批
-      if (directorMode === 0) {
-        props.node.nodeAssigneeList.push(...getTopLevelListDirector());
-      } else if (directorMode === 1) {
-        props.node.nodeAssigneeList.push(...getDirectorListByLevel(directorLevel));
-      }
-      break;
-    // 可以添加其他情况的处理
-  }
-}
-
-// 根据层级获取领导
-function getLeaderByLevel(level) {
-  // 实现获取发起人指定层级领导的逻辑
-  console.log(`获取发起人的第${level}层级领导`);
-  // TODO: 实现具体逻辑并将结果添加到nodeAssigneeList
-  return currentUserInfo.value;
-}
-
-// 获取顶级主管
-function getTopLevelListDirector() {
-  // 实现获取发起人的所有主管
-  console.log('获取发起人的所有主管');
-  // TODO: 实现具体逻辑并将结果添加到nodeAssigneeList
-  return [currentUserInfo.value];
-}
-
-// 根据层级获取主管
-function getDirectorListByLevel(level) {
-  // 实现获取发起人指定层级下的主管
-  console.log(`获取发起人指定${level}层级下的主管`);
-  // TODO: 实现具体逻辑并将结果添加到nodeAssigneeList
-  return [currentUserInfo.value];
-}
 
 
 // 用于控制选择器模态框的显示

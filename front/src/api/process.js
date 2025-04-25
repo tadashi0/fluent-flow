@@ -82,10 +82,8 @@ export const terminateProcess = (businessKey, data) => {
 }
 
 // 根据businessKey和taskKey回退流程
-export const reclaimProcess = (businessKey, taskKey) => {
-  return request.put(`/task/reclaim/${businessKey}`, {
-    taskKey
-  })
+export const reclaimProcess = (businessKey, data) => {
+  return request.put(`/task/reclaim/${businessKey}`, data)
 }
 
 // 根据businessKey和转交人转交任务

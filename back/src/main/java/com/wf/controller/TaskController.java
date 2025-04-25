@@ -1,13 +1,15 @@
 package com.wf.controller;
 
 import com.aizuda.bpm.engine.FlowLongEngine;
+import com.aizuda.bpm.engine.TaskActorProvider;
+import com.aizuda.bpm.engine.assist.ObjectUtils;
+import com.aizuda.bpm.engine.core.Execution;
 import com.aizuda.bpm.engine.core.FlowCreator;
-import com.aizuda.bpm.engine.core.enums.InstanceState;
-import com.aizuda.bpm.engine.core.enums.PerformType;
-import com.aizuda.bpm.engine.core.enums.TaskState;
-import com.aizuda.bpm.engine.core.enums.TaskType;
+import com.aizuda.bpm.engine.core.enums.*;
 import com.aizuda.bpm.engine.entity.*;
+import com.aizuda.bpm.engine.impl.GeneralTaskActorProvider;
 import com.aizuda.bpm.engine.model.ModelHelper;
+import com.aizuda.bpm.engine.model.NodeAssignee;
 import com.aizuda.bpm.engine.model.NodeModel;
 import com.aizuda.bpm.engine.model.ProcessModel;
 import com.alibaba.fastjson2.JSONObject;
@@ -18,6 +20,7 @@ import com.wf.entity.*;
 import com.wf.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -29,10 +32,33 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/task")
 @RequiredArgsConstructor
-public class TaskController {
+public class TaskController implements TaskActorProvider {
     private final static FlowCreator testCreator = FlowCreator.of("20240815", "田重辉");
+    private final static FlowCreator testCreator2 = FlowCreator.of("20240815", "田重辉2");
+    private final static FlowCreator testCreator3 = FlowCreator.of("20240815", "田重辉3");
+    private final static FlowCreator testCreator4 = FlowCreator.of("20240815", "田重辉4");
     private final FlowLongEngine flowLongEngine;
     private final TaskService taskService;
+
+    /**
+     * 根据流程对象启动流程实例
+     */
+    //@PostMapping("{businessKey}")
+    //public CommonResult<FlwInstance> start(@PathVariable Long businessKey, @RequestBody FlwProcess flwProcess) {
+    //    FlwProcess process = flowLongEngine.processService()
+    //            .getProcessByKey(null, flwProcess.getProcessKey());
+    //    process.setModelContent(flwProcess.getModelContent());
+    //    return flowLongEngine.startProcessInstance(process, testCreator, null, () -> FlwInstance.of(String.valueOf(businessKey)))
+    //            .map(CommonResult::success)
+    //            .orElseGet(() -> CommonResult.error(GlobalErrorCodeConstants.INTERNAL_SERVER_ERROR, "启动流程失败, 请稍后重试!"));
+    //}
+    public List<NodeModel> getUnsetAssigneeNodes(NodeModel rootNodeModel) {
+        List<NodeModel> nodeModels = ModelHelper.getRootNodeAllChildNodes(rootNodeModel);
+        //
+        return nodeModels.stream().filter(t -> ObjectUtils.isEmpty(t.getNodeAssigneeList()) && NodeSetType.specifyMembers.eq(t.getSetType())
+                || NodeSetType.initiatorThemselves.eq(t.getSetType())
+                || NodeSetType.initiatorSelected.eq(t.getSetType())).collect(Collectors.toList());
+    }
 
     /**
      * 根据流程对象保存流程实例
@@ -65,21 +91,9 @@ public class TaskController {
         return CommonResult.success(result.get());
     }
 
-    /**
-     * 根据流程对象启动流程实例
-     */
-    //@PostMapping("{businessKey}")
-    //public CommonResult<FlwInstance> start(@PathVariable Long businessKey, @RequestBody FlwProcess flwProcess) {
-    //    FlwProcess process = flowLongEngine.processService()
-    //            .getProcessByKey(null, flwProcess.getProcessKey());
-    //    process.setModelContent(flwProcess.getModelContent());
-    //    return flowLongEngine.startProcessInstance(process, testCreator, null, () -> FlwInstance.of(String.valueOf(businessKey)))
-    //            .map(CommonResult::success)
-    //            .orElseGet(() -> CommonResult.error(GlobalErrorCodeConstants.INTERNAL_SERVER_ERROR, "启动流程失败, 请稍后重试!"));
-    //}
     @PostMapping("start/{businessKey}")
     public CommonResult<Boolean> start(@PathVariable Long businessKey, @RequestBody FlwProcess flwProcess) {
-        List<NodeModel> list = ModelHelper.getUnsetAssigneeNodes(ModelHelper.buildProcessModel(flwProcess.getModelContent()).getNodeConfig());
+        List<NodeModel> list = getUnsetAssigneeNodes(ModelHelper.buildProcessModel(flwProcess.getModelContent()).getNodeConfig());
 
         if (list.size() > 0) {
             String name = list.stream()
@@ -108,6 +122,7 @@ public class TaskController {
                         //if (hisTaskList.isPresent() && hisTaskList.get().size() == 0) {
                         flowLongEngine.queryService()
                                 .getActiveTasksByInstanceId(instance.getId())
+                                .filter(ObjectUtils::isNotEmpty)
                                 .ifPresent(e -> {
                                     e.stream().findFirst()
                                             .ifPresent(task -> {
@@ -138,25 +153,73 @@ public class TaskController {
         return CommonResult.success(result.get());
     }
 
+    private List<NodeModel> getAllParentNodeModels(NodeModel nodeModel) {
+        List<NodeModel> nodeModels = new ArrayList<>();
+        NodeModel parentNodeModel = nodeModel.getParentNode();
+        if (null != parentNodeModel) {
+            nodeModels.add(parentNodeModel);
+            if (TaskType.major.eq(parentNodeModel.getType())) {
+                return nodeModels;
+            }
+            // 继续往上递归
+            List<NodeModel> pnmList = getAllParentNodeModels(parentNodeModel);
+            if (!pnmList.isEmpty()) {
+                nodeModels.addAll(pnmList);
+            }
+        }
+        return nodeModels;
+    }
+
+    public List<FlwTask> getPreviousApprovalAndMajorNodes(NodeModel nodeModel) {
+        List<FlwTask> list = new ArrayList<>();
+        if (nodeModel == null) {
+            return list;
+        }
+        // 获取所有父节点
+        List<NodeModel> parentNodes = getAllParentNodeModels(nodeModel);
+
+        // 遍历父节点，只保留审批节点和发起节点
+        for (NodeModel parentNode : parentNodes) {
+            Integer type = parentNode.getType();
+            if (TaskType.major.eq(type) || TaskType.approval.eq(type)) {
+                FlwTask flwTask = new FlwTask();
+                flwTask.setTaskKey(parentNode.getNodeKey());
+                flwTask.setTaskName(parentNode.getNodeName());
+                list.add(flwTask);
+            }
+        }
+
+        return list;
+    }
+
     /**
      * 根据instanceId获取可回退节点列表
      */
     @GetMapping("/getBackList/{instanceId}")
-    public CommonResult<List<FlwHisTask>> getBackList(@PathVariable Long instanceId) {
+    public CommonResult<List<FlwTask>> getBackList(@PathVariable Long instanceId) {
 
-        Optional<List<FlwHisTask>> optional = flowLongEngine.queryService()
-                .getHisTasksByInstanceId(instanceId);
+        List<FlwTask> list = new ArrayList<>();
+        Optional<List<FlwTask>> optional = flowLongEngine.queryService()
+                .getActiveTasksByInstanceId(instanceId)
+                .filter(ObjectUtils::isNotEmpty);
 
-        Optional<List<FlwTask>> optionalFlwTasks = flowLongEngine.queryService()
-                .getActiveTasksByInstanceId(instanceId);
+        optional.ifPresent(e -> {
+            String taskKey = e.get(0).getTaskKey();
+            FlwExtInstance extInstance = flowLongEngine.queryService()
+                    .getExtInstance(instanceId);
+            NodeModel model = ModelHelper.buildProcessModel(extInstance.getModelContent()).getNode(taskKey);
+            list.addAll(getPreviousApprovalAndMajorNodes(model));
+        });
 
-        return optional.map(e -> CommonResult.success(e.stream()
-                        .filter(task -> TaskType.approval.eq(task.getTaskType())
-                                && TaskState.complete.eq(task.getTaskState())
-                                && !optionalFlwTasks.get().stream().map(FlwTask::getTaskKey).collect(Collectors.toList()).contains(task.getTaskKey()))
-                        .sorted(Comparator.comparing(FlwHisTask::getId))
-                        .collect(Collectors.toList())))
-                .orElseGet(() -> CommonResult.success(Arrays.asList()));
+        return CommonResult.success(list);
+
+        //return optional.map(e -> CommonResult.success(e.stream()
+        //                .filter(task -> TaskType.approval.eq(task.getTaskType())
+        //                        && TaskState.complete.eq(task.getTaskState())
+        //                        && !optionalFlwTasks.get().stream().map(FlwTask::getTaskKey).collect(Collectors.toList()).contains(task.getTaskKey()))
+        //                .sorted(Comparator.comparing(FlwHisTask::getId))
+        //                .collect(Collectors.toList())))
+        //        .orElseGet(() -> CommonResult.success(Arrays.asList()));
     }
 
     /**
@@ -230,24 +293,19 @@ public class TaskController {
                                     })
                                     .collect(Collectors.toList()))
                             .ifPresent(collect::addAll);
-                    List<FlwHisTask> flwTaskList = flowLongEngine.queryService()
-                            .getActiveTasksByInstanceId(instance.getId())
-                            .get()
-                            .stream()
-                            .map(task -> {
-                                flowLongEngine.queryService()
-                                        .getActiveTaskActorsByTaskId(task.getId())
-                                        .get()
-                                        .stream()
-                                        .findFirst()
-                                        .ifPresent(actor -> {
+                    flowLongEngine.queryService()
+                            .getActiveTaskActorsByInstanceId(instance.getId())
+                            .filter(ObjectUtils::isNotEmpty)
+                            .ifPresent(actors -> {
+                                FlwTask task = flowLongEngine.queryService()
+                                        .getTask(actors.get(0).getTaskId());
+                                collect.addAll(actors.stream()
+                                        .map(actor -> {
                                             task.setAssignorId(actor.getActorId());
                                             task.setAssignor(actor.getActorName());
-                                        });
-                                return FlwHisTask.of(task, TaskState.active);
-                            })
-                            .collect(Collectors.toList());
-                    collect.addAll(flwTaskList);
+                                            return FlwHisTask.of(task, TaskState.active);
+                                        }).collect(Collectors.toList()));
+                            });
                 });
         return CommonResult.success(collect);
     }
@@ -286,6 +344,7 @@ public class TaskController {
                     e.stream().findFirst()
                             .ifPresent(instance -> {
                                 flowLongEngine.queryService().getActiveTasksByInstanceId(instance.getId())
+                                        .filter(ObjectUtils::isNotEmpty)
                                         .ifPresent(task -> {
                                             FlwTask flwTask = task.get(0);
                                             flowLongEngine.createCcTask(flwTask, data.getCcUsers(), testCreator);
@@ -480,4 +539,81 @@ public class TaskController {
         return CommonResult.success(taskService.aboutList(page));
     }
 
+    @Override
+    public List<FlwTaskActor> getTaskActors(NodeModel nodeModel, Execution execution) {
+        List<FlwTaskActor> flwTaskActors = new ArrayList<>();
+        final Integer actorType = this.getActorType(nodeModel);
+        List<NodeAssignee> nodeAssigneeList = nodeModel.getNodeAssigneeList();
+        if (ActorType.user.eq(actorType)) {
+            flwTaskActors.addAll(nodeAssigneeList.stream()
+                    .map(e -> FlwTaskActor.ofNodeAssignee(e))
+                    .collect(Collectors.toList()));
+        } else if (ActorType.role.eq(actorType)) {
+            // 获取所有的角色ID
+            List<String> roleIds = nodeAssigneeList.stream()
+                    .map(NodeAssignee::getId)
+                    .collect(Collectors.toList());
+            // TODO: 根据角色ID获取所有的用户信息
+            flwTaskActors.addAll(nodeModel.getNodeAssigneeList().stream()
+                    .map(e -> FlwTaskActor.ofFlowCreator(testCreator))
+                    .collect(Collectors.toList()));
+        } else if (ActorType.department.eq(actorType)) {
+            // 获取所有的部门ID
+            List<String> roleIds = nodeAssigneeList.stream()
+                    .map(NodeAssignee::getId)
+                    .collect(Collectors.toList());
+            // TODO: 根据部门ID获取所有的用户信息
+            flwTaskActors.addAll(nodeModel.getNodeAssigneeList().stream()
+                    .map(e -> FlwTaskActor.ofFlowCreator(testCreator))
+                    .collect(Collectors.toList()));
+        } else {
+            // 主管需要获取发起人
+            FlowCreator flowCreator = execution.getFlowCreator();
+            String createId = flowCreator.getCreateId();
+            if (NodeSetType.supervisor.eq(nodeModel.getSetType())) {
+                Integer examineLevel = nodeModel.getExamineLevel();
+                // TODO: 获取指定层级主管, 单人
+                flwTaskActors.add(FlwTaskActor.ofFlowCreator(testCreator));
+            } else {
+                if (nodeModel.getDirectorMode() == 0) {
+                    // TODO: 获取直到最上级主管
+                    flwTaskActors.add(FlwTaskActor.ofFlowCreator(testCreator2));
+                    flwTaskActors.add(FlwTaskActor.ofFlowCreator(testCreator3));
+                    flwTaskActors.add(FlwTaskActor.ofFlowCreator(testCreator4));
+                } else {
+                    // TODO: 获取指定层级主管, 多人
+                    Integer directorLevel = nodeModel.getDirectorLevel();
+                    flwTaskActors.add(FlwTaskActor.ofFlowCreator(testCreator2));
+                    flwTaskActors.add(FlwTaskActor.ofFlowCreator(testCreator3));
+                }
+            }
+        }
+        return ObjectUtils.isEmpty(flwTaskActors) ? null : flwTaskActors;
+    }
+
+    @Override
+    public Integer getActorType(NodeModel nodeModel) {
+        // 0，用户
+        if (NodeSetType.specifyMembers.eq(nodeModel.getSetType())
+                || NodeSetType.initiatorThemselves.eq(nodeModel.getSetType())
+                || NodeSetType.initiatorSelected.eq(nodeModel.getSetType())) {
+            return 0;
+        }
+
+        // 1，角色
+        if (NodeSetType.role.eq(nodeModel.getSetType())) {
+            return 1;
+        }
+
+        // 2，部门
+        if (NodeSetType.department.eq(nodeModel.getSetType())) {
+            return 2;
+        }
+
+        // 3，主管 && 连续多级主管
+        if (NodeSetType.supervisor.eq(nodeModel.getSetType()) || NodeSetType.multiLevelSupervisors.eq(nodeModel.getSetType())) {
+            return 3;
+        }
+        return 0;
+    }
 }
