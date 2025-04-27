@@ -7,12 +7,7 @@
       </el-form-item>
       <el-form-item label="审批状态">
         <el-select v-model="queryParams.state" placeholder="请选择状态" clearable :style="'width: 120px'">
-          <el-option
-            v-for="item in stateOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
+          <el-option v-for="item in stateOptions" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -31,15 +26,10 @@
 
     <!-- 数据表格 -->
     <div class="table-wrapper">
-      <el-table
-        v-loading="loading"
-        :data="userList"
-        @selection-change="handleSelectionChange"
-        style="width: 100%"
-      >
+      <el-table v-loading="loading" :data="userList" @selection-change="handleSelectionChange" style="width: 100%">
         <el-table-column type="selection" width="55" align="center" />
         <el-table-column label="序号" width="55" align="center">
-          <template #default="{$index }">
+          <template #default="{ $index }">
             {{ (queryParams.current - 1) * queryParams.size + $index + 1 }}
           </template>
         </el-table-column>
@@ -55,67 +45,52 @@
 
         <el-table-column label="处理环节" align="center" width="150">
           <template #default="{ row }">
-              <template v-if="row.handler">
-                <el-tooltip 
-                  :content="row.handlerName"
-                  placement="top"
-                >
-                <span>待 
+            <template v-if="row.handler">
+              <el-tooltip :content="row.handlerName" placement="top">
+                <span>待
                   <span class="handler-text">
-                    {{row.handlerName.slice(0,2)}}...
+                    {{ row.handlerName.slice(0, 2) }}...
                   </span>
                   处理
                 </span>
-                </el-tooltip>
-              </template>
-              <span v-else>
-                -
-              </span>
+              </el-tooltip>
+            </template>
+            <span v-else>
+              -
+            </span>
           </template>
         </el-table-column>
         <el-table-column label="操作" align="left" width="240">
           <template #default="{ row }">
             <div style="display: flex; gap: 8px;">
-                <div v-if="row.state === 1">
-                    <el-button size="small" type="primary" @click="handleEdit(row)">
-                        审批
-                    </el-button>
-                    <el-button size="small" type="danger" @click="handleRevoke(row)">撤销</el-button>
-                </div>
-                <div v-else-if="[0,4].includes(row.state)">
-                    <el-button size="small" @click="handleEdit(row)">
-                        编辑
-                    </el-button>
-                    <el-button size="small" type="danger" @click="handleDelete(row)">
-                        删除
-                    </el-button>
-                </div>
-                <el-button size="small" type="primary" @click="handleDetail(row)">详情</el-button>
+              <div v-if="row.state === 1">
+                <el-button size="small" type="primary" @click="handleEdit(row)">
+                  审批
+                </el-button>
+                <el-button size="small" type="danger" @click="handleRevoke(row)">撤销</el-button>
+              </div>
+              <div v-else-if="[0, 4].includes(row.state)">
+                <el-button size="small" @click="handleEdit(row)">
+                  编辑
+                </el-button>
+                <el-button size="small" type="danger" @click="handleDelete(row)">
+                  删除
+                </el-button>
+              </div>
+              <el-button size="small" type="primary" @click="handleDetail(row)">详情</el-button>
             </div>
           </template>
         </el-table-column>
       </el-table>
 
       <div class="pagination-container">
-        <el-pagination
-          v-show="total > 0"
-          :page-size="queryParams.size"
-          layout="prev, pager, next"
-          :total="total"
-          :current-page="queryParams.current"
-          @current-change="handlePagination"
-          background
-        />
+        <el-pagination v-show="total > 0" :page-size="queryParams.size" layout="prev, pager, next" :total="total"
+          :current-page="queryParams.current" @current-change="handlePagination" background />
       </div>
     </div>
 
     <!-- 新增/编辑弹窗 -->
-    <el-dialog
-      :title="dialog.title"
-      v-model="dialog.visible"
-      width="500px"
-      @close="resetForm"
-    >
+    <el-dialog :title="dialog.title" v-model="dialog.visible" width="500px" @close="resetForm">
       <el-form ref="formRef" :model="formData" :rules="rules" label-width="80px" @close="resetForm">
         <el-form-item label="姓名" prop="name">
           <el-input v-model="formData.name" placeholder="请输入姓名" />
@@ -124,37 +99,21 @@
           <el-input-number v-model="formData.age" :min="0" :controls="false" />
         </el-form-item>
       </el-form>
-      <WorkFlowPro
-                :processKey="processKey"
-                :businessKey="formData.id"
-                :status="formData.state"
-                :on-submit="submitForm"
-                :on-save="submitForm"
-                :on-approve="submitForm"
-                @cancel="dialog.visible = false"
-                @refresh="resetQuery"
-            />
+      <WorkFlowPro :processKey="formData.processKey" :businessKey="formData.id" :status="formData.state" :on-submit="submitForm"
+        :on-save="submitForm" :on-approve="submitForm" @cancel="dialog.visible = false" @refresh="resetQuery" />
     </el-dialog>
 
-    <el-drawer       
-    :title="drawer.title"
-    v-model="drawer.visible" 
-    size="40%"
-    >
-        <el-descriptions :column="1" border>
-            <el-descriptions-item label="姓名">{{ formData.name }}</el-descriptions-item>
-            <el-descriptions-item label="年龄">{{ formData.age }}</el-descriptions-item>
-            <el-descriptions-item label="状态">
-                <el-tag :type="stateTagType[formData.state]">
-                    {{ stateFormat(formData.state) }}
-                </el-tag>
-            </el-descriptions-item>
-        </el-descriptions>
-        <WorkFlowPro
-            :businessKey="formData.id"
-            :status="formData.state"
-            :readonly="true"
-        />
+    <el-drawer :title="drawer.title" v-model="drawer.visible" size="40%">
+      <el-descriptions :column="1" border>
+        <el-descriptions-item label="姓名">{{ formData.name }}</el-descriptions-item>
+        <el-descriptions-item label="年龄">{{ formData.age }}</el-descriptions-item>
+        <el-descriptions-item label="状态">
+          <el-tag :type="stateTagType[formData.state]">
+            {{ stateFormat(formData.state) }}
+          </el-tag>
+        </el-descriptions-item>
+      </el-descriptions>
+      <WorkFlowPro :businessKey="formData.id" :status="formData.state" :readonly="true" />
     </el-drawer>
   </div>
 </template>
@@ -171,7 +130,7 @@ import {
   delUser,
   delUserBatch
 } from '@/api/flowUser'
-import { revokeProcess} from '@/api/process'
+import { revokeProcess } from '@/api/process'
 
 // 状态选项配置
 const stateOptions = [
@@ -218,7 +177,7 @@ const drawer = reactive({
 
 // 表单数据
 const formData = reactive({
-  processKey: 'user',
+  processKey: '/user',
   id: null,
   name: '',
   age: 0,
@@ -335,7 +294,7 @@ const handleDelete = async (row) => {
     await delUser(row.id)
     ElMessage.success('删除成功')
     getList()
-  } catch {}
+  } catch { }
 }
 
 // 批量删除
@@ -349,7 +308,7 @@ const handleBatchDelete = async () => {
     await delUserBatch(selectedIds.value)
     ElMessage.success('删除成功')
     getList()
-  } catch {}
+  } catch { }
 }
 
 const handleRevoke = async (row) => {
@@ -362,7 +321,7 @@ const handleRevoke = async (row) => {
     await revokeProcess(row.id)
     ElMessage.success('撤销成功')
     getList()
-  } catch {}
+  } catch { }
 };
 </script>
 
@@ -379,6 +338,7 @@ const handleRevoke = async (row) => {
 .search-form {
   margin-bottom: 20px;
 }
+
 .operation-buttons {
   margin-bottom: 10px;
 }
@@ -388,7 +348,8 @@ const handleRevoke = async (row) => {
   margin-top: 20px;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 260px); /* 根据实际布局调整 */
+  height: calc(100vh - 260px);
+  /* 根据实际布局调整 */
 }
 
 .el-table {
@@ -405,7 +366,7 @@ const handleRevoke = async (row) => {
   z-index: 2;
   padding: 12px 16px;
   border-top: 1px solid #ebeef5;
-  box-shadow: 0 -1px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.05);
   margin-top: auto;
 }
 </style>

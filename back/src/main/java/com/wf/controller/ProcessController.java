@@ -27,16 +27,16 @@ public class ProcessController {
     /**
      * 根据菜单标识获取流程列表
      */
-    @GetMapping("getList/{processKey}")
-    public CommonResult<IPage<FlwProcess>> getProcessList(@PathVariable String processKey, String keyword, Page page) {
+    @GetMapping("getList")
+    public CommonResult<IPage<FlwProcess>> getProcessList(String processKey, String keyword, Page page) {
         return CommonResult.success(processService.getProcessList(processKey, keyword, page));
     }
 
     /**
      * 根据菜单标识获取流程信息
      */
-    @GetMapping("{processKey}")
-    public CommonResult<FlwProcess> getProcess(@PathVariable String processKey) {
+    @GetMapping
+    public CommonResult<FlwProcess> getProcess(String processKey) {
         log.info("processKey:{}", processKey);
         return CommonResult.success(Optional.ofNullable(flowLongEngine.processService()
                 .getProcessByKey(null, processKey))

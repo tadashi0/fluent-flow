@@ -5,12 +5,12 @@ export const getTableList = (query) => {
   return request.get('/process/tables', {params: query})
 }
 
-export const getProcessList = (processKey, query) => {
-  return request.get(`process/getList/${processKey}`, {params: query})
+export const getProcessList = (query) => {
+  return request.get(`process/getList`, {params: query})
 }
 
 export const getProcessInfo = (processKey) => {
-  return request.get(`process/${processKey}`)
+  return request.get(`process`, {params: {processKey}})
 }
 
 export const createProcess = (data) => {

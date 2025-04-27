@@ -3,7 +3,7 @@
         <div class="step-button-container">
             <!-- Left-aligned back button -->
             <div class="left-actions">
-                <el-button @click="() => router.back({ query: { componentName } })">返回</el-button>
+                <el-button @click="() => router.back({ query: { processKey: formData.processKey } })">返回</el-button>
             </div>
             
             <!-- Centered steps -->
@@ -45,7 +45,7 @@
                     </el-form-item>
 
                     <el-form-item label="所属模块" prop="processKey">
-                        <el-input v-model="formData.processKey" disabled />
+                        <el-input v-model="formData.module" disabled />
                     </el-form-item>
 
                     <el-form-item label="数据库表" prop="processType" required>
@@ -89,6 +89,7 @@
                     :model-content="formData.modelContent" 
                     :process-name="formData.processName"
                     :process-key="formData.processKey" 
+                    :module="formData.module"
                 />
             </div>
         </div>
@@ -122,7 +123,8 @@ const formRules = {
 }
 
 // 从路由参数获取组件名称
-const componentName = computed(() => route.query?.componentName || '')
+const processKey = computed(() => route.query?.processKey || '')
+const module = computed(() => route.query?.module || '')
 
 // 从路由参数获取编辑数据并初始化表单
 const editData = computed(() => {
@@ -141,12 +143,14 @@ const initFormData = computed(() => {
             processKey: editData.value.processKey,
             processType: editData.value.processType,
             remark: editData.value.remark || '',
-            modelContent: editData.value.modelContent || ''
+            modelContent: editData.value.modelContent || '',
+            module: JSON.parse(editData.value.modelContent)?.module || ''
         }
     }
     return {
         processName: '',
-        processKey: componentName.value,
+        processKey: processKey.value,
+        module: module.value, 
         processType: '',
         remark: '',
         modelContent: ''
@@ -204,16 +208,11 @@ const handleSubmit = async () => {
         await createProcess(submitData)
         ElMessage.success('流程创建成功')
 
-        // 提交成功后跳转回流程列表
-        formData.value = {
-            processName: '',
-            description: ''
-        }
         step.value = 1
         router.push({
             name: 'ProcessSettings',
             query: {
-                componentName: componentName.value
+                processKey: formData.value.processKey
             }
         })
     } catch (error) {

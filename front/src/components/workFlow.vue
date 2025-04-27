@@ -25,6 +25,10 @@ const props = defineProps({
     type: String,
     required: true
   },
+  module: {
+    type: String,
+    required: true
+  },
   modelContent: {
     type: Object,
     default: null
@@ -46,6 +50,7 @@ const marks = reactive({
 const defaultData = computed(() => ({
   name: props.processName,
   key: props.processKey,
+  module: props.module,
   nodeConfig: {
     nodeName: "发起人",
     nodeKey: "flk001",

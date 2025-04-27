@@ -31,7 +31,7 @@ import ApproveFlow from './ApproveFlow.vue'
 const props = defineProps({
   processKey: {
     type: String,
-    default: 'user'
+    default: 0,
   },
   businessKey: [String, Number],
   status: {
@@ -61,6 +61,7 @@ const showStartFlow = computed(() => {
   // 1. 状态为待发起(0)或已驳回(4)
   // 2. 当只读时：允许预览未发起的流程
   // 3. 当非只读时：允许编辑
+  console.log(props)
   return [0, 4].includes(props.status) && 
     (props.readonly ? props.status === 0 : true)
 })

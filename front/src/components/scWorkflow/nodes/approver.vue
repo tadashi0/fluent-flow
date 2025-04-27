@@ -31,6 +31,7 @@
                 <el-option :value="4" label="发起人自选"></el-option>
                 <el-option :value="5" label="发起人自己"></el-option>
                 <el-option :value="6" label="连续多级主管"></el-option>
+                <!-- <el-option :value="7" label="部门(暂未实现)"></el-option> -->
               </el-select>
             </el-form-item>
 

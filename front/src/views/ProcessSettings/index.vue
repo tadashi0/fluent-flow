@@ -137,13 +137,13 @@ const previewProcessName = ref('');
 const previewRemark = ref('');
 
 // 树形数据配置
-const treeProps = { children: 'children', label: 'label' };
+const treeProps = {id: 'menudId', label: 'menudName' };
 
 // 树形数据 - 实际项目中可能从API获取
 const treeData = ref([
-  { id: 2, label: '用户管理', componentName: 'user' },
-  { id: 3, label: '采购管理', componentName: 'purchase' },
-  { id: 4, label: '财务流程', componentName: 'finance' }
+  { menudId: 2, menudName: '用户管理', path: '/user'},
+  { menudId: 3, menudName: '采购管理', path: '/caigou'},
+  { menudId: 4, menudName: '财务流程', path: '/caiwu'},
 ]);
 
 // 状态映射
@@ -160,9 +160,9 @@ const formatDate = (date) => dayjs(date).format('YYYY-MM-DD HH:mm');
 
 // 初始化函数 - 处理路由返回时的状态恢复
 const initFromRoute = async () => {
-  const { componentName } = route.query;
-  if (componentName) {
-    const category = treeData.value.find(item => item.componentName === componentName);
+  const { processKey } = route.query;
+  if (processKey) {
+    const category = treeData.value.find(item => item.path === processKey);
       if (category) {
         await handleNodeClick(category);
     }
@@ -175,7 +175,8 @@ const fetchProcessList = async () => {
   
   try {
     loading.value = true;
-    const res = await getProcessList(selectedCategory.value.componentName, {
+    const res = await getProcessList({
+      processKey: selectedCategory.value.path, 
       ...queryParams,
       keyword: searchKeyword.value
     });
@@ -217,7 +218,7 @@ const handleCreate = () => {
   
   router.push({
     name: 'ProcessCreate',
-    query: { componentName: selectedCategory.value.componentName }
+    query: { processKey: selectedCategory.value.path, module: selectedCategory.value.menudName }
   });
 };
 
@@ -225,7 +226,6 @@ const handleEdit = (row) => {
   router.push({
     name: 'ProcessCreate',
     query: {
-      componentName: selectedCategory.value.componentName,
       editData: JSON.stringify(row)
     }
   });
