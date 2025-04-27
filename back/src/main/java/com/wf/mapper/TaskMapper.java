@@ -30,7 +30,7 @@ public interface TaskMapper {
             "     <if test='tenantId != null'> AND ta.tenant_id = #{tenantId} </if>" +
             "  ) AS todo, " +
             "  IFNULL(SUM(CASE WHEN ht.task_type != 0 THEN 1 ELSE 0 END), 0) AS done, " +
-            "  IFNULL(SUM(CASE WHEN ht.task_type = 0 THEN 1 ELSE 0 END), 0) AS submit, " +
+            "  IFNULL(SUM(CASE WHEN ht.perform_type = 0 THEN 1 ELSE 0 END), 0) AS submit, " +
             "  IFNULL(SUM(CASE WHEN hta.weight = 6 THEN 1 ELSE 0 END), 0) AS about " +
             "FROM flw_his_task_actor hta " +
             "INNER JOIN flw_his_task ht ON hta.task_id = ht.id " +
@@ -86,6 +86,7 @@ public interface TaskMapper {
             ") start_actor ON b.instance_id = start_actor.instance_id " +
             "WHERE a.actor_id = #{userId} " +
             "  AND b.task_type != 0 " +
+            "  AND b.task_type != 2 " +
             "<if test='tenantId != null'> AND b.tenant_id = #{tenantId} </if>" +
             "ORDER BY b.create_time DESC" +
             "</script>")

@@ -56,9 +56,9 @@ public class TaskController implements TaskActorProvider {
     public List<NodeModel> getUnsetAssigneeNodes(NodeModel rootNodeModel) {
         List<NodeModel> nodeModels = ModelHelper.getRootNodeAllChildNodes(rootNodeModel);
         //
-        return nodeModels.stream().filter(t -> ObjectUtils.isEmpty(t.getNodeAssigneeList()) && NodeSetType.specifyMembers.eq(t.getSetType())
+        return nodeModels.stream().filter(t -> ObjectUtils.isEmpty(t.getNodeAssigneeList()) && (NodeSetType.specifyMembers.eq(t.getSetType())
                 || NodeSetType.initiatorThemselves.eq(t.getSetType())
-                || NodeSetType.initiatorSelected.eq(t.getSetType())).collect(Collectors.toList());
+                || NodeSetType.initiatorSelected.eq(t.getSetType()))).collect(Collectors.toList());
     }
 
     /**
