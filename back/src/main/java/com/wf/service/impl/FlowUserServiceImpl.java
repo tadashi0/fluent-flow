@@ -1,5 +1,6 @@
 package com.wf.service.impl;
 
+import com.aizuda.bpm.engine.assist.ObjectUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
@@ -8,6 +9,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.wf.common.exception.ServiceException;
 import com.wf.entity.FlowUser;
 import com.wf.mapper.FlowUserMapper;
+import com.wf.mapper.TaskMapper;
 import com.wf.service.FlowUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,7 @@ import java.util.*;
 public class FlowUserServiceImpl extends ServiceImpl<FlowUserMapper, FlowUser> implements FlowUserService {
 
     private final FlowUserMapper flowUserMapper;
+    private final TaskMapper taskMapper;
 
     /**
      * Create a FlowUser.
@@ -122,8 +125,14 @@ public class FlowUserServiceImpl extends ServiceImpl<FlowUserMapper, FlowUser> i
     @Override
     public IPage<FlowUser> pageFlowUser(FlowUser flowUser) {
         Page<FlowUser> page = Page.of(flowUser.getCurrent(), flowUser.getSize());
+        String userId = "20240815";
+        List<String> businessKeys = Optional.ofNullable(taskMapper.getBusinessKeys(userId, null))
+                .filter(ObjectUtils::isNotEmpty)
+                .orElseGet(() -> Arrays.asList("0"));
+        log.info("businessKeys: {}", businessKeys);
         LambdaQueryWrapper<FlowUser> wrapper = new LambdaQueryWrapper<>();
         // Example: wrapper.like(flowUser.getName() != null, FlowUser::getName, flowUser.getName());
+                    wrapper.in(FlowUser::getId, businessKeys);
                     wrapper.like(StringUtils.isNotBlank(flowUser.getName()), FlowUser::getName, flowUser.getName());
                     wrapper.eq(Objects.nonNull(flowUser.getAge()), FlowUser::getAge, flowUser.getAge());
                     wrapper.eq(Objects.nonNull(flowUser.getState()), FlowUser::getState, flowUser.getState());

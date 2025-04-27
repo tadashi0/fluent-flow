@@ -8,6 +8,7 @@ import com.wf.entity.SubmitListVO;
 import com.wf.entity.TodoListVO;
 import org.apache.ibatis.annotations.*;
 
+import java.util.List;
 import java.util.Map;
 
 
@@ -156,5 +157,21 @@ public interface TaskMapper {
             "ORDER BY hi.create_time DESC" +
             "</script>")
     IPage<AboutListVO> aboutList(@Param("userId") String userId, @Param("tenantId") String tenantId, Page page);
+
+
+    @Select("<script>" +
+            "SELECT DISTINCT hi.business_key " +
+            "FROM flw_his_instance hi " +
+            "JOIN flw_his_task_actor hta ON hi.id = hta.instance_id " +
+            "WHERE hta.actor_id = #{userId} " +
+            "<if test='tenantId != null'> AND hi.tenant_id = #{tenantId} </if> " +
+            "UNION " +
+            "SELECT DISTINCT i.business_key " +
+            "FROM flw_his_instance i " +
+            "JOIN flw_task_actor ta ON i.id = ta.instance_id " +
+            "WHERE ta.actor_id = #{userId} " +
+            "<if test='tenantId != null'> AND i.tenant_id = #{tenantId} </if> " +
+            "</script>")
+    List<String> getBusinessKeys(@Param("userId") String userId, @Param("tenantId") String tenantId);
 
 }
