@@ -29,7 +29,7 @@ public interface TaskMapper {
             "     AND t.task_type = 1 " +
             "     <if test='tenantId != null'> AND ta.tenant_id = #{tenantId} </if>" +
             "  ) AS todo, " +
-            "  IFNULL(SUM(CASE WHEN ht.task_type != 0 AND ht.task_type != 2 THEN 1 ELSE 0 END), 0) AS done, " +
+            "  IFNULL(SUM(CASE WHEN ht.task_type != 0 AND ht.task_type != 2 AND ht.task_type != 25 THEN 1 ELSE 0 END), 0) AS done, " +
             "  IFNULL(SUM(CASE WHEN ht.perform_type = 0 THEN 1 ELSE 0 END), 0) AS submit, " +
             "  IFNULL(SUM(CASE WHEN hta.weight = 6 THEN 1 ELSE 0 END), 0) AS about " +
             "FROM flw_his_task_actor hta " +
@@ -87,6 +87,7 @@ public interface TaskMapper {
             "WHERE a.actor_id = #{userId} " +
             "  AND b.task_type != 0 " +
             "  AND b.task_type != 2 " +
+            "  AND b.task_type != 25 " +
             "<if test='tenantId != null'> AND b.tenant_id = #{tenantId} </if>" +
             "ORDER BY b.create_time DESC" +
             "</script>")
