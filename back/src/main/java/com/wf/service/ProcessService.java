@@ -15,5 +15,5 @@ import java.util.List;
 
     IPage<FlwProcess> getProcessList(String processKey, String keyword, Page page);
 
-    List<TableInfoDTO> getTales(String tableName);
+    List<TableInfoDTO> getTables(String tableName);
 }

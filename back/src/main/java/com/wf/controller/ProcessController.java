@@ -72,7 +72,7 @@ public class ProcessController {
      */
     @GetMapping("tables")
     public CommonResult<List<TableInfoDTO>> getTables(@RequestParam(required = false) String tableName) {
-        return CommonResult.success(processService.getTales(tableName));
+        return CommonResult.success(processService.getTables(tableName));
     }
 
 }

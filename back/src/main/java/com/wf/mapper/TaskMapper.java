@@ -25,12 +25,12 @@ public interface TaskMapper {
             "   FROM flw_task_actor ta " +
             "   INNER JOIN flw_task t ON ta.task_id = t.id " +
             "   WHERE ta.actor_id = #{userId} " +
-            "     AND t.perform_type != 0 " +
+            "     AND t.task_type = 1 " +
             "     <if test='tenantId != null'> AND ta.tenant_id = #{tenantId} </if>" +
             "  ) AS todo, " +
-            "  SUM(CASE WHEN ht.perform_type = 1 THEN 1 ELSE 0 END) AS done, " +
-            "  SUM(CASE WHEN ht.perform_type = 0 THEN 1 ELSE 0 END) AS submit, " +
-            "  SUM(CASE WHEN ht.perform_type = 9 THEN 1 ELSE 0 END) AS about " +
+            "  IFNULL(SUM(CASE WHEN ht.task_type != 0 THEN 1 ELSE 0 END), 0) AS done, " +
+            "  IFNULL(SUM(CASE WHEN ht.task_type = 0 THEN 1 ELSE 0 END), 0) AS submit, " +
+            "  IFNULL(SUM(CASE WHEN hta.weight = 6 THEN 1 ELSE 0 END), 0) AS about " +
             "FROM flw_his_task_actor hta " +
             "INNER JOIN flw_his_task ht ON hta.task_id = ht.id " +
             "WHERE hta.actor_id = #{userId} " +
@@ -59,7 +59,7 @@ public interface TaskMapper {
             ") ht ON ta.instance_id = ht.instance_id " +
             "LEFT JOIN flw_his_task_actor hta ON ht.id = hta.task_id " +
             "WHERE ta.actor_id = #{userId} " +
-            "  AND t.perform_type != 0 " +
+            "  AND t.task_type = 1 " +
             "<if test='tenantId != null'> AND t.tenant_id = #{tenantId} </if>" +
             "ORDER BY t.create_time DESC" +
             "</script>")
@@ -84,7 +84,7 @@ public interface TaskMapper {
             "  GROUP BY ht.instance_id, hta.actor_name" +
             ") start_actor ON b.instance_id = start_actor.instance_id " +
             "WHERE a.actor_id = #{userId} " +
-            "  AND b.perform_type = 1 " +
+            "  AND b.task_type != 0 " +
             "<if test='tenantId != null'> AND b.tenant_id = #{tenantId} </if>" +
             "ORDER BY b.create_time DESC" +
             "</script>")

@@ -12,6 +12,7 @@ import com.aizuda.bpm.engine.model.ModelHelper;
 import com.aizuda.bpm.engine.model.NodeAssignee;
 import com.aizuda.bpm.engine.model.NodeModel;
 import com.aizuda.bpm.engine.model.ProcessModel;
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -181,7 +182,7 @@ public class TaskController implements TaskActorProvider {
         // 遍历父节点，只保留审批节点和发起节点
         for (NodeModel parentNode : parentNodes) {
             Integer type = parentNode.getType();
-            if (TaskType.major.eq(type) || TaskType.approval.eq(type)) {
+            if (TaskType.approval.eq(type)) {
                 FlwTask flwTask = new FlwTask();
                 flwTask.setTaskKey(parentNode.getNodeKey());
                 flwTask.setTaskName(parentNode.getNodeName());
@@ -279,7 +280,7 @@ public class TaskController implements TaskActorProvider {
                     flowLongEngine.queryService()
                             .getHisTasksByInstanceId(instance.getId())
                             .map(taskList -> taskList.stream()
-                                    .filter(task -> PerformType.copy.ne(task.getPerformType()))
+                                    .filter(task -> TaskType.cc.ne(task.getTaskType()))
                                     .map(task -> {
                                         flowLongEngine.queryService()
                                                 .getHisTaskActorsByTaskId(task.getId())
@@ -377,11 +378,13 @@ public class TaskController implements TaskActorProvider {
                                                         .getExtInstance(instance.getId()).model();
                                                 NodeModel parentNode = processModel.getNode(task.getTaskKey())
                                                         .getParentNode();
+                                                HashMap<String, Object> variable = data.getVariable();
+                                                variable.putIfAbsent("rejectNodeName", parentNode.getNodeName());
                                                 flowLongEngine.executeRejectTask(
                                                         task,
                                                         parentNode.getNodeKey(),
                                                         testCreator,
-                                                        data.getVariable(),
+                                                        variable,
                                                         TaskType.major.eq(parentNode.getType())
                                                 ).ifPresent(e1 -> {
                                                     flowLongEngine.createCcTask(task, data.getCcUsers(), testCreator);

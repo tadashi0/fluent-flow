@@ -29,7 +29,7 @@
             <div v-if="task.duration" class="task-history-duration">
               处理耗时: {{ formatDuration(task.duration) }}
             </div>
-            <div v-if="task.variable" class="task-history-comment">
+            <div v-if="task.variable && task.taskState !== 0" class="task-history-comment">
               {{ JSON.parse(task.variable)?.comment || '' }}
             </div>
           </div>
@@ -89,6 +89,9 @@
             </div>
             <div v-if="task.variable && task.taskState !== 0" class="task-history-comment">
               {{ JSON.parse(task.variable)?.comment || '' }}
+            </div>
+            <div v-if="task.taskState === 11 && task.variable && (JSON.parse(task.variable)?.rejectNodeName || JSON.parse(task.variable)?.reclaimNodeName)" class="task-history-reclaim">
+              回退至: {{ JSON.parse(task.variable)?.rejectNodeName || JSON.parse(task.variable)?.reclaimNodeName }}
             </div>
             <div v-if="task.expireTime" class="task-history-expire">
               期望完成时间: {{ formatTime(task.expireTime) }}

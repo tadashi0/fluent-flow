@@ -186,6 +186,7 @@ const handleReclaim = async (data) => {
       comment: data.comment,
       ccUsers: data.ccUsers,
       reclaimNodeKey: data.reclaimNode?.taskKey,
+      reclaimNodeName: data.reclaimNode?.taskName,
     });
   } catch (error) {
     console.error('回退操作失败:', error);

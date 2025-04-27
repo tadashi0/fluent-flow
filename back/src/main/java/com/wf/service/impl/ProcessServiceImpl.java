@@ -43,7 +43,7 @@ public class ProcessServiceImpl implements ProcessService {
     }
 
     @Override
-    public List<TableInfoDTO> getTales(String tableName) {
+    public List<TableInfoDTO> getTables(String tableName) {
         return mapper.getTableInfoList(tableName);
     }
 }
