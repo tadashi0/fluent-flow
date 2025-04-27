@@ -30,7 +30,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public JSONObject taskCount() {
         // 获取当前用户
-        String userId = "410000199512025445";
+        String userId = "20240815";
         Map<String, Long> result = mapper.taskCount(userId, null);
         return new JSONObject(result);
     }
@@ -38,7 +38,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public IPage<TodoListVO> todoList(Page page) {
         // 获取当前用户
-        String userId = "410000199512025445";
+        String userId = "20240815";
         IPage<TodoListVO> pageResult = mapper.todoList(userId, null, page);
         return pageResult;
     }
@@ -46,7 +46,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public IPage<DoneListVO> doneList(Page page) {
         // 获取当前用户
-        String userId = "410000199512025445";
+        String userId = "20240815";
         IPage<DoneListVO> pageResult = mapper.doneList(userId, null, page);
         return pageResult;
     }
@@ -54,7 +54,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public IPage<SubmitListVO> submitList(boolean isAll, Page page) {
         // 获取当前用户
-        String userId = "410000199512025445";
+        String userId = "20240815";
         IPage<SubmitListVO> pageResult = mapper.submitList(isAll ? null : userId, null, page);
         return pageResult;
     }
@@ -62,9 +62,8 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public IPage<AboutListVO> aboutList(Page page) {
         // 获取当前用户
-        String userId = "410000199512025445";
+        String userId = "20240815";
         IPage<AboutListVO> pageResult = mapper.aboutList(userId, null, page);
         return pageResult;
     }
-
 }
