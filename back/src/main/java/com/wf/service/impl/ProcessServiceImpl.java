@@ -36,7 +36,9 @@ public class ProcessServiceImpl implements ProcessService {
                 .like(ObjectUtils.isNotEmpty(keyword), FlwProcess::getProcessName, keyword)
                 .like(FlwProcess::getProcessKey, processKey)
                 .eq(Objects.nonNull(tenantId), FlwProcess::getTenantId, tenantId)
-                .orderByDesc(FlwProcess::getProcessVersion)
+                .orderByAsc(FlwProcess::getProcessState)
+                .orderByAsc(FlwProcess::getUseScope)
+                .orderByDesc(FlwProcess::getCreateTime)
                 .page(page);
 
         return pageResult;
