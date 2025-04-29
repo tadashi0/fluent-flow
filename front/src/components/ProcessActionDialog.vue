@@ -7,16 +7,79 @@
     destroy-on-close
   >
     <div class="action-dialog-body">
+      <!-- 加签类型选择，仅加签操作时显示 -->
+      <div v-if="actionType === 'countersign'" class="form-item">
+        <div class="label">加签方式</div>
+        <el-radio-group v-model="formData.signType">
+          <el-radio :value="true">
+            <div class="radio-content">
+              前加签
+              <el-tooltip content="在当前节点之前增加一个审批节点，当新增的节点同意后，再流转至当前节点" placement="top">
+                <span class="tooltip-icon">
+                  <el-icon><el-icon-question-filled /></el-icon>
+                </span>
+              </el-tooltip>
+            </div>
+          </el-radio>
+          <el-radio :value="false">
+            <div class="radio-content">
+              后加签
+              <el-tooltip content="在当前节点之后增加一个审批节点，当前节点会默认同意，并流转至新增的节点" placement="top">
+                <span class="tooltip-icon">
+                  <el-icon><el-icon-question-filled /></el-icon>
+                </span>
+              </el-tooltip>
+            </div>
+          </el-radio>
+        </el-radio-group>
+      </div>
+
+      <!-- 加签人选择，仅加签操作时显示 -->
+      <div v-if="actionType === 'countersign'" class="form-item">
+        <div class="label">
+          <span class="required">*</span>给谁加签
+        </div>
+        <div class="select-input" @click="openUserSelector('counterSignUsers')">
+          <div class="selected-tags" v-if="formData.counterSignUsers.length > 0">
+            <el-tag
+              v-for="user in formData.counterSignUsers"
+              :key="user.id"
+              closable
+              @close="removeUser('counterSignUsers', user.id)"
+            >
+              {{ user.name }}
+            </el-tag>
+          </div>
+          <div v-else class="placeholder-text">请选择加签人员</div>
+          <div class="select-icon">
+            <i class="el-icon-arrow-down"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- 节点名称，仅加签操作时显示 -->
+      <div v-if="actionType === 'countersign'" class="form-item">
+        <div class="label">
+          <span class="required">*</span>节点名称
+        </div>
+        <el-input
+          v-model="formData.nodeName"
+          placeholder="请输入节点名称"
+          maxlength="50"
+          show-word-limit
+        />
+      </div>
+
       <!-- 意见输入，必填 -->
       <div class="form-item">
         <div class="label">
-          <span class="required">*</span>意见
+          <span class="required">*</span>{{ actionType === 'countersign' ? '审批意见' : '意见' }}
         </div>
         <el-input
           v-model="formData.comment"
           type="textarea"
           :rows="4"
-          placeholder="请输入意见"
+          :placeholder="actionType === 'countersign' ? '请输入内容' : '请输入意见'"
           maxlength="200"
           show-word-limit
         />
@@ -113,7 +176,7 @@ const props = defineProps({
   actionType: {
     type: String,
     required: true,
-    validator: (value) => ['approve', 'reject', 'transfer', 'reclaim', 'terminate'].includes(value)
+    validator: (value) => ['approve', 'reject', 'transfer', 'reclaim', 'terminate', 'countersign'].includes(value)
   },
   visible: {
     type: Boolean,
@@ -133,10 +196,13 @@ const emit = defineEmits([
 
 // 表单数据
 const formData = reactive({
-  comment: '',         // 处理意见
-  ccUsers: [],         // 抄送人
-  transferUser: '',    // 转交人
-  reclaimNode: ''      // 回退节点
+  comment: '',               // 处理意见
+  ccUsers: [],               // 抄送人
+  transferUser: '',          // 转交人
+  reclaimNode: '',           // 回退节点
+  signType: false,         // 加签类型：前加签(true)或后加签(false)
+  counterSignUsers: [],      // 加签人员
+  nodeName: '',              // 节点名称
 });
 
 // 用户选择器相关
@@ -160,6 +226,8 @@ const openUserSelector = (field) => {
     } else if (field === 'transferUser') {
       selectMode = 1;
       currentSelectedItems = formData.transferUser ? [formData.transferUser] : [];
+    } else if (field === 'counterSignUsers') {
+      currentSelectedItems = formData.counterSignUsers;
     }
     
     userRoleSelector.value.open(1, currentSelectedItems, selectMode);
@@ -177,6 +245,8 @@ const handleSelectorClosed = () => {
     formData.ccUsers = selectedItems; // 直接存储对象数组
   } else if (currentSelectorField.value === 'transferUser') {
     formData.transferUser = selectedItems.length > 0 ? selectedItems[0] : null;
+  } else if (currentSelectorField.value === 'counterSignUsers') {
+    formData.counterSignUsers = selectedItems;
   }
   
   currentSelectorField.value = '';
@@ -188,6 +258,8 @@ const removeUser = (field, id) => {
     formData.ccUsers = formData.ccUsers.filter(user => user.id !== id);
   } else if (field === 'transferUser') {
     formData.transferUser = null;
+  } else if (field === 'counterSignUsers' && id) {
+    formData.counterSignUsers = formData.counterSignUsers.filter(user => user.id !== id);
   }
 };
 
@@ -198,7 +270,8 @@ const dialogTitle = computed(() => {
     reject: '驳回',
     transfer: '转交',
     reclaim: '回退',
-    terminate: '终止'
+    terminate: '终止',
+    countersign: '审批加签'
   };
   return `办理意见 - ${titleMap[props.actionType] || ''}`;
 });
@@ -213,6 +286,11 @@ const isFormValid = computed(() => {
   
   if (props.actionType === 'reclaim' && !formData.reclaimNode) {
     return false;
+  }
+  
+  if (props.actionType === 'countersign') {
+    if (formData.counterSignUsers.length === 0) return false;
+    if (!formData.nodeName.trim()) return false;
   }
   
   return true;
@@ -249,6 +327,12 @@ const handleConfirm = () => {
     result.reclaimNode = props.reclaimNodes.find(node => node.taskKey === formData.reclaimNode)
   }
   
+  if (props.actionType === 'countersign') {
+    result.signType = formData.signType;
+    result.counterSignUsers = formData.counterSignUsers.map(u => ({ id: u.id, name: u.name }));
+    result.nodeName = formData.nodeName;
+  }
+  
   // 触发确认事件，传递数据
   emit('confirm', result);
   // 关闭对话框
@@ -262,7 +346,14 @@ watch(() => props.visible, (newVal) => {
     formData.comment = '';
     formData.ccUsers = [];
     formData.transferUser = '';
-    formData.reclaimNode = props.reclaimNodes?.[0]?.taskKey || {};
+    formData.reclaimNode = props.reclaimNodes?.[0]?.taskKey || '';
+    
+    // 重置加签相关表单项
+    if (props.actionType === 'countersign') {
+      formData.signType = false;  // 默认选择后加签
+      formData.counterSignUsers = [];
+      formData.nodeName = '';
+    }
   }
 });
 </script>
@@ -280,6 +371,18 @@ watch(() => props.visible, (newVal) => {
   font-size: 14px;
   margin-bottom: 8px;
   color: #606266;
+}
+
+.radio-content {
+  display: flex;
+  align-items: center;
+}
+
+.tooltip-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  color: #909399; /* 使用固定的图标颜色，不随单选框状态变化 */
 }
 
 .required {
@@ -331,5 +434,3 @@ watch(() => props.visible, (newVal) => {
   justify-content: flex-end;
 }
 </style>
-  
-  
