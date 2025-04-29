@@ -19,6 +19,9 @@
               <el-button type="warning" @click="openActionDialog('reclaim')">回退</el-button>
             </el-dropdown-item>
             <el-dropdown-item>
+              <el-button type="success" @click="openActionDialog('countersign')">加签</el-button>
+            </el-dropdown-item>
+            <el-dropdown-item>
               <el-button type="danger" @click="openActionDialog('terminate')">终止</el-button>
             </el-dropdown-item>
           </el-dropdown-menu>
@@ -42,7 +45,7 @@
 <script setup>
 import { ref, computed, watchEffect } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { getInstanceModel, getInstanceInfo, getTaskList, getBackList, approveProcess, rejectProcess, reclaimProcess, terminateProcess, transferProcess } from '@/api/process';
+import { getInstanceModel, getInstanceInfo, getTaskList, getBackList, approveProcess, rejectProcess, reclaimProcess, terminateProcess, transferProcess, countersignProcess } from '@/api/process';
 import NodeRenderer from './NodeRenderer.vue';
 import ProcessActionDialog from './ProcessActionDialog.vue';
 
@@ -128,6 +131,10 @@ const handleActionConfirm = async (data) => {
         await handleTerminate(data);
         ElMessage.success('终止成功');
         break;
+      case 'countersign':
+        await handleCountersign(data);
+        ElMessage.success('加签成功');
+        break;
     }
     // 刷新流程数据
     handleCancel();
@@ -203,6 +210,22 @@ const handleTerminate = async (data) => {
     });
   } catch (error) {
     console.error('终止操作失败:', error);
+    throw error;
+  }
+};
+
+// 加签操作
+const handleCountersign = async (data) => {
+  try {
+    await countersignProcess(data.businessKey, {
+      comment: data.comment,
+      ccUsers: data.ccUsers,
+      signType: data.signType, // 前加签(true)或后加签(false)
+      counterSignUsers: data.counterSignUsers, // 加签人员
+      nodeName: data.nodeName // 节点名称
+    });
+  } catch (error) {
+    console.error('加签操作失败:', error);
     throw error;
   }
 };
@@ -289,4 +312,3 @@ const traverseNode = (node, taskList) => {
   gap: 8px;
 }
 </style>
-

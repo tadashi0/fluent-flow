@@ -1,7 +1,9 @@
 package com.wf.controller;
 
 import com.aizuda.bpm.engine.FlowLongEngine;
+import com.aizuda.bpm.engine.FlowLongIdGenerator;
 import com.aizuda.bpm.engine.TaskActorProvider;
+import com.aizuda.bpm.engine.assist.DateUtils;
 import com.aizuda.bpm.engine.assist.ObjectUtils;
 import com.aizuda.bpm.engine.core.Execution;
 import com.aizuda.bpm.engine.core.FlowCreator;
@@ -14,6 +16,7 @@ import com.aizuda.bpm.engine.model.NodeModel;
 import com.aizuda.bpm.engine.model.ProcessModel;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson2.util.UUIDUtils;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.wf.common.pojo.CommonResult;
@@ -499,6 +502,49 @@ public class TaskController implements TaskActorProvider {
         //            result.set(true);
         //        });
 
+        return CommonResult.success(result.get());
+    }
+
+    /**
+     * 根据businessKey加签任务
+     */
+    @PutMapping("/countersign/{businessKey}")
+    public CommonResult<Boolean> countersign(@PathVariable Long businessKey, @RequestBody ActionDTO data) {
+        Optional<List<FlwInstance>> optional = flowLongEngine.queryService()
+                .getInstancesByBusinessKey(String.valueOf(businessKey));
+        AtomicReference<Boolean> result = new AtomicReference<>(false);
+        optional.ifPresent(e -> {
+            e.stream().findFirst()
+                    .ifPresent(instance -> {
+                        flowLongEngine.queryService()
+                                .getActiveTasksByInstanceId(instance.getId())
+                                .ifPresent(tasks -> {
+                                    tasks.stream()
+                                            .findFirst()
+                                            .ifPresent(task -> {
+                                                NodeModel nodeModel = new NodeModel();
+                                                nodeModel.setNodeName(data.getNodeName());
+                                                nodeModel.setNodeKey("flk" + DateUtils.getCurrentDate().getTime());
+                                                nodeModel.setType(1);
+                                                nodeModel.setSetType(1);
+                                                nodeModel.setExamineMode(1);
+                                                nodeModel.setNodeAssigneeList(data.getCounterSignUsers());
+                                                boolean addResult = flowLongEngine.executeAppendNodeModel(
+                                                        task.getId(),
+                                                        nodeModel,
+                                                        //FlowCreator.of(task.getCreateId(), task.getCreateBy()),
+                                                        testCreator,
+                                                        data.getVariable(),
+                                                        data.getSignType()
+                                                );
+                                                if(addResult){
+                                                    result.set(data.getSignType() ? true : flowLongEngine.executeTask(task.getId(), testCreator, data.getVariable()));
+                                                }
+                                                flowLongEngine.createCcTask(task, data.getCcUsers(), testCreator);
+                                            });
+                                });
+                    });
+        });
         return CommonResult.success(result.get());
     }
 

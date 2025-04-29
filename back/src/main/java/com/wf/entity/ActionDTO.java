@@ -38,6 +38,15 @@ public class ActionDTO {
     // 回退节点名称
     String reclaimNodeName;
 
+    // 加签方式
+    Boolean signType;
+
+    // 加签节点名称
+    String nodeName;
+
+    // 加签人列表
+    List<NodeAssignee> counterSignUsers;
+
     public HashMap<String, Object> getVariable() {
         HashMap<String, Object> map = new HashMap<>();
         map.put("comment", comment);

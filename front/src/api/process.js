@@ -91,6 +91,11 @@ export const transferProcess = (businessKey, data) => {
   return request.put(`/task/transfer/${businessKey}`, data)
 }
 
+// 根据businessKey加签任务
+export const countersignProcess = (businessKey, data) => {
+  return request.put(`/task/countersign/${businessKey}`, data)
+}
+
 // 任务统计
 export const taskCount = () => {
   return request.get('/task/count')
