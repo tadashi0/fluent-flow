@@ -17,8 +17,8 @@ export const createProcess = (data) => {
   return request.post('/process', data)
 }
 
-export const deleteProcess = (processKey, version) => {
-  return request.delete(`/process/${processKey}`, {params: {version}})
+export const deleteProcess = (params) => {
+  return request.delete('/process', {params})
 }
 
 /**

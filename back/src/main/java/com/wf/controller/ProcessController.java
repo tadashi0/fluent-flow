@@ -53,6 +53,7 @@ public class ProcessController {
                     e.setModelContent(flwProcess.getModelContent());
                     e.setProcessName(flwProcess.getProcessName());
                     e.setProcessType(flwProcess.getProcessType());
+                    e.setUseScope(flwProcess.getUseScope());
                     e.setRemark(flwProcess.getRemark());
                 }));
     }
@@ -60,8 +61,8 @@ public class ProcessController {
     /**
      * 删除流程
      */
-    @DeleteMapping("{processKey}")
-    public CommonResult delete(@PathVariable String processKey, Integer version) {
+    @DeleteMapping
+    public CommonResult delete(String processKey, Integer version) {
         FlwProcess flwProcess = flowLongEngine.processService().getProcessByVersion(null, processKey, version);
         flowLongEngine.processService().cascadeRemove(flwProcess.getId());
         return CommonResult.success(true);

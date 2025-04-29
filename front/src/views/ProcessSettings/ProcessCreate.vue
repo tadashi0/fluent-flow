@@ -48,7 +48,14 @@
                         <el-input v-model="formData.module" disabled />
                     </el-form-item>
 
-                    <el-form-item label="数据库表" prop="processType" required>
+                    <el-form-item label="流程类型" prop="useScope" required>
+                        <el-radio-group v-model="formData.useScope" :disabled="formData.processId">
+                            <el-radio :value="0">业务流程</el-radio>
+                            <el-radio :value="1">子流程</el-radio>
+                        </el-radio-group>
+                    </el-form-item>
+
+                    <el-form-item label="关联业务表" prop="processType" required>
                         <el-select 
                             v-model="formData.processType" 
                             placeholder="请输入关键词搜索数据库表"
@@ -120,6 +127,9 @@ const formRules = {
     processType: [
         { required: true, message: '请选择数据库表', trigger: 'change' }
     ],
+    useScope: [
+        { required: true, message: '请选择流程类型', trigger: 'change' }
+    ]
 }
 
 // 从路由参数获取组件名称
@@ -139,9 +149,11 @@ const editData = computed(() => {
 const initFormData = computed(() => {
     if (editData.value) {
         return {
+            processId: editData.value.id,
             processName: editData.value.processName,
             processKey: editData.value.processKey,
             processType: editData.value.processType,
+            useScope: editData.value.useScope || 0,
             remark: editData.value.remark || '',
             modelContent: editData.value.modelContent || '',
             module: JSON.parse(editData.value.modelContent)?.module || ''
@@ -151,6 +163,7 @@ const initFormData = computed(() => {
         processName: '',
         processKey: processKey.value,
         module: module.value, 
+        useScope: 0,
         processType: '',
         remark: '',
         modelContent: ''
@@ -201,7 +214,7 @@ const handleSubmit = async () => {
 
         const submitData = {
             ...formData.value,
-            modelContent: workflowData
+            modelContent: JSON.stringify({ ...workflowData, key: formData.value.useScope === 1 ? formData.value.processId ? formData.value.processKey : formData.value.processKey + '-' + Date.now() : formData.value.processKey })
         }
         
         // 调用提交接口
@@ -212,7 +225,7 @@ const handleSubmit = async () => {
         router.push({
             name: 'ProcessSettings',
             query: {
-                processKey: formData.value.processKey
+                processKey: formData.value.processKey?.split('-')[0] || formData.value.processKey
             }
         })
     } catch (error) {

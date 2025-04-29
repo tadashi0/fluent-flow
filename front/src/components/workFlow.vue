@@ -102,7 +102,7 @@ const workflowRef = ref(null)
 
 // 暴露方法
 const getWorkflowData = () => {
-  return JSON.stringify(data.value)
+  return data.value
 }
 
 defineExpose({

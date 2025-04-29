@@ -6,7 +6,7 @@
 					<el-button type="primary" icon="el-icon-plus" circle></el-button>
 				</template>
 				<div class="add-node-popover-body">
-					<ul>
+					<ul style="padding-inline-start: 0px; margin-block-start: 0px; margin-block-end: 0px">
 						<li>
 							<el-icon style="color: #ff943e;" @click="addType(1)"><el-icon-user-filled /></el-icon>
 							<p>审批节点</p>
@@ -18,6 +18,10 @@
 						<li>
 							<el-icon style="color: #15BC83;" @click="addType(4)"><el-icon-share /></el-icon>
 							<p>条件分支</p>
+						</li>
+						<li>
+							<el-icon style="color: #9260FB;" @click="addType(5)"><el-icon-money /></el-icon>
+							<p>子流程</p>
 						</li>
 					</ul>
 				</div>
@@ -97,7 +101,13 @@ export default {
 					],
 					childNode: this.modelValue
 				}
-
+			} else if (type == 5) {
+				node = {
+					nodeName: "子流程",
+					nodeKey: this.getNodeKey(),
+					type: 5,
+					childNode: this.modelValue
+				}
 			}
 			this.$emit("update:modelValue", node)
 		}

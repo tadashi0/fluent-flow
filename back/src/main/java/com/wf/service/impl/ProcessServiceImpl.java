@@ -34,7 +34,7 @@ public class ProcessServiceImpl implements ProcessService {
         Long tenantId = null;
         IPage<FlwProcess> pageResult = ChainWrappers.lambdaQueryChain(processMapper)
                 .like(ObjectUtils.isNotEmpty(keyword), FlwProcess::getProcessName, keyword)
-                .eq(FlwProcess::getProcessKey, processKey)
+                .like(FlwProcess::getProcessKey, processKey)
                 .eq(Objects.nonNull(tenantId), FlwProcess::getTenantId, tenantId)
                 .orderByDesc(FlwProcess::getProcessVersion)
                 .page(page);

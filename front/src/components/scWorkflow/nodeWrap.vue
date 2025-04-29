@@ -11,46 +11,49 @@
 		</template>
 	</branch>
 
+	<subProcess v-if="nodeConfig.type==5" v-model="nodeConfig"></subprocess>
+
 	<node-wrap v-if="nodeConfig.childNode" v-model="nodeConfig.childNode"></node-wrap>
 
 </template>
 
 <script>
-	import approver from './nodes/approver.vue'
-	import promoter from './nodes/promoter.vue'
-	import branch from './nodes/branch.vue'
-	import send from './nodes/send.vue'
+import approver from './nodes/approver.vue'
+import promoter from './nodes/promoter.vue'
+import branch from './nodes/branch.vue'
+import send from './nodes/send.vue'
+import subProcess from './nodes/process.vue'
 
-	export default {
-		props: {
-			modelValue: { type: Object, default: () => {} }
-		},
-		components: {
-			approver,
-			promoter,
-			branch,
-			send
-		},
-		data() {
-			return {
-				nodeConfig: {},
-			}
-		},
-		watch:{
-			modelValue(val){
-				this.nodeConfig = val
-			},
-			nodeConfig(val){
-				this.$emit("update:modelValue", val)
-			}
-		},
-		mounted() {
-			this.nodeConfig = this.modelValue
-		},
-		methods: {
-
+export default {
+	props: {
+		modelValue: { type: Object, default: () => {} }
+	},
+	components: {
+		approver,
+		promoter,
+		branch,
+		send,
+		subProcess
+	},
+	data() {
+		return {
+			nodeConfig: {},
 		}
+	},
+	watch:{
+		modelValue(val){
+			this.nodeConfig = val
+		},
+		nodeConfig(val){
+			this.$emit("update:modelValue", val)
+		}
+	},
+	mounted() {
+		this.nodeConfig = this.modelValue
+	},
+	methods: {
 	}
+}
 </script>
 
 <style>

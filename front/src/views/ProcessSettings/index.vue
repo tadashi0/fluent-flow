@@ -50,8 +50,13 @@
               </template>
             </el-table-column>
             <el-table-column prop="processName" label="流程名称" min-width="120" align="center" />
-            <el-table-column prop="processKey" label="流程标识" width="120" align="center" />
-            <el-table-column prop="processType" label="数据库表" min-width="120" align="center" />
+            <!-- <el-table-column prop="processKey" label="流程标识" width="120" align="center" /> -->
+            <el-table-column prop="processType" label="关联业务表" min-width="120" align="center" />
+            <el-table-column prop="useScope" label="流程类型" min-width="120" align="center">
+              <template #default="{ row }">
+                <el-tag :type="row.useScope === 0 ? 'success' : 'warning'">{{ row.useScope === 0 ? '业务流程' : '子流程' }}</el-tag>
+              </template>
+            </el-table-column>
             <el-table-column prop="processVersion" label="版本" width="100" align="center">
               <template #default="{ row }">
                 <el-tag type="success">V{{ row.processVersion }}</el-tag>
@@ -238,7 +243,7 @@ const handleDelete = (row) => {
     type: 'warning'
   }).then(async () => {
     try {
-      await deleteProcess(row.processKey, row.processVersion);
+      await deleteProcess({ processKey: row.processKey, processVersion: row.processVersion });
       await fetchProcessList(); // 重新加载数据以反映最新状态
       ElMessage.success('删除成功');
     } catch (error) {
