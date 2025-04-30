@@ -2,157 +2,248 @@
   <div class="node-wrap">
     <div class="node-wrap-box" @click="show">
       <div class="title" style="background: #9260FB;">
-        <el-icon class="icon"><el-icon-money /></el-icon>
+        <el-icon class="icon"><el-icon-connection /></el-icon>
         <span>{{ nodeConfig.nodeName }}</span>
-        <el-icon class="close" @click.stop="delNode()"><el-icon-close /></el-icon>
+        <el-icon class="close" @click.stop="delNode"><el-icon-close /></el-icon>
       </div>
       <div class="content">
-        <span v-if="toText(nodeConfig)">{{ toText(nodeConfig) }}</span>
+        <span v-if="processName">{{ processName }}</span>
         <span v-else class="placeholder">请选择子流程规则</span>
       </div>
     </div>
-    <add-node v-model="nodeConfig.childNode"></add-node>
-    <el-drawer title="子流程设置" v-model="drawer" destroy-on-close append-to-body :size="500" @closed="save">
+    <add-node v-model="nodeConfig.childNode" />
+    
+    <!-- 设置抽屉 -->
+    <el-drawer 
+      title="子流程设置" 
+      v-model="drawer" 
+      destroy-on-close 
+      append-to-body 
+      :size="500"
+      @closed="save"
+    >
       <template #header>
         <div class="node-wrap-drawer__title">
-          <label @click="editTitle" v-if="!isEditTitle">{{form.nodeName}}<el-icon class="node-wrap-drawer__title-edit"><el-icon-edit /></el-icon></label>
-          <el-input v-if="isEditTitle" ref="nodeTitle" v-model="form.nodeName" clearable @blur="saveTitle" @keyup.enter="saveTitle"></el-input>
+          <label @click="editTitle" v-if="!isEditTitle">
+            {{ form.nodeName }}
+            <el-icon class="node-wrap-drawer__title-edit">
+              <el-icon-edit />
+            </el-icon>
+          </label>
+          <el-input 
+            v-if="isEditTitle" 
+            ref="nodeTitle" 
+            v-model="form.nodeName" 
+            clearable 
+            @blur="saveTitle"
+            @keyup.enter="saveTitle"
+          />
         </div>
       </template>
+
       <el-container>
-				<el-main style="padding:0 20px 20px 20px">
-					<el-form label-position="top">
-						<el-form-item label="选择要抄送的人员">
-							<el-button type="primary" icon="el-icon-plus" round
-								@click="selectHandle(1, form.nodeAssigneeList)">选择人员</el-button>
-							<div class="tags-list">
-								<el-tag v-for="(user, index) in form.nodeAssigneeList" :key="user.id" closable
-									@close="delUser(index)">{{ user.name }}</el-tag>
-							</div>
-						</el-form-item>
-						<el-form-item label="">
-							<el-checkbox v-model="form.allowSelection" label="允许发起人自选抄送人"></el-checkbox>
-						</el-form-item>
-					</el-form>
-				</el-main>
-			</el-container>
+        <el-main style="padding:0 20px 20px 20px">
+          <el-form label-position="top">
+            <el-form-item label="选择子流程">
+              <el-select
+                v-model="selectedProcessId"
+                filterable
+                placeholder="请选择子流程"
+                :loading="loading"
+                style="width: 100%"
+                @change="handleProcessChange"
+              >
+                <el-option
+                  v-for="item in processList"
+                  :key="item.id"
+                  :label="item.processName"
+                  :value="String(item.id)"
+                />
+              </el-select>
+            </el-form-item>
+            
+            <el-form-item v-if="selectedProcessId">
+              <el-button 
+                type="primary" 
+                :icon="View" 
+                @click="handlePreview"
+              >
+                预览子流程
+              </el-button>
+            </el-form-item>
+          </el-form>
+        </el-main>
+      </el-container>
     </el-drawer>
+
+    <!-- 预览对话框 -->
+    <el-dialog 
+      v-model="previewVisible" 
+      title="子流程预览" 
+      width="800px" 
+      append-to-body
+      destroy-on-close
+    >
+      <preview-flow 
+        v-if="previewVisible"
+        :flow-data="previewFlowData"
+        v-model:process-name="previewProcessName"
+        v-model:remark="previewRemark"
+      />
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, nextTick, inject, computed } from 'vue';
-import addNode from './addNode.vue';
+import { ref, computed, nextTick, watch, onMounted } from 'vue'
+import { View } from '@element-plus/icons-vue'
+import { getProcessList } from '@/api/process'
+import AddNode from './addNode.vue'
+import PreviewFlow from '@/components/PreviewFlow.vue'
 
 const props = defineProps({
   modelValue: { 
-    type: Object, 
-    default: () => ({}) 
+    type: Object,
+    default: () => ({
+      nodeName: '子流程',
+      callProcess: '',
+      childNode: null
+    })
   }
-});
+})
 
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue'])
 
-const select = inject('select');
-const nodeConfig = ref({});
-const drawer = ref(false);
-const isEditTitle = ref(false);
-const form = ref({});
-const nodeTitle = ref(null);
+// 响应式状态
+const nodeConfig = ref({...props.modelValue})
+const drawer = ref(false)
+const isEditTitle = ref(false)
+const form = ref({})
+const nodeTitle = ref(null)
+const loading = ref(false)
+const processList = ref([])
+const selectedProcessId = ref(null)
 
-// 计算属性：判断是否为多人审批
-const isMultipleApprovers = computed(() => {
-  // 判断条件：
-  // 1. 指定成员且有多个成员
-  if (form.value.setType === 1 && form.value.nodeAssigneeList?.length > 1) {
-    return true;
+// 预览相关
+const previewVisible = ref(false)
+const previewFlowData = ref({})
+const previewProcessName = ref('')
+const previewRemark = ref('')
+
+// 计算属性
+const processName = computed(() => {
+  if (!nodeConfig.value.callProcess) return null
+  const parts = nodeConfig.value.callProcess.split(':')
+  return parts.length > 1 ? parts[1] : null
+})
+
+// 生命周期
+onMounted(() => {
+  initProcessData()
+  fetchProcessList()
+})
+
+// 方法
+const initProcessData = () => {
+  if (nodeConfig.value.callProcess) {
+    const parts = nodeConfig.value.callProcess.split(':')
+    if (parts.length > 0) {
+      selectedProcessId.value = String(parts[0])
+    }
+  } else {
+    selectedProcessId.value = null
   }
-  // 2. 角色（通常角色包含多人）
-  if (form.value.setType === 3) {
-    return true;
-  }
-  // 3. 发起人自选多人
-  if (form.value.setType === 4 && form.value.selectMode === 2) {
-    return true;
-  }
-  // 4. 连续多级主管
-  if (form.value.setType === 6) {
-    return true;
-  }
-  
-  return false;
-});
+}
 
-watch(() => props.modelValue, () => {
-  nodeConfig.value = props.modelValue;
-}, { immediate: true });
-
-const show = () => {
-  form.value = JSON.parse(JSON.stringify(nodeConfig.value));
-  drawer.value = true;
-};
+const show = async () => {
+  form.value = JSON.parse(JSON.stringify(nodeConfig.value))
+  drawer.value = true
+  await fetchProcessList() // 每次打开都刷新流程列表
+}
 
 const editTitle = () => {
-  isEditTitle.value = true;
-  nextTick(() => {
-    nodeTitle.value.focus();
-  });
-};
+  isEditTitle.value = true
+  nextTick(() => nodeTitle.value?.focus())
+}
 
 const saveTitle = () => {
-  isEditTitle.value = false;
-};
+  isEditTitle.value = false
+}
 
 const save = () => {
-  emit('update:modelValue', form.value);
-};
+  if (selectedProcessId.value) {
+    const process = processList.value.find(
+      item => String(item.id) === selectedProcessId.value
+    )
+    form.value.callProcess = process ? `${process.id}:${process.processName}` : ''
+  }
+  emit('update:modelValue', form.value)
+}
 
 const delNode = () => {
-  emit('update:modelValue', nodeConfig.value.childNode);
-};
+  emit('update:modelValue', nodeConfig.value.childNode)
+}
 
-const delUser = (index) => {
-  form.value.nodeAssigneeList.splice(index, 1);
-};
-
-const delRole = (index) => {
-  form.value.nodeAssigneeList.splice(index, 1);
-};
-
-const selectHandle = (type, data) => {
-  select(type, data);
-};
-
-const changeSetType = () => {
-  form.value.nodeAssigneeList = [];  
-};
-
-const toText = (nodeConfig) => {
-  if (nodeConfig.setType == 1) {
-    if (nodeConfig.nodeAssigneeList && nodeConfig.nodeAssigneeList.length > 0) {
-      const users = nodeConfig.nodeAssigneeList.map(item => item.name).join("、");
-      return users;
-    } else {
-      return false;
-    }
-  } else if (nodeConfig.setType == 2) {
-    return nodeConfig.examineLevel == 1 ? '直接主管' : `发起人的第${nodeConfig.examineLevel}级主管`;
-  } else if (nodeConfig.setType == 3) {
-    if (nodeConfig.nodeAssigneeList && nodeConfig.nodeAssigneeList.length > 0) {
-      const roles = nodeConfig.nodeAssigneeList.map(item => item.name).join("、");
-      return '角色-' + roles;
-    } else {
-      return false;
-    }
-  } else if (nodeConfig.setType == 4) {
-    return "发起人自选";
-  } else if (nodeConfig.setType == 5) {
-    return "发起人自己";
-  } else if (nodeConfig.setType == 6) {
-    return "连续多级主管";
+const fetchProcessList = async () => {
+  try {
+    loading.value = true
+    const res = await getProcessList({
+      processKey: form.value.key,
+      size: -1,
+      useScope: 1,
+    })
+    processList.value = res.data.records || []
+    validateSelectedProcess()
+  } catch (error) {
+    console.error('流程加载失败:', error)
+    processList.value = []
+    selectedProcessId.value = null
+  } finally {
+    loading.value = false
   }
-};
+}
+
+const validateSelectedProcess = () => {
+  if (selectedProcessId.value) {
+    const exists = processList.value.some(
+      item => String(item.id) === selectedProcessId.value
+    )
+    if (!exists) selectedProcessId.value = null
+  }
+}
+
+const handleProcessChange = (id) => {
+  const process = processList.value.find(
+    item => String(item.id) === id
+  )
+  form.value.callProcess = process ? `${process.id}:${process.processName}` : ''
+}
+
+const handlePreview = () => {
+  const process = processList.value.find(
+    item => String(item.id) === selectedProcessId.value
+  )
+  if (process) {
+    try {
+      previewFlowData.value = JSON.parse(process.modelContent)
+      previewProcessName.value = process.processName
+      previewRemark.value = process.remark || ''
+      previewVisible.value = true
+    } catch (e) {
+      console.error('流程数据解析失败:', e)
+      ElMessage.error('流程数据格式错误')
+    }
+  }
+}
+
+// 监听器
+watch(() => props.modelValue, (newVal) => {
+  nodeConfig.value = {...newVal}
+  initProcessData()
+})
+
+watch(processList, validateSelectedProcess)
 </script>
-<style>
-/* 保留原有样式 */
+
+<style scoped>
 </style>

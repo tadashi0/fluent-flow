@@ -13,7 +13,7 @@ import java.util.List;
  * description 
  */public interface ProcessService {
 
-    IPage<FlwProcess> getProcessList(String processKey, String keyword, Page page);
+    IPage<FlwProcess> getProcessList(String processKey, Integer useScope, String keyword, Page page);
 
     List<TableInfoDTO> getTables(String tableName);
 }

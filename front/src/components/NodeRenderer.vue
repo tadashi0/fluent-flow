@@ -166,10 +166,14 @@
   <div v-else-if="node.type === 5" class="workflow-item">
     <div class="workflow-icon">
       <span>子</span>
+      <div v-if="node.taskState !== undefined" class="status-indicator" :class="getStatusIndicatorClass(node)"></div>
     </div>
     <div class="workflow-line"></div>
     <div class="workflow-content">
-      <div class="workflow-title">{{ node.nodeName || '子流程' }}</div>
+      <div class="workflow-title">
+        {{ node.nodeName || '子流程' }}
+        <span v-if="node.taskState !== undefined" class="state-tag">{{ getNodeStateText(node) }}</span>
+      </div>
       <div class="workflow-desc">
         <div v-if="node.callProcess">
           调用流程: {{ getProcessName(node.callProcess) }}
@@ -177,6 +181,14 @@
         <div v-if="node.actionUrl">
           表单URL: {{ node.actionUrl }}
         </div>
+        <div v-if="node.state">
+          审批状态:流程{{getProcessStateText(node.state) || '待发起'}}
+        </div>
+      </div>
+      
+      <!-- 子流程内容渲染 -->
+      <div v-if="node.nodeConfig" class="sub-process-container">
+        <node-renderer :node="node.nodeConfig" :mode="mode" />
       </div>
     </div>
   </div>
@@ -331,7 +343,7 @@
 </template>
 
 <script setup>
-import { defineProps, inject, provide, ref, watchEffect } from 'vue';
+import { defineProps, inject, provide, ref, watch, watchEffect } from 'vue';
 import UserRoleSelector from './scWorkflow/select.vue';
 
 const props = defineProps({
@@ -358,6 +370,23 @@ const currentUserInfo = ref({
   name: '田重辉'
 })
 
+// 获取流程状态文本
+const getProcessStateText = (state) => {
+  const stateTexts = {
+    0: '暂存待审',
+    1: '审批中',
+    2: '审批通过',
+    3: '审批拒绝【 驳回结束流程 】',
+    4: '撤销审批',
+    5: '超时结束',
+    6: '强制终止',
+    7: '自动通过',
+    8: '自动拒绝'
+  };
+  
+  return stateTexts[state + 1] || '';
+};
+
 watchEffect(() => {
   console.log('node', props.node);
   // 如果节点已有审批人列表，则不需要处理
@@ -376,7 +405,6 @@ watchEffect(() => {
     props.node.nodeAssigneeList.push(currentUserInfo.value);
   }
 });
-
 
 // 用于控制选择器模态框的显示
 const selectorVisible = ref(false);
@@ -941,6 +969,35 @@ const getRouteTarget = (nodeKey) => {
 
 .workflow-desc>div {
  margin-bottom: 4px;
+}
+
+/* 子流程容器样式 */
+.sub-process-container {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+}
+
+/* 子流程内部的连线样式调整 */
+.sub-process-container .workflow-line {
+  left: 30px;
+}
+
+.sub-process-container .workflow-icon {
+  width: 30px;
+  height: 30px;
+  font-size: 12px;
+}
+
+.loading-sub-process {
+  padding: 10px;
+  color: #666;
+  font-size: 12px;
+  text-align: center;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  margin-top: 10px;
 }
 
 /* 任务历史记录样式 */

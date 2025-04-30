@@ -4,21 +4,25 @@ import com.aizuda.bpm.engine.FlowLongEngine;
 import com.aizuda.bpm.engine.assist.ObjectUtils;
 import com.aizuda.bpm.engine.core.Execution;
 import com.aizuda.bpm.engine.core.FlowCreator;
+import com.aizuda.bpm.engine.core.FlowLongContext;
 import com.aizuda.bpm.engine.core.enums.TaskEventType;
 import com.aizuda.bpm.engine.core.enums.TaskType;
-import com.aizuda.bpm.engine.entity.FlwInstance;
-import com.aizuda.bpm.engine.entity.FlwProcess;
-import com.aizuda.bpm.engine.entity.FlwTask;
-import com.aizuda.bpm.engine.entity.FlwTaskActor;
+import com.aizuda.bpm.engine.entity.*;
 import com.aizuda.bpm.engine.model.ModelHelper;
 import com.aizuda.bpm.engine.model.NodeModel;
 import com.aizuda.bpm.engine.model.ProcessModel;
+import com.aizuda.bpm.mybatisplus.mapper.FlwExtInstanceMapper;
+import com.aizuda.bpm.mybatisplus.mapper.FlwHisInstanceMapper;
 import com.aizuda.bpm.spring.event.TaskEvent;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.mybatisplus.extension.toolkit.ChainWrappers;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.ui.Model;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -29,6 +33,8 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
+import static com.aizuda.bpm.engine.model.ModelHelper.getRootNodeAllChildNodes;
+
 @Configuration
 @RequiredArgsConstructor
 @Slf4j
@@ -37,6 +43,8 @@ public class ProcessListener {
     private final FlowLongEngine flowLongEngine;
     private final JdbcTemplate jdbcTemplate;
     private final DataSource dataSource;
+    private final FlwHisInstanceMapper flwHisInstanceMapper;
+    private final FlwExtInstanceMapper flwExtInstanceMapper;
 
     /**
      * 状态值映射
@@ -149,6 +157,28 @@ public class ProcessListener {
             FlwProcess process = flowLongEngine.processService().getProcessById(instance.getProcessId());
 
             String businessKey = instance.getBusinessKey();
+            if(ObjectUtils.isEmpty(businessKey)){
+                businessKey = ChainWrappers.lambdaQueryChain(flwHisInstanceMapper)
+                        .select(FlwHisInstance::getBusinessKey)
+                        .eq(FlwHisInstance::getId, instance.getParentInstanceId())
+                        .last("limit 1")
+                        .one().getBusinessKey();
+                //if(TaskEventType.start.eq(eventType)) {
+                //    String modelContent = ChainWrappers.lambdaQueryChain(flwExtInstanceMapper)
+                //            .select(FlwExtInstance::getModelContent)
+                //            .eq(FlwExtInstance::getId, instance.getParentInstanceId())
+                //            .last("limit 1")
+                //            .one().getModelContent();
+                //    JSONObject root = JSON.parseObject(modelContent);
+                //    JSONObject nodeConfig = findNodeConfig(root.getJSONObject("nodeConfig"), instance.getProcessId().toString());
+                //    JSONObject model = JSON.parseObject(process.getModelContent());
+                //    model.put("nodeConfig", nodeConfig);
+                //    ChainWrappers.lambdaUpdateChain(flwExtInstanceMapper)
+                //            .set(FlwExtInstance::getModelContent, model.toJSONString())
+                //            .eq(FlwExtInstance::getId, instanceId)
+                //            .update();
+                //}
+            }
             String tableName = process.getProcessType();
             String processKey = process.getProcessKey();
 
@@ -162,6 +192,8 @@ public class ProcessListener {
                 handler.accept(taskEvent, updates);
             }
 
+
+
             // 执行更新
             if (!updates.isEmpty()) {
                 updateTable(tableName, businessKey, updates);
@@ -170,6 +202,35 @@ public class ProcessListener {
             log.error("流程事件处理失败", e);
         }
     }
+
+    public static JSONObject findNodeConfig(JSONObject root, String processId) {
+        JSONObject result = new JSONObject();
+        findNodeConfigRecursive(root, processId, result);
+        return result;
+    }
+
+    private static void findNodeConfigRecursive(JSONObject node, String processId, JSONObject result) {
+        if (node == null) return;
+
+        // 检查当前节点是否符合条件
+        if (node.getIntValue("type") == 5) {
+            String callProcess = node.getString("callProcess");
+            if (callProcess != null && callProcess.startsWith(processId + ":")) {
+                JSONObject config = node.getJSONObject("nodeConfig");
+                if (config != null) {
+                    result.putAll(config);
+                    return; // 找到后直接返回，如果需找多个可以改为收集到List
+                }
+            }
+        }
+
+        // 递归检查子节点
+        JSONObject childNode = node.getJSONObject("childNode");
+        if (childNode != null) {
+            findNodeConfigRecursive(childNode, processId, result);
+        }
+    }
+
 
     /**
      * 设置处理人

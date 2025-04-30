@@ -30,11 +30,13 @@ public class ProcessServiceImpl implements ProcessService {
     private final ProcessMapper mapper;
 
     @Override
-    public IPage<FlwProcess> getProcessList(String processKey, String keyword, Page page) {
+    public IPage<FlwProcess> getProcessList(String processKey, Integer useScope, String keyword, Page page) {
         Long tenantId = null;
         IPage<FlwProcess> pageResult = ChainWrappers.lambdaQueryChain(processMapper)
+                .eq(ObjectUtils.isNotEmpty(useScope), FlwProcess::getUseScope, useScope)
+                .like(ObjectUtils.isNotEmpty(processKey), FlwProcess::getProcessKey, processKey)
                 .like(ObjectUtils.isNotEmpty(keyword), FlwProcess::getProcessName, keyword)
-                .like(FlwProcess::getProcessKey, processKey)
+                .eq(ObjectUtils.isNotEmpty(useScope), FlwProcess::getProcessState, 1)
                 .eq(Objects.nonNull(tenantId), FlwProcess::getTenantId, tenantId)
                 .orderByAsc(FlwProcess::getProcessState)
                 .orderByAsc(FlwProcess::getUseScope)

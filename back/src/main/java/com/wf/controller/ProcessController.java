@@ -1,6 +1,7 @@
 package com.wf.controller;
 
 import com.aizuda.bpm.engine.FlowLongEngine;
+import com.aizuda.bpm.engine.assist.ObjectUtils;
 import com.aizuda.bpm.engine.core.FlowCreator;
 import com.aizuda.bpm.engine.entity.FlwProcess;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -21,15 +22,15 @@ import java.util.*;
 @Slf4j
 public class ProcessController {
     private final static FlowCreator testCreator = FlowCreator.of("20240815", "田重辉");
-    private final  FlowLongEngine flowLongEngine;
+    private final FlowLongEngine flowLongEngine;
     private final ProcessService processService;
 
     /**
      * 根据菜单标识获取流程列表
      */
     @GetMapping("getList")
-    public CommonResult<IPage<FlwProcess>> getProcessList(String processKey, String keyword, Page page) {
-        return CommonResult.success(processService.getProcessList(processKey, keyword, page));
+    public CommonResult<IPage<FlwProcess>> getProcessList(String processKey, Integer useScope, String keyword, Page page) {
+        return CommonResult.success(processService.getProcessList(processKey, useScope, keyword, page));
     }
 
     /**
@@ -37,10 +38,16 @@ public class ProcessController {
      */
     @GetMapping
     public CommonResult<FlwProcess> getProcess(String processKey) {
+        if(ObjectUtils.isEmpty(processKey)){
+            return CommonResult.success(null);
+        }
         log.info("processKey:{}", processKey);
-        return CommonResult.success(Optional.ofNullable(flowLongEngine.processService()
-                .getProcessByKey(null, processKey))
-                .orElseThrow(() -> new ServiceException("流程不存在")));
+        // 判断processKey是否是Long类型的
+        if (processKey.matches("\\d+")) {
+            return CommonResult.success(flowLongEngine.processService().getProcessById(Long.valueOf(processKey)));
+        }else {
+            return CommonResult.success(flowLongEngine.processService().getProcessByKey(null, processKey));
+        }
     }
 
     /**

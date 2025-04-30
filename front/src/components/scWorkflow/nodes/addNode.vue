@@ -21,7 +21,7 @@
 						</li>
 						<li>
 							<el-icon style="color: #9260FB;" @click="addType(5)"><el-icon-money /></el-icon>
-							<p>子流程</p>
+							<p>子流程(存在Bug)</p>
 						</li>
 					</ul>
 				</div>

@@ -46,6 +46,11 @@ export const getBackList = (businessKey) => {
   return request.get(`/task/getBackList/${businessKey}`)
 }
 
+// 根据businessKey和processId获取流程实例ID
+export const getSubInstanceId = (getSubInstanceId, businessKey) => {
+  return request.get(`/task/getSubInstanceId/${getSubInstanceId}`, {params: {businessKey}})
+}
+
 // 根据businessKey获取历史流程实例模型
 export const getInstanceModel = (businessKey) => {
   return request.get(`/task/${businessKey}`)

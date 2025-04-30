@@ -45,7 +45,7 @@
 <script setup>
 import { ref, computed, watchEffect } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { getInstanceModel, getInstanceInfo, getTaskList, getBackList, approveProcess, rejectProcess, reclaimProcess, terminateProcess, transferProcess, countersignProcess } from '@/api/process';
+import { getInstanceModel, getInstanceInfo, getTaskList, getSubInstanceId, getBackList, approveProcess, rejectProcess, reclaimProcess, terminateProcess, transferProcess, countersignProcess } from '@/api/process';
 import NodeRenderer from './NodeRenderer.vue';
 import ProcessActionDialog from './ProcessActionDialog.vue';
 
@@ -266,7 +266,7 @@ watchEffect(async () => {
       const { taskState } = instanceInfoResult.data;
       state.value = taskState;
       const processModel = JSON.parse(modelResult.data);
-      traverseNode(processModel.nodeConfig, taskResult.data);
+      await traverseNode(processModel.nodeConfig, taskResult.data);
       modelContent.value = processModel;
     } catch (error) {
       console.error('数据加载失败:', error);
@@ -274,9 +274,26 @@ watchEffect(async () => {
   }
 });
 
-const traverseNode = (node, taskList) => {
+const traverseNode = async (node, taskList) => {
   if (node?.childNode) {
-    traverseNode(node.childNode, taskList);
+    await traverseNode(node.childNode, taskList);
+  }
+  if (node?.type === 5) {
+    // 这是一个子流程节点
+    const instanceId = await getSubInstanceId(parseCallProcess(node.callProcess).id, props.businessKey);
+    if(instanceId.data) {
+      const [instanceInfoResult, modelResult, taskResult] = await Promise.all([
+          getInstanceInfo(instanceId.data),
+          getInstanceModel(instanceId.data),
+          getTaskList(instanceId.data),
+      ]);
+        // 处理数据逻辑
+        const { taskState } = instanceInfoResult.data;
+        node.state = taskState;
+        const processModel = JSON.parse(modelResult.data);
+        await traverseNode(processModel.nodeConfig, taskResult.data);
+        node.modelContent = processModel.nodeConfig;
+    }
   }
   if (node?.nodeKey && [0, 1, 3].includes(node.type)) {
     const list = taskList.filter(t => t.taskKey === node.nodeKey);
@@ -289,6 +306,16 @@ const traverseNode = (node, taskList) => {
       console.log('任务信息:', list);
     }
   }
+};
+
+// 解析callProcess值
+const parseCallProcess = (callProcess) => {
+  if (!callProcess) return null;
+  const parts = callProcess.split(':');
+  return {
+    id: parts[0],
+    name: parts[1] || '未命名子流程'
+  };
 };
 </script>
 

@@ -81,11 +81,40 @@ provide('updateNodeConfig', (updateFn) => {
 // 初始化调用接口获取流程数据
 watchEffect(async () => {
   console.log('props', props)
-  const res = !props.businessKey ? await getProcessInfo(props.processKey) : await getInstanceModel(props.businessKey)
+  var res = {}
+  if(!props.businessKey) {
+    res = await getProcessInfo(props.processKey)
+  } else {
+    res = await getInstanceModel(props.businessKey)
+  }
   if (res.code == 0) {
-    modelContent.value = JSON.parse(res.data.modelContent || res.data)
+    const processModel = JSON.parse(res.data.modelContent);
+    await traverseNode(processModel.nodeConfig);
+    modelContent.value = processModel;
   }
 });
+
+const traverseNode = async (node) => {
+  if (node?.childNode) {
+    await traverseNode(node.childNode);
+  }
+  if (node?.type === 5) {
+    const modelResult = await getProcessInfo(parseCallProcess(node.callProcess).id)
+    const processModel = JSON.parse(modelResult.data.modelContent);
+    await traverseNode(processModel.nodeConfig);
+    node.nodeConfig = processModel.nodeConfig;
+  }
+};
+
+// 解析callProcess值
+const parseCallProcess = (callProcess) => {
+  if (!callProcess) return null;
+  const parts = callProcess.split(':');
+  return {
+    id: parts[0],
+    name: parts[1] || '未命名子流程'
+  };
+};
 
 </script>
 
