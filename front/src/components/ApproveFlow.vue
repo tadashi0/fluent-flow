@@ -265,7 +265,7 @@ watchEffect(async () => {
       // 处理数据逻辑
       const { taskState } = instanceInfoResult.data;
       state.value = taskState;
-      const processModel = JSON.parse(modelResult.data);
+      const processModel = JSON.parse(modelResult.data.modelContent);
       await traverseNode(processModel.nodeConfig, taskResult.data);
       modelContent.value = processModel;
     } catch (error) {
@@ -290,7 +290,7 @@ const traverseNode = async (node, taskList) => {
         // 处理数据逻辑
         const { taskState } = instanceInfoResult.data;
         node.state = taskState;
-        const processModel = JSON.parse(modelResult.data);
+        const processModel = JSON.parse(modelResult.data.modelContent);
         await traverseNode(processModel.nodeConfig, taskResult.data);
         node.modelContent = processModel.nodeConfig;
     }

@@ -87,7 +87,7 @@ watchEffect(async () => {
   } else {
     res = await getInstanceModel(props.businessKey)
   }
-  if (res.code == 0) {
+  if (res.code === 0) {
     const processModel = JSON.parse(res.data.modelContent);
     await traverseNode(processModel.nodeConfig);
     modelContent.value = processModel;

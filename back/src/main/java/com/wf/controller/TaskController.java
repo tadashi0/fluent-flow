@@ -281,11 +281,11 @@ public class TaskController implements TaskActorProvider {
      * 根据businessKey获取流程实例模型
      */
     @GetMapping("/{businessKey}")
-    public CommonResult<String> getInstanceModel(@PathVariable Long businessKey) {
+    public CommonResult<FlwExtInstance> getInstanceModel(@PathVariable Long businessKey) {
         List<FlwHisInstance> list = flowLongEngine.queryService()
                 .getHisInstancesByBusinessKey(String.valueOf(businessKey))
                 .orElseGet(() -> Arrays.asList(flowLongEngine.queryService().getHistInstance(businessKey)));
-        AtomicReference<String> processModel = new AtomicReference<>();
+        AtomicReference<FlwExtInstance> processModel = new AtomicReference<>();
 
         if (list.size() > 0) {
             list.stream()
@@ -293,7 +293,7 @@ public class TaskController implements TaskActorProvider {
                     .findFirst()
                     .ifPresent(instance -> {
                         processModel.set(flowLongEngine.queryService()
-                                .getExtInstance(instance.getId()).getModelContent());
+                                .getExtInstance(instance.getId()));
                     });
         }
 
@@ -530,7 +530,7 @@ public class TaskController implements TaskActorProvider {
                                             .findFirst()
                                             .ifPresent(task -> {
                                                 result.set(flowLongEngine.taskService()
-                                                        .transferTask(task.getId(), testCreator, data.getTransferUsers()));
+                                                        .transferTask(task.getId(), testCreator, data.getTransferUsers(), data.getVariable()));
                                                 flowLongEngine.createCcTask(task, data.getCcUsers(), testCreator);
                                             });
                                 });
