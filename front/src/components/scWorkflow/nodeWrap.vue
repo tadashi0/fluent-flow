@@ -1,4 +1,6 @@
 <template>
+	<over v-if="nodeConfig.type==-1" v-model="nodeConfig"></over>
+
 	<promoter v-if="nodeConfig.type==0" v-model="nodeConfig"></promoter>
 
 	<approver v-if="nodeConfig.type==1" v-model="nodeConfig"></approver>
@@ -13,6 +15,14 @@
 
 	<subProcess v-if="nodeConfig.type==5" v-model="nodeConfig"></subprocess>
 
+	<delay v-if="nodeConfig.type==6" v-model="nodeConfig"></delay>
+
+	<trigger v-if="nodeConfig.type==7" v-model="nodeConfig"></trigger>
+
+	<through v-if="nodeConfig.type==30" v-model="nodeConfig"></through>
+
+	<refuse v-if="nodeConfig.type==31" v-model="nodeConfig"></refuse>
+
 	<node-wrap v-if="nodeConfig.childNode" v-model="nodeConfig.childNode"></node-wrap>
 
 </template>
@@ -23,6 +33,12 @@ import promoter from './nodes/promoter.vue'
 import branch from './nodes/branch.vue'
 import send from './nodes/send.vue'
 import subProcess from './nodes/process.vue'
+import over from './nodes/over.vue'
+import through from './nodes/through.vue'
+import refuse from './nodes/refuse.vue'
+import delay from './nodes/delay.vue'
+import trigger from './nodes/trigger.vue'
+
 
 export default {
 	props: {
@@ -33,7 +49,12 @@ export default {
 		promoter,
 		branch,
 		send,
-		subProcess
+		subProcess,
+		over,
+		through,
+		refuse,
+		delay,
+		trigger
 	},
 	data() {
 		return {

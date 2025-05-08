@@ -165,7 +165,7 @@
   <!-- 办理子流程 -->
   <div v-else-if="node.type === 5" class="workflow-item">
     <div class="workflow-icon">
-      <span>子</span>
+      <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
       <div v-if="node.taskState !== undefined" class="status-indicator" :class="getStatusIndicatorClass(node)"></div>
     </div>
     <div class="workflow-line"></div>
@@ -196,13 +196,13 @@
   <!-- 定时器任务 -->
   <div v-else-if="node.type === 6" class="workflow-item">
     <div class="workflow-icon">
-      <span>时</span>
+      <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
     </div>
     <div class="workflow-line"></div>
     <div class="workflow-content">
-      <div class="workflow-title">{{ node.nodeName || '定时器' }}</div>
+      <div class="workflow-title">{{ node.nodeName || '延时处理' }}</div>
       <div class="workflow-desc" v-if="node.extendConfig?.time">
-        触发时间: {{ node.extendConfig.time }}
+        触发时间: {{ displayTime(node)  }}
       </div>
     </div>
   </div>
@@ -306,13 +306,35 @@
     </div>
   </div>
 
+  <!-- 自动通过 -->
+  <div v-else-if="node.type === 30" class="workflow-item">
+    <div class="workflow-icon">
+      <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
+    </div>
+    <div class="workflow-line"></div>
+    <div class="workflow-content">
+      <div class="workflow-title">{{ node.nodeName }}</div>
+    </div>
+  </div>
+
+    <!-- 自动拒绝 -->
+    <div v-else-if="node.type === 31" class="workflow-item">
+    <div class="workflow-icon">
+      <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
+    </div>
+    <div class="workflow-line"></div>
+    <div class="workflow-content">
+      <div class="workflow-title">{{ node.nodeName }}</div>
+    </div>
+  </div>
+
   <!-- 结束节点 -->
   <div v-else-if="node.type === -1" class="workflow-item">
     <div class="workflow-icon">
       <span>结</span>
     </div>
     <div class="workflow-content">
-      <div class="workflow-title">结束</div>
+      <div class="workflow-title">流程结束</div>
     </div>
   </div>
 
@@ -630,6 +652,20 @@ const formatAssignees = (assigneeList) => {
     return displayText;
   }).join('、');
 };
+
+// 展示时间格式
+const displayTime = (node) => {
+  const { delayType, extendConfig } = node
+  const time = extendConfig?.time
+  if (!time) return null
+
+  if (delayType === '1') {
+    const map = { m: '分钟', h: '小时', d: '天' }
+    const [val, unit] = time.split(':')
+    return `等待 ${val} ${map[unit] || ''}`
+  }
+  return `至当天 ${time}`
+}
 
 const getApproveTypeText = (setType) => {
   const types = {

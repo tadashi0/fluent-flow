@@ -81,7 +81,12 @@ const defaultData = computed(() => ({
         selectMode: 1,
         termAuto: false,
         term: 0,
-        termMode: 1
+        termMode: 1,
+        childNode: {
+          nodeName: '结束',
+          nodeKey: "flk004",
+          type: -1
+        },
       }
     }
   }

@@ -23,6 +23,22 @@
 							<el-icon style="color: #9260FB;" @click="addType(5)"><el-icon-money /></el-icon>
 							<p>子流程</p>
 						</li>
+						<li>
+							<el-icon style="color: #F55266;" @click="addType(6)"><el-icon-clock /></el-icon>
+							<p>延迟等待</p>
+						</li>
+						<li>
+							<el-icon style="color: #38B58B;" @click="addType(7)"><el-icon-set-up /></el-icon>
+							<p>触发器</p>
+						</li>
+						<li>
+							<el-icon style="color: #67C23A;" @click="addType(30)"><el-icon-circle-check-filled /></el-icon>
+							<p>自动通过</p>
+						</li>
+						<li>
+							<el-icon style="color: #F56C6C;" @click="addType(31)"><el-icon-circle-close-filled /></el-icon>
+							<p>自动拒绝</p>
+						</li>
 					</ul>
 				</div>
 			</el-popover>
@@ -106,6 +122,43 @@ export default {
 					nodeName: "子流程",
 					nodeKey: this.getNodeKey(),
 					type: 5,
+					childNode: this.modelValue
+				}
+			} else if (type == 6) {
+				node = {
+					nodeName: "延时处理",
+					nodeKey: this.getNodeKey(),
+					type: 6,
+					delayType: '1',
+					extendConfig: {
+						time: "0:m"
+					},
+					childNode: this.modelValue
+				}
+			} else if (type == 7) {
+				node = {
+					nodeName: "触发器",
+					nodeKey: this.getNodeKey(),
+					type: 7,
+					triggerType: 1,
+					delayType: '1',
+					extendConfig: {
+						time: "0:m"
+					},
+					childNode: this.modelValue
+				}
+			} else if (type == 30) {
+				node = {
+					nodeName: "自动通过",
+					nodeKey: this.getNodeKey(),
+					type: 30,
+					childNode: this.modelValue
+				}
+			} else if (type == 31) {
+				node = {
+					nodeName: "自动拒绝",
+					nodeKey: this.getNodeKey(),
+					type: 31,
 					childNode: this.modelValue
 				}
 			}

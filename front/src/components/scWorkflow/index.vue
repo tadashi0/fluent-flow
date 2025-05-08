@@ -13,10 +13,6 @@
       <node-wrap
         v-if="nodeConfig"
         v-model="nodeConfig"></node-wrap>
-      <div class="end-node">
-        <div class="end-node-circle"></div>
-        <div class="end-node-text">流程结束</div>
-      </div>
     </div>
     <use-select
       v-if="selectVisible"
@@ -347,23 +343,6 @@ export default {
   }
   .bottom-right-cover-line {
     right: -1px;
-  }
-  .end-node {
-    border-radius: 50%;
-    font-size: 14px;
-    color: rgba(25, 31, 37, 0.4);
-    text-align: left;
-  }
-  .end-node-circle {
-    width: 10px;
-    height: 10px;
-    margin: auto;
-    border-radius: 50%;
-    background: #ccc;
-  }
-  .end-node-text {
-    margin-top: 5px;
-    text-align: center;
   }
   .auto-judge:hover {
     .sort-left {

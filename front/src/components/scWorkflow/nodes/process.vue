@@ -104,11 +104,7 @@ import PreviewFlow from '@/components/PreviewFlow.vue'
 const props = defineProps({
   modelValue: { 
     type: Object,
-    default: () => ({
-      nodeName: '子流程',
-      callProcess: '',
-      childNode: null
-    })
+    default: () => ({})
   }
 })
 
