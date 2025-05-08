@@ -633,17 +633,17 @@ public class TaskController implements TaskActorProvider {
         final Integer actorType = this.getActorType(nodeModel);
         List<NodeAssignee> nodeAssigneeList = nodeModel.getNodeAssigneeList();
         FlwInstance instance = execution.getFlwInstance();
-        //if(ObjectUtils.isEmpty(instance.getBusinessKey())
-        //    && ObjectUtils.isNotEmpty(instance.getParentInstanceId())){
-        //    String modelContent = ChainWrappers.lambdaQueryChain(flwExtInstanceMapper)
-        //            .select(FlwExtInstance::getModelContent)
-        //            .eq(FlwExtInstance::getId, instance.getParentInstanceId())
-        //            .last("limit 1")
-        //            .one().getModelContent();
-        //    JSONObject root = JSON.parseObject(modelContent);
-        //    JSONObject nodeConfig = findNodeConfig(root.getJSONObject("nodeConfig"), instance.getProcessId().toString());
-        //    nodeAssigneeList.addAll(findAssigneesByNodeKey(nodeConfig, nodeModel.getNodeKey()));
-        //}
+        if(ObjectUtils.isEmpty(instance.getBusinessKey())
+            && ObjectUtils.isNotEmpty(instance.getParentInstanceId())){
+            String modelContent = ChainWrappers.lambdaQueryChain(flwExtInstanceMapper)
+                    .select(FlwExtInstance::getModelContent)
+                    .eq(FlwExtInstance::getId, instance.getParentInstanceId())
+                    .last("limit 1")
+                    .one().getModelContent();
+            JSONObject root = JSON.parseObject(modelContent);
+            JSONObject nodeConfig = findNodeConfig(root.getJSONObject("nodeConfig"), instance.getProcessId().toString());
+            nodeAssigneeList.addAll(findAssigneesByNodeKey(nodeConfig, nodeModel.getNodeKey()));
+        }
         if (ActorType.user.eq(actorType)) {
             flwTaskActors.addAll(nodeAssigneeList.stream()
                     .map(e -> FlwTaskActor.ofNodeAssignee(e))
