@@ -176,7 +176,8 @@ const save = () => {
       item => String(item.id) === selectedProcessId.value
     )
     form.value.callProcess = process ? `${process.id}:${process.processName}` : ''
-    form.value.callAsync = true
+    // 是否异步调用
+    form.value.callAsync = false
   }
   emit('update:modelValue', form.value)
 }

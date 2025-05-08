@@ -5,6 +5,7 @@ import com.aizuda.bpm.engine.assist.ObjectUtils;
 import com.aizuda.bpm.engine.core.Execution;
 import com.aizuda.bpm.engine.core.FlowCreator;
 import com.aizuda.bpm.engine.core.FlowLongContext;
+import com.aizuda.bpm.engine.core.enums.InstanceState;
 import com.aizuda.bpm.engine.core.enums.TaskEventType;
 import com.aizuda.bpm.engine.core.enums.TaskType;
 import com.aizuda.bpm.engine.entity.*;
@@ -31,18 +32,11 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
-import static com.aizuda.bpm.engine.model.ModelHelper.getRootNodeAllChildNodes;
 
 @Configuration
 @RequiredArgsConstructor
 @Slf4j
 public class ProcessListener {
-
-    private final FlowLongEngine flowLongEngine;
-    private final JdbcTemplate jdbcTemplate;
-    private final DataSource dataSource;
-    private final FlwHisInstanceMapper flwHisInstanceMapper;
-    private final FlwExtInstanceMapper flwExtInstanceMapper;
 
     /**
      * 状态值映射
@@ -56,11 +50,43 @@ public class ProcessListener {
                 put(TaskEventType.autoReject, 3);
                 put(TaskEventType.terminate, 3);
             }});
-
+    private final FlowLongEngine flowLongEngine;
+    private final JdbcTemplate jdbcTemplate;
+    private final DataSource dataSource;
+    private final FlwHisInstanceMapper flwHisInstanceMapper;
+    private final FlwExtInstanceMapper flwExtInstanceMapper;
     /**
      * 事件处理器映射，根据不同事件类型执行不同的处理逻辑
      */
     private final Map<TaskEventType, BiConsumer<TaskEvent, Map<String, Object>>> eventHandlers = initEventHandlers();
+
+    public static JSONObject findNodeConfig(JSONObject root, String processId) {
+        JSONObject result = new JSONObject();
+        findNodeConfigRecursive(root, processId, result);
+        return result;
+    }
+
+    private static void findNodeConfigRecursive(JSONObject node, String processId, JSONObject result) {
+        if (node == null) return;
+
+        // 检查当前节点是否符合条件
+        if (node.getIntValue("type") == 5) {
+            String callProcess = node.getString("callProcess");
+            if (callProcess != null && callProcess.startsWith(processId + ":")) {
+                JSONObject config = node.getJSONObject("nodeConfig");
+                if (config != null) {
+                    result.putAll(config);
+                    return; // 找到后直接返回，如果需找多个可以改为收集到List
+                }
+            }
+        }
+
+        // 递归检查子节点
+        JSONObject childNode = node.getJSONObject("childNode");
+        if (childNode != null) {
+            findNodeConfigRecursive(childNode, processId, result);
+        }
+    }
 
     private Map<TaskEventType, BiConsumer<TaskEvent, Map<String, Object>>> initEventHandlers() {
         Map<TaskEventType, BiConsumer<TaskEvent, Map<String, Object>>> handlers = new EnumMap<>(TaskEventType.class);
@@ -155,7 +181,7 @@ public class ProcessListener {
             FlwProcess process = flowLongEngine.processService().getProcessById(instance.getProcessId());
 
             String businessKey = instance.getBusinessKey();
-            if(ObjectUtils.isEmpty(businessKey)){
+            if (ObjectUtils.isEmpty(businessKey)) {
                 businessKey = ChainWrappers.lambdaQueryChain(flwHisInstanceMapper)
                         .select(FlwHisInstance::getBusinessKey)
                         .eq(FlwHisInstance::getId, instance.getParentInstanceId())
@@ -191,7 +217,6 @@ public class ProcessListener {
             }
 
 
-
             // 执行更新
             if (!updates.isEmpty()) {
                 updateTable(tableName, businessKey, updates);
@@ -201,35 +226,6 @@ public class ProcessListener {
         }
     }
 
-    public static JSONObject findNodeConfig(JSONObject root, String processId) {
-        JSONObject result = new JSONObject();
-        findNodeConfigRecursive(root, processId, result);
-        return result;
-    }
-
-    private static void findNodeConfigRecursive(JSONObject node, String processId, JSONObject result) {
-        if (node == null) return;
-
-        // 检查当前节点是否符合条件
-        if (node.getIntValue("type") == 5) {
-            String callProcess = node.getString("callProcess");
-            if (callProcess != null && callProcess.startsWith(processId + ":")) {
-                JSONObject config = node.getJSONObject("nodeConfig");
-                if (config != null) {
-                    result.putAll(config);
-                    return; // 找到后直接返回，如果需找多个可以改为收集到List
-                }
-            }
-        }
-
-        // 递归检查子节点
-        JSONObject childNode = node.getJSONObject("childNode");
-        if (childNode != null) {
-            findNodeConfigRecursive(childNode, processId, result);
-        }
-    }
-
-
     /**
      * 设置处理人
      */
@@ -238,6 +234,11 @@ public class ProcessListener {
                 .map(FlwTaskActor::getActorName) // 后续需要改成ID
                 .collect(Collectors.joining(","));
         updates.put("handler", handler);
+
+        if (InstanceState.active.eq(flowLongEngine.queryService()
+                .getHistInstance(event.getFlwTask().getInstanceId()).getInstanceState())) {
+            updates.put("state", 1);
+        }
     }
 
     /**
