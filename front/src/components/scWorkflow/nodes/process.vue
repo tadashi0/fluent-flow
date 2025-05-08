@@ -115,7 +115,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 // 响应式状态
-const nodeConfig = ref({...props.modelValue})
+const nodeConfig = ref({})
 const drawer = ref(false)
 const isEditTitle = ref(false)
 const form = ref({})
@@ -129,6 +129,11 @@ const previewVisible = ref(false)
 const previewFlowData = ref({})
 const previewProcessName = ref('')
 const previewRemark = ref('')
+
+
+watch(() => props.modelValue, () => {
+  nodeConfig.value = props.modelValue;
+}, { immediate: true });
 
 // 计算属性
 const processName = computed(() => {
@@ -176,7 +181,8 @@ const save = () => {
       item => String(item.id) === selectedProcessId.value
     )
     form.value.callProcess = process ? `${process.id}:${process.processName}` : ''
-    form.value.callAsync = true
+    // 是否异步调用
+    form.value.callAsync = false
   }
   emit('update:modelValue', form.value)
 }

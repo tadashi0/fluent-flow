@@ -292,7 +292,7 @@ const traverseNode = async (node, taskList) => {
         node.state = taskState;
         const processModel = JSON.parse(modelResult.data.modelContent);
         await traverseNode(processModel.nodeConfig, taskResult.data);
-        node.modelContent = processModel.nodeConfig;
+        node.nodeConfig = processModel.nodeConfig;
     }
   }
   if (node?.nodeKey && [0, 1, 3].includes(node.type)) {

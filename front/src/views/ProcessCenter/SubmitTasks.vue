@@ -128,21 +128,26 @@ const taskStateMap = {
 
 // 格式化处理耗时
 const formatDuration = (duration) => {
-if (!duration) return '';
+  if (!duration) return '';
 
-// 如果是数字，假设是毫秒
-if (typeof duration === 'number') {
-  const seconds = Math.floor(duration / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  
-  if (hours > 0) {
-    return `${hours}小时${minutes % 60}分钟`;
-  } else if (minutes > 0) {
-    return `${minutes}分钟${seconds % 60}秒`;
-  } else {
-    return `${seconds}秒`;
+  // 如果是数字字符串，转换成 number 处理（假设是毫秒）
+  if (typeof duration === 'string' && /^\d+$/.test(duration)) {
+    duration = Number(duration);
   }
+
+  // 如果是数字，假设是毫秒
+  if (typeof duration === 'number') {
+    const seconds = Math.floor(duration / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    
+    if (hours > 0) {
+      return `${hours}小时${minutes % 60}分钟`;
+    } else if (minutes > 0) {
+      return `${minutes}分钟${seconds % 60}秒`;
+    } else {
+      return `${seconds}秒`;
+    }
 }
 
 // 如果已经是字符串格式

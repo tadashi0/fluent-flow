@@ -44,7 +44,7 @@ export default {
 		modelValue(val){
 			this.nodeConfig = val
 		},
-		nodeConfig(val){
+		nodeConfig(val) {
 			this.$emit("update:modelValue", val)
 		}
 	},

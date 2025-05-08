@@ -501,6 +501,11 @@ const formatTime = (time) => {
 // 格式化处理耗时
 const formatDuration = (duration) => {
   if (!duration) return '';
+
+  // 如果是数字字符串，转换成 number 处理（假设是毫秒）
+  if (typeof duration === 'string' && /^\d+$/.test(duration)) {
+    duration = Number(duration);
+  }
   
   // 如果是数字，假设是毫秒
   if (typeof duration === 'number') {
