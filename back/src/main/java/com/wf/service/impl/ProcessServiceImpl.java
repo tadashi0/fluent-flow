@@ -6,6 +6,7 @@ import com.aizuda.bpm.mybatisplus.mapper.FlwProcessMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.toolkit.ChainWrappers;
+import com.wf.entity.FieldInfoDTO;
 import com.wf.entity.TableInfoDTO;
 import com.wf.mapper.ProcessMapper;
 import com.wf.service.ProcessService;
@@ -49,5 +50,10 @@ public class ProcessServiceImpl implements ProcessService {
     @Override
     public List<TableInfoDTO> getTables(String tableName) {
         return mapper.getTableInfoList(tableName);
+    }
+
+    @Override
+    public List<FieldInfoDTO> getFields(String tableName) {
+        return mapper.getFieldInfoList(tableName);
     }
 }

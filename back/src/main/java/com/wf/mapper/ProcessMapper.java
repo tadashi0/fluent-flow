@@ -28,4 +28,13 @@ public interface ProcessMapper {
             "<if test='tableName != null'> AND table_name LIKE CONCAT('%', #{tableName}, '%') </if>" +
             "</script>")
     List<TableInfoDTO> getTableInfoList(@Param("tableName") String tableName);
+
+    @Select("SELECT " +
+            "column_comment AS label, " +
+            "column_name AS field " +
+            "FROM information_schema.columns " +
+            "WHERE table_schema = DATABASE() " +
+            "AND table_name = #{tableName} " +
+            "ORDER BY ordinal_position")
+    List<FieldInfoDTO> getFieldInfoList(@Param("tableName") String tableName);
 }

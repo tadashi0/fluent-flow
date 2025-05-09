@@ -5,6 +5,11 @@ export const getTableList = (query) => {
   return request.get('/process/tables', {params: query})
 }
 
+// 获取数据库表字段列表
+export const getTableFields = (tableName) => {
+  return request.get(`/process/fields/${tableName}`)
+}
+
 export const getProcessList = (query) => {
   return request.get(`process/getList`, {params: query})
 }

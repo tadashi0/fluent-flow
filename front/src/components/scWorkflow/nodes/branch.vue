@@ -2,109 +2,69 @@
   <div class="branch-wrap">
     <div class="branch-box-wrap">
       <div class="branch-box">
-        <el-button
-          class="add-branch"
-          type="success"
-          plain
-          round
-          @click="addTerm">
+        <el-button class="add-branch" type="success" plain round @click="addTerm">
           添加条件
         </el-button>
-        <div
-          class="col-box"
-          v-for="(item, index) in nodeConfig.conditionNodes"
-          :key="index">
+
+        <div class="col-box" v-for="(item, index) in nodeConfig.conditionNodes" :key="index">
           <div class="condition-node">
             <div class="condition-node-box">
-              <div
-                class="auto-judge"
-                @click="show(index)">
-                <div
-                  class="sort-left"
-                  v-if="index != 0"
-                  @click.stop="arrTransfer(index, -1)">
+              <div class="auto-judge" @click="show(index)">
+                <div class="sort-left" v-if="index !== 0" @click.stop="arrTransfer(index, -1)">
                   <el-icon><el-icon-arrow-left /></el-icon>
                 </div>
                 <div class="title">
                   <span class="node-title">{{ item.nodeName }}</span>
                   <span class="priority-title">优先级{{ item.priorityLevel }}</span>
-                  <el-icon
-                    class="close"
-                    @click.stop="delTerm(index)">
+                  <el-icon class="close" @click.stop="delTerm(index)">
                     <el-icon-close />
                   </el-icon>
                 </div>
                 <div class="content">
-                  <span v-if="toText(nodeConfig, index)">{{ toText(nodeConfig, index) }}</span>
-                  <span
-                    v-else
-                    class="placeholder">
-                    请设置条件
-                  </span>
+                  <span v-if="toText(index)">{{ toText(index) }}</span>
+                  <span v-else class="placeholder">请设置条件</span>
                 </div>
-                <div
-                  class="sort-right"
-                  v-if="index != nodeConfig.conditionNodes.length - 1"
-                  @click.stop="arrTransfer(index)">
+                <div class="sort-right" v-if="index !== nodeConfig.conditionNodes.length - 1" @click.stop="arrTransfer(index)">
                   <el-icon><el-icon-arrow-right /></el-icon>
                 </div>
               </div>
-              <add-node v-model="item.childNode"></add-node>
+              <add-node v-model="item.childNode" />
             </div>
           </div>
-          <slot
-            v-if="item.childNode"
-            :node="item"></slot>
-          <div
-            class="top-left-cover-line"
-            v-if="index == 0"></div>
-          <div
-            class="bottom-left-cover-line"
-            v-if="index == 0"></div>
-          <div
-            class="top-right-cover-line"
-            v-if="index == nodeConfig.conditionNodes.length - 1"></div>
-          <div
-            class="bottom-right-cover-line"
-            v-if="index == nodeConfig.conditionNodes.length - 1"></div>
+
+          <slot v-if="item.childNode" :node="item"></slot>
+
+          <div class="top-left-cover-line" v-if="index === 0"></div>
+          <div class="bottom-left-cover-line" v-if="index === 0"></div>
+          <div class="top-right-cover-line" v-if="index === nodeConfig.conditionNodes.length - 1"></div>
+          <div class="bottom-right-cover-line" v-if="index === nodeConfig.conditionNodes.length - 1"></div>
         </div>
       </div>
-      <add-node v-model="nodeConfig.childNode"></add-node>
+      <add-node v-model="nodeConfig.childNode" />
     </div>
+
     <el-drawer
       title="条件设置"
       v-model="drawer"
       destroy-on-close
       append-to-body
-      :size="600">
+      :size="600"
+      @close="save"
+    >
       <template #header>
         <div class="node-wrap-drawer__title">
-          <label
-            @click="editTitle"
-            v-if="!isEditTitle">
-            {{ form.nodeName }}
-            <div @click="rmConditionGroup(conditionGroup)">
-              <el-icon class="node-wrap-drawer__title-edit"><el-icon-edit /></el-icon>
-            </div>
-          </label>
-          <el-input
-            v-if="isEditTitle"
-            ref="nodeTitle"
-            v-model="form.nodeName"
-            clearable
-            @blur="saveTitle"
-            @keyup.enter="saveTitle"></el-input>
+          <label @click="editTitle" v-if="!isEditTitle">{{form.nodeName}}<el-icon class="node-wrap-drawer__title-edit"><el-icon-edit /></el-icon></label>
+          <el-input v-if="isEditTitle" ref="nodeTitle" v-model="form.nodeName" clearable @blur="saveTitle" @keyup.enter="saveTitle"></el-input>
         </div>
       </template>
+
       <el-container>
         <el-main style="padding: 0 20px 20px 20px">
           <div class="top-tips">满足以下条件时进入当前分支</div>
-          <template v-for="(conditionGroup, conditionGroupIdx) in form.conditionList">
-            <div
-              class="or-branch-link-tip"
-              v-if="conditionGroupIdx != 0">
-              或满足
-            </div>
+
+          <template v-for="(conditionGroup, conditionGroupIdx) in form.conditionList" :key="conditionGroupIdx">
+            <div class="or-branch-link-tip" v-if="conditionGroupIdx !== 0">或满足</div>
+
             <div class="condition-group-editor">
               <div class="header">
                 <span>条件组 {{ conditionGroupIdx + 1 }}</span>
@@ -114,217 +74,204 @@
               </div>
 
               <div class="main-content">
-                <!-- 单个条件 -->
                 <div class="condition-content-box cell-box">
-                  <div>描述</div>
                   <div>条件字段</div>
                   <div>运算符</div>
                   <div>值</div>
                 </div>
-                <div
-                  class="condition-content"
-                  v-for="(condition, idx) in conditionGroup">
+
+                <div v-for="(condition, idx) in conditionGroup" :key="idx" class="condition-content">
                   <div class="condition-relation">
-                    <span>{{ idx == 0 ? '当' : '且' }}</span>
+                    <span>{{ idx === 0 ? '当' : '且' }}</span>
                     <div @click="deleteConditionList(conditionGroup, idx)">
                       <el-icon class="branch-delete-icon"><el-icon-delete /></el-icon>
                     </div>
                   </div>
                   <div class="condition-content">
                     <div class="condition-content-box">
-                      <el-input
-                        v-model="condition.label"
-                        placeholder="描述" />
-                      <el-input
-                        v-model="condition.field"
-                        placeholder="条件字段" />
                       <el-select
-                        v-model="condition.operator"
-                        placeholder="Select">
+                        v-model="condition.field"
+                        placeholder="条件字段"
+                        @change="val => syncLabel(condition, val)"
+                      >
                         <el-option
-                          label="等于"
-                          value="=="></el-option>
-                        <el-option
-                          label="不等于"
-                          value="!="></el-option>
-                        <el-option
-                          label="大于"
-                          value=">"></el-option>
-                        <el-option
-                          label="大于等于"
-                          value=">="></el-option>
-                        <el-option
-                          label="小于"
-                          value="<"></el-option>
-                        <el-option
-                          label="小于等于"
-                          value="<="></el-option>
-                        <el-option
-                          label="包含"
-                          value="include"></el-option>
-                        <el-option
-                          label="不包含"
-                          value="notinclude"></el-option>
+                          v-for="item in fieldOptions"
+                          :key="item.field"
+                          :label="item.label"
+                          :value="item.field"
+                        />
                       </el-select>
-                      <el-input
-                        v-model="condition.value"
-                        placeholder="值" />
+                      <el-select v-model="condition.operator" placeholder="Select">
+                        <el-option label="等于" value="==" />
+                        <el-option label="不等于" value="!=" />
+                        <el-option label="大于" value=">" />
+                        <el-option label="大于等于" value=">=" />
+                        <el-option label="小于" value="<" />
+                        <el-option label="小于等于" value="<=" />
+                        <el-option label="包含" value="include" />
+                        <el-option label="不包含" value="notinclude" />
+                      </el-select>
+                      <el-input v-model="condition.value" placeholder="值" />
                     </div>
                   </div>
                 </div>
               </div>
+
               <div class="sub-content">
-                <el-button
-                  link
-                  type="primary"
-                  @click="addConditionList(conditionGroup)"
-                  icon="el-icon-plus">
+                <el-button link type="primary" @click="addConditionList(conditionGroup)" icon="el-icon-plus">
                   添加条件
                 </el-button>
               </div>
             </div>
           </template>
-          <el-button
-            style="width: 100%"
-            type="info"
-            icon="el-icon-plus"
-            text
-            bg
-            @click="addConditionGroup">
+
+          <el-button style="width: 100%" type="info" icon="el-icon-plus" text bg @click="addConditionGroup">
             添加条件组
           </el-button>
         </el-main>
-        <el-footer>
-          <el-button
-            type="primary"
-            @click="save">
-            保存
-          </el-button>
-          <el-button @click="drawer = false">取消</el-button>
-        </el-footer>
       </el-container>
     </el-drawer>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive, watch, inject, watchEffect } from 'vue'
 import addNode from './addNode.vue'
+import { getTableFields } from '@/api/process'
 
-export default {
-  props: {
-    modelValue: { type: Object, default: () => {} }
-  },
-  components: {
-    addNode
-  },
-  data() {
-    return {
-      nodeConfig: {},
-      drawer: false,
-      isEditTitle: false,
-      index: 0,
-      form: {}
-    }
-  },
-  watch: {
-    modelValue() {
-      this.nodeConfig = this.modelValue
-    }
-  },
-  mounted() {
-    this.nodeConfig = this.modelValue
-  },
-  methods: {
-    show(index) {
-      this.index = index
-      this.form = {}
-      this.form = JSON.parse(JSON.stringify(this.nodeConfig.conditionNodes[index]))
-      this.drawer = true
-    },
-    editTitle() {
-      this.isEditTitle = true
-      this.$nextTick(() => {
-        this.$refs.nodeTitle.focus()
-      })
-    },
-    saveTitle() {
-      this.isEditTitle = false
-    },
-    save() {
-      this.nodeConfig.conditionNodes[this.index] = this.form
-      this.$emit('update:modelValue', this.nodeConfig)
-      this.drawer = false
-    },
-    addTerm() {
-      let len = this.nodeConfig.conditionNodes.length + 1
-      this.nodeConfig.conditionNodes.push({
-        nodeName: '条件' + len,
-        type: 3,
-        priorityLevel: len,
-        conditionMode: 1,
-        conditionList: []
-      })
-    },
-    delTerm(index) {
-      this.nodeConfig.conditionNodes.splice(index, 1)
-      if (this.nodeConfig.conditionNodes.length == 1) {
-        if (this.nodeConfig.childNode) {
-          if (this.nodeConfig.conditionNodes[0].childNode) {
-            this.reData(this.nodeConfig.conditionNodes[0].childNode, this.nodeConfig.childNode)
-          } else {
-            this.nodeConfig.conditionNodes[0].childNode = this.nodeConfig.childNode
-          }
-        }
-        this.$emit('update:modelValue', this.nodeConfig.conditionNodes[0].childNode)
-      }
-    },
-    reData(data, addData) {
-      if (!data.childNode) {
-        data.childNode = addData
-      } else {
-        this.reData(data.childNode, addData)
-      }
-    },
-    arrTransfer(index, type = 1) {
-      this.nodeConfig.conditionNodes[index] = this.nodeConfig.conditionNodes.splice(index + type, 1, this.nodeConfig.conditionNodes[index])[0]
-      this.nodeConfig.conditionNodes.map((item, index) => {
-        item.priorityLevel = index + 1
-      })
-      this.$emit('update:modelValue', this.nodeConfig)
-    },
-    addConditionList(conditionList) {
-      conditionList.push({
-        label: '',
-        field: '',
-        operator: '=',
-        value: ''
-      })
-    },
-    deleteConditionList(conditionList, index) {
-      conditionList.splice(index, 1)
-    },
-    addConditionGroup() {
-      this.addConditionList(this.form.conditionList[this.form.conditionList.push([]) - 1])
-    },
-    deleteConditionGroup(index) {
-      this.form.conditionList.splice(index, 1)
-    },
-    toText(nodeConfig, index) {
-      var { conditionList } = nodeConfig.conditionNodes[index]
-      if (conditionList && conditionList.length == 1) {
-        const text = conditionList.map((conditionGroup) => conditionGroup.map((item) => `${item.label}${item.operator}${item.value}`)).join(' 和 ')
-        return text
-      } else if (conditionList && conditionList.length > 1) {
-        return conditionList.length + '个条件，或满足'
-      } else {
-        if (index == nodeConfig.conditionNodes.length - 1) {
-          return '其他条件进入此流程'
-        } else {
-          return false
-        }
-      }
-    }
+const props = defineProps({
+  modelValue: { type: Object, default: () => ({}) }
+})
+
+const emit = defineEmits(['update:modelValue'])
+
+const drawer = ref(false)
+const isEditTitle = ref(false)
+const index = ref(0)
+const form = reactive({})
+const nodeTitle = ref(null)
+
+const nodeConfig = reactive({
+  ...props.modelValue
+})
+
+const fieldOptions = ref([])
+
+watchEffect(async () => {
+  const tableName = inject('tableName')
+  if (tableName) {
+    const res = await getTableFields(tableName)
+    fieldOptions.value = res.data || []
   }
+})
+
+function syncLabel(condition, fieldVal) {
+  const match = fieldOptions.value.find(item => item.field === fieldVal)
+  if (match) {
+    condition.label = match.label
+  }
+}
+
+watch(
+  () => props.modelValue,
+  () => {
+    Object.assign(nodeConfig, props.modelValue)
+  },
+  { deep: true }
+)
+
+
+function show(i) {
+  index.value = i
+  Object.assign(form, JSON.parse(JSON.stringify(nodeConfig.conditionNodes[i])))
+  drawer.value = true
+}
+
+function editTitle() {
+  isEditTitle.value = true
+  nextTick(() => nodeTitle.value?.focus())
+}
+
+function saveTitle() {
+  isEditTitle.value = false
+}
+
+function save() {
+  nodeConfig.conditionNodes[index.value] = JSON.parse(JSON.stringify(form))
+  emit('update:modelValue', nodeConfig)
+}
+
+function addTerm() {
+  const len = nodeConfig.conditionNodes.length + 1
+  nodeConfig.conditionNodes.push({
+    nodeName: '条件' + len,
+    type: 3,
+    priorityLevel: len,
+    conditionMode: 1,
+    conditionList: []
+  })
+}
+
+function delTerm(i) {
+  nodeConfig.conditionNodes.splice(i, 1)
+  if (nodeConfig.conditionNodes.length === 1 && nodeConfig.childNode) {
+    if (nodeConfig.conditionNodes[0].childNode) {
+      reData(nodeConfig.conditionNodes[0].childNode, nodeConfig.childNode)
+    } else {
+      nodeConfig.conditionNodes[0].childNode = nodeConfig.childNode
+    }
+    emit('update:modelValue', nodeConfig.conditionNodes[0].childNode)
+  }
+}
+
+function reData(data, addData) {
+  if (!data.childNode) {
+    data.childNode = addData
+  } else {
+    reData(data.childNode, addData)
+  }
+}
+
+function arrTransfer(i, type = 1) {
+  const moved = nodeConfig.conditionNodes.splice(i, 1)[0]
+  nodeConfig.conditionNodes.splice(i + type, 0, moved)
+  nodeConfig.conditionNodes.forEach((item, idx) => (item.priorityLevel = idx + 1))
+  emit('update:modelValue', nodeConfig)
+}
+
+function addConditionList(group) {
+  group.push({
+    label: '',
+    field: '',
+    operator: '==',
+    value: ''
+  })
+}
+
+function deleteConditionList(group, idx) {
+  group.splice(idx, 1)
+}
+
+function addConditionGroup() {
+  const group = []
+  addConditionList(group)
+  form.conditionList.push(group)
+}
+
+function deleteConditionGroup(idx) {
+  form.conditionList.splice(idx, 1)
+}
+
+function toText(i) {
+  const conditionList = nodeConfig.conditionNodes[i].conditionList
+  if (conditionList?.length === 1) {
+    return conditionList.map(group => group.map(item => `${item.label}${item.operator}${item.value}`).join(' 和 ')).join(' 或 ')
+  } else if (conditionList?.length > 1) {
+    return `${conditionList.length}个条件，或满足`
+  } else if (i === nodeConfig.conditionNodes.length - 1) {
+    return '其他条件进入此流程'
+  }
+  return false
 }
 </script>
 

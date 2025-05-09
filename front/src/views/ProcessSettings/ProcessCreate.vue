@@ -104,7 +104,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, provide, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import WorkFlow from '@/components/workFlow.vue'
 import { getTableList, createProcess } from '@/api/process'
@@ -173,6 +173,10 @@ const initFormData = computed(() => {
 // 表单数据
 const formData = ref(initFormData.value)
 
+watchEffect(() => {
+    provide('tableName', formData.value.processType)
+})
+
 // 流程设计组件引用
 const workflowRef = ref(null)
 
@@ -230,11 +234,6 @@ const handleSubmit = async () => {
         })
     } catch (error) {
         console.error('提交失败:', error)
-        if (error?.errors) {
-            ElMessage.error('请检查表单填写是否正确')
-        } else {
-            ElMessage.error('提交失败: ' + (error.message || '未知错误'))
-        }
     }
 }
 

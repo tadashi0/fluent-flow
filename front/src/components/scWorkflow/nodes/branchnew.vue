@@ -23,7 +23,7 @@
                   class="sort-left"
                   v-if="index != 0"
                   @click.stop="arrTransfer(index, -1)">
-                  <el-icon><ArrowLeft /></el-icon>
+                  <el-icon><el-icon-arrow-left /></el-icon>
                 </div>
                 <div class="title">
                   <span class="node-title">{{ item.nodeName }}</span>
@@ -31,7 +31,7 @@
                   <el-icon
                     class="close"
                     @click.stop="delTerm(index)">
-                    <Close />
+                    <el-icon-close />
                   </el-icon>
                 </div>
                 <div class="content">
@@ -46,7 +46,7 @@
                   class="sort-right"
                   v-if="index != nodeConfig.conditionNodes.length - 1"
                   @click.stop="arrTransfer(index)">
-                  <el-icon><ArrowRight /></el-icon>
+                  <el-icon><el-icon-arrow-right /></el-icon>
                 </div>
               </div>
               <add-node v-model="item.childNode"></add-node>
@@ -84,7 +84,7 @@
             @click="editTitle"
             v-if="!isEditTitle">
             {{ form.nodeName }}
-            <el-icon class="node-wrap-drawer__title-edit"><Edit /></el-icon>
+            <el-icon class="node-wrap-drawer__title-edit"><el-icon-edit /></el-icon>
           </label>
           <el-input
             v-if="isEditTitle"
@@ -108,7 +108,7 @@
               <div class="header">
                 <span>条件组 {{ conditionGroupIdx + 1 }}</span>
                 <div @click="deleteConditionGroup(conditionGroupIdx)">
-                  <el-icon class="branch-delete-icon"><Delete /></el-icon>
+                  <el-icon class="branch-delete-icon"><el-icon-delete /></el-icon>
                 </div>
               </div>
 
@@ -126,7 +126,7 @@
                   <div class="condition-relation">
                     <span>{{ idx == 0 ? '当' : '且' }}</span>
                     <div @click="deleteConditionList(conditionGroup, idx)">
-                      <el-icon class="branch-delete-icon"><Delete /></el-icon>
+                      <el-icon class="branch-delete-icon"><el-icon-delete /></el-icon>
                     </div>
                   </div>
                   <div class="condition-content">
@@ -157,7 +157,7 @@
                       <div class="user-selector">
                         <el-button 
                           type="primary" 
-                          :icon="Plus" 
+                          icon="el-icon-plus" 
                           round 
                           @click="selectHandle(1, condition)">
                           选择人员
@@ -181,7 +181,7 @@
                   link
                   type="primary"
                   @click="addConditionList(conditionGroup)"
-                  :icon="Plus">
+                  icon="el-icon-plus">
                   添加条件
                 </el-button>
               </div>
@@ -190,7 +190,7 @@
           <el-button
             style="width: 100%"
             type="info"
-            :icon="Plus"
+            icon="el-icon-plus"
             text
             bg
             @click="addConditionGroup">
@@ -211,8 +211,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, inject, computed } from 'vue';
-import { ArrowLeft, ArrowRight, Edit, Delete, Plus } from '@element-plus/icons-vue';
+import { ref, watch, nextTick, inject } from 'vue';
 import addNode from './addNode.vue';
 
 const props = defineProps({

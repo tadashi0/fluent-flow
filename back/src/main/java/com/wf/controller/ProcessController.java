@@ -1,17 +1,22 @@
 package com.wf.controller;
 
 import com.aizuda.bpm.engine.FlowLongEngine;
+import com.aizuda.bpm.engine.assist.Assert;
 import com.aizuda.bpm.engine.assist.ObjectUtils;
 import com.aizuda.bpm.engine.core.FlowCreator;
 import com.aizuda.bpm.engine.entity.FlwProcess;
+import com.aizuda.bpm.engine.model.ModelHelper;
+import com.aizuda.bpm.engine.model.NodeModel;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.wf.common.exception.ServiceException;
 import com.wf.common.pojo.CommonResult;
+import com.wf.entity.FieldInfoDTO;
 import com.wf.entity.TableInfoDTO;
 import com.wf.service.ProcessService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -38,14 +43,14 @@ public class ProcessController {
      */
     @GetMapping
     public CommonResult<FlwProcess> getProcess(String processKey) {
-        if(ObjectUtils.isEmpty(processKey)){
+        if (ObjectUtils.isEmpty(processKey)) {
             return CommonResult.success(null);
         }
         log.info("processKey:{}", processKey);
         // 判断processKey是否是Long类型的
         if (processKey.matches("\\d+")) {
             return CommonResult.success(flowLongEngine.processService().getProcessById(Long.valueOf(processKey)));
-        }else {
+        } else {
             return CommonResult.success(flowLongEngine.processService().getProcessByKey(null, processKey));
         }
     }
@@ -55,6 +60,13 @@ public class ProcessController {
      */
     @PostMapping
     public CommonResult<Long> create(@RequestBody FlwProcess flwProcess) {
+        // 检测流程
+        NodeModel nodeModel = ModelHelper.buildProcessModel(flwProcess.getModelContent()).getNodeConfig();
+        Assert.isFalse(ModelHelper.checkExistApprovalNode(nodeModel), "请添加审批节点");
+        int checkNode = ModelHelper.checkNodeModel(nodeModel);
+        Assert.isTrue(checkNode > 0, buildCheckNodeMap(checkNode));
+        int checkConditionNode = ModelHelper.checkConditionNode(nodeModel);
+        Assert.isTrue(checkConditionNode > 0, buildCheckConditionNodeMap(checkConditionNode));
         return CommonResult.success(flowLongEngine.processService()
                 .deploy(null, flwProcess.getModelContent(), testCreator, true, e -> {
                     e.setModelContent(flwProcess.getModelContent());
@@ -63,6 +75,24 @@ public class ProcessController {
                     e.setUseScope(flwProcess.getUseScope());
                     e.setRemark(flwProcess.getRemark());
                 }));
+    }
+
+    private String buildCheckNodeMap(int value) {
+        Map<Integer, String> map = new HashMap<>();
+        map.put(1, "存在重复节点KEY");
+        map.put(2, "自动通过节点配置错误");
+        map.put(3, "自动拒绝节点配置错误");
+        map.put(4, "路由节点必须配置错误（未配置路由分支）");
+        map.put(5, "子流程节点配置错误（未选择子流程）");
+        return map.get(value);
+    }
+
+    private String buildCheckConditionNodeMap(int value) {
+        Map<Integer, String> map = new HashMap<>();
+        map.put(1, "存在多个条件表达式为空");
+        map.put(2, "存在多个条件子节点为空");
+        map.put(3, "存在条件节点KEY重复");
+        return map.get(value);
     }
 
     /**
@@ -81,6 +111,14 @@ public class ProcessController {
     @GetMapping("tables")
     public CommonResult<List<TableInfoDTO>> getTables(@RequestParam(required = false) String tableName) {
         return CommonResult.success(processService.getTables(tableName));
+    }
+
+    /**
+     * 获取表字段
+     */
+    @GetMapping("fields/{tableName}")
+    public CommonResult<List<FieldInfoDTO>> getFields(@PathVariable String tableName) {
+        return CommonResult.success(processService.getFields(tableName));
     }
 
 }

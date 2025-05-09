@@ -3,6 +3,7 @@ package com.wf.service;
 import com.aizuda.bpm.engine.entity.FlwProcess;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.wf.entity.FieldInfoDTO;
 import com.wf.entity.TableInfoDTO;
 
 import java.util.List;
@@ -16,4 +17,6 @@ import java.util.List;
     IPage<FlwProcess> getProcessList(String processKey, Integer useScope, String keyword, Page page);
 
     List<TableInfoDTO> getTables(String tableName);
+
+    List<FieldInfoDTO> getFields(String tableName);
 }

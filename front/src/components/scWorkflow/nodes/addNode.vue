@@ -70,7 +70,7 @@ export default {
 					nodeName: "审批人",
 					nodeKey: this.getNodeKey(),
 					type: 1,			//节点类型
-					setType: 1,			//审核人类型 1，选择成员 3，选择角色
+					setType: 4,			//审核人类型 1，选择成员 3，选择角色 4，发起人自选
 					nodeAssigneeList: [],	//审核人员，根据 setType 确定成员还是角色
 					examineLevel: 1,	//指定主管层级
 					directorLevel: 1,	//自定义连续主管审批层级
@@ -108,7 +108,7 @@ export default {
 						},
 						{
 							nodeName: "条件2",
-							nodeKey: this.getNodeKey(),
+							nodeKey: 'flk' + (Date.now() + 1),
 							type: 3,
 							priorityLevel: 2,
 							conditionMode: 1,
