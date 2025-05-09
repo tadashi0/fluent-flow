@@ -310,10 +310,11 @@
   <div v-else-if="node.type === 30" class="workflow-item">
     <div class="workflow-icon">
       <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
+      <div v-if="node.taskState !== undefined" class="status-indicator" :class="getStatusIndicatorClass(node)"></div>
     </div>
     <div class="workflow-line"></div>
     <div class="workflow-content">
-      <div class="workflow-title">{{ node.nodeName }}</div>
+      <div class="workflow-title">{{ node.nodeName || '自动通过' }} <span v-if="node.taskState !== undefined" class="state-tag">{{ getNodeStateText(node) }}</span></div>
     </div>
   </div>
 
@@ -321,10 +322,11 @@
     <div v-else-if="node.type === 31" class="workflow-item">
     <div class="workflow-icon">
       <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
+      <div v-if="node.taskState !== undefined" class="status-indicator" :class="getStatusIndicatorClass(node)"></div>
     </div>
     <div class="workflow-line"></div>
     <div class="workflow-content">
-      <div class="workflow-title">{{ node.nodeName }}</div>
+      <div class="workflow-title">{{ node.nodeName || '自动拒绝' }} <span v-if="node.taskState !== undefined" class="state-tag">{{ getNodeStateText(node) }}</span></div>
     </div>
   </div>
 

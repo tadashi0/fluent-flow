@@ -325,7 +325,8 @@ public class TaskController implements TaskActorProvider {
                 .sorted(Comparator.comparing(FlwHisInstance::getId).reversed())
                 .map(e -> new InstanceInfoVO()
                         .setInstanceId(e.getId())
-                        .setTaskState(e.getInstanceState()))
+                        .setTaskState(e.getInstanceState())
+                        .setCurrentNodeKey(e.getCurrentNodeKey()))
                 .findFirst()
                 .orElse(new InstanceInfoVO().setTaskState(InstanceState.active.getValue())));
     }

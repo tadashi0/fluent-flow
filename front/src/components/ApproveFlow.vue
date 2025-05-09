@@ -263,9 +263,10 @@ watchEffect(async () => {
       ]);
       
       // 处理数据逻辑
-      const { taskState } = instanceInfoResult.data;
+      const { taskState, currentNodeKey } = instanceInfoResult.data;
       state.value = taskState;
       const processModel = JSON.parse(modelResult.data.modelContent);
+      await traverseAutoNode(processModel.nodeConfig, taskState, currentNodeKey);
       await traverseNode(processModel.nodeConfig, taskResult.data);
       modelContent.value = processModel;
     } catch (error) {
@@ -273,6 +274,21 @@ watchEffect(async () => {
     }
   }
 });
+
+const traverseAutoNode = async (node, taskState, currentNodeKey) => { 
+  if (node?.childNode) {
+    await traverseAutoNode(node.childNode, taskState, currentNodeKey);
+  }
+  if (node?.type === 4) {
+    // 这是一个条件分支节点
+    node.conditionNodes.forEach(async (conditionNode) => {
+      await traverseAutoNode(conditionNode.childNode, taskState, currentNodeKey);
+    });
+  }
+  if (node.nodeKey === currentNodeKey) {
+    node.taskState = taskState + 2;
+  }
+}
 
 const traverseNode = async (node, taskList) => {
   console.log('遍历节点:', node);

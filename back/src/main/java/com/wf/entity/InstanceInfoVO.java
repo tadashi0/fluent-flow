@@ -18,8 +18,9 @@ import java.util.Date;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class InstanceInfoVO {
     // 实例ID
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     Long instanceId;
     // 审批状态
     Integer taskState;
+    // 当前节点
+    String currentNodeKey;
 }
