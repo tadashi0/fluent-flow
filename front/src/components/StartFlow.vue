@@ -57,20 +57,52 @@ const handleSave = async () => {
 const handleSubmit = async () => {
   try {
     // 1. 先调用父组件提交逻辑
-    const businessKey = await props.onSubmit()
+    const params = await props.onSubmit()
     
     // 2. 执行子组件提交逻辑
     const data = {
       processKey: props.processKey,
-      modelContent: JSON.stringify(modelContent.value)
+      modelContent: JSON.stringify(modelContent.value),
     }
-    await startProcess(businessKey, data)
+    const firstNode = modelContent.value?.nodeConfig?.childNode
+    if (firstNode?.type === 4) {
+      const variable = collectFields(firstNode.conditionNodes)
+      for (const key in variable) {
+        if (variable.hasOwnProperty(key) && params.hasOwnProperty(key)) {
+          variable[key] = params[key];
+        }
+      } 
+      data.variable = variable
+    }
+    await startProcess(params.id, data)
     handleCancel()
     emit('refresh');
     ElMessage.success('流程发起成功')
   } catch (error) {
     console.error('流程发起失败:', error)
   }
+}
+
+function collectFields(conditionNodes) {
+    const collect = {};
+
+    if (!Array.isArray(conditionNodes)) return collect;
+
+    conditionNodes
+        .forEach(conditionNode => {
+            const conditionList = conditionNode.conditionList || [];
+            conditionList.forEach(innerList => {
+              (innerList || []).forEach(expression => {
+                    if (expression && expression.field) {
+                        if (!(expression.field in collect)) {
+                            collect[expression.field] = 0;
+                        }
+                    }
+                });
+            });
+        });
+
+    return collect;
 }
 
 // 提供更新函数给所有子组件

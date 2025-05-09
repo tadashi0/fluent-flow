@@ -42,7 +42,8 @@ export const saveProcess = (businessKey, data) => {
 export const startProcess = (businessKey, data) => {
   return request.post(`/task/start/${businessKey}`, {
     processKey: data.processKey,
-    modelContent: data.modelContent
+    modelContent: data.modelContent,
+    variable: data.variable || {}
   })
 }
 

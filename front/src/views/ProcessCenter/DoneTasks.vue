@@ -112,7 +112,7 @@ const tableData = ref([]);
 // 状态标签类型映射
 const stateTagMap = {
   '审批中': 'warning',
-  '跳转': 'info',
+  '回退跳转': 'info',
   '已通过': 'success',
   '已拒绝': 'danger',
   '已撤销': 'info',
@@ -129,7 +129,7 @@ const stateTagMap = {
 
 const taskStateMap = {
   0: '审批中',
-  1: '跳转',
+  1: '回退跳转',
   2: '已通过',
   3: '已拒绝',
   4: '已撤销',

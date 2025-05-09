@@ -90,8 +90,8 @@
             <div v-if="task.variable && task.taskState !== 0" class="task-history-comment">
               {{ JSON.parse(task.variable)?.comment || '' }}
             </div>
-            <div v-if="task.taskState === 11 && task.variable && (JSON.parse(task.variable)?.rejectNodeName || JSON.parse(task.variable)?.reclaimNodeName)" class="task-history-reclaim">
-              回退至: {{ JSON.parse(task.variable)?.rejectNodeName || JSON.parse(task.variable)?.reclaimNodeName }}
+            <div v-if="task.taskState === 1 && task.variable && JSON.parse(task.variable)?.reclaimNodeName" class="task-history-reclaim">
+              回退至: {{ JSON.parse(task.variable)?.reclaimNodeName }}
             </div>
             <div v-if="task.expireTime" class="task-history-expire">
               期望完成时间: {{ formatTime(task.expireTime) }}
@@ -465,7 +465,7 @@ const getStatusIndicatorClass = (node) => {
 const getStartNodeStateText = (node) => {
   const stateTexts = {
     0: '待发起',
-    1: '跳转',
+    1: '回退跳转',
     2: '已发起',
     3: '已拒绝',
     4: '已撤销',
@@ -487,7 +487,7 @@ const getStartNodeStateText = (node) => {
 const getNodeStateText = (node) => {
   const stateTexts = {
     0: '审批中', 
-    1: '跳转',
+    1: '回退跳转',
     2: '已通过',
     3: '已拒绝',
     4: '已撤销',

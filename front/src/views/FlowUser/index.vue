@@ -269,7 +269,7 @@ const submitForm = async () => {
     } else {
       result = await addUser(formData)
     }
-    return result.data.id
+    return result.data
   } catch (error) {
     console.error('操作失败:', error)
   }

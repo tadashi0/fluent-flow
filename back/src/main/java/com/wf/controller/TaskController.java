@@ -16,6 +16,7 @@ import com.aizuda.bpm.engine.model.NodeModel;
 import com.aizuda.bpm.engine.model.ProcessModel;
 import com.aizuda.bpm.mybatisplus.mapper.FlwExtInstanceMapper;
 import com.aizuda.bpm.mybatisplus.mapper.FlwHisInstanceMapper;
+import com.aizuda.bpm.mybatisplus.mapper.FlwHisTaskMapper;
 import com.aizuda.bpm.mybatisplus.mapper.FlwInstanceMapper;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
@@ -29,7 +30,6 @@ import com.wf.entity.*;
 import com.wf.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -51,7 +51,61 @@ public class TaskController implements TaskActorProvider {
     private final FlwInstanceMapper flwInstanceMapper;
     private final FlwHisInstanceMapper flwHisInstanceMapper;
     private final FlwExtInstanceMapper flwExtInstanceMapper;
+    private final FlwHisTaskMapper flwHisTaskMapper;
 
+    public static JSONObject findNodeConfig(JSONObject root, String processId) {
+        JSONObject result = new JSONObject();
+        findNodeConfigRecursive(root, processId, result);
+        return result;
+    }
+
+    private static void findNodeConfigRecursive(JSONObject node, String processId, JSONObject result) {
+        if (node == null) return;
+
+        // 检查当前节点是否符合条件
+        if (node.getIntValue("type") == 5) {
+            String callProcess = node.getString("callProcess");
+            if (callProcess != null && callProcess.startsWith(processId + ":")) {
+                JSONObject config = node.getJSONObject("nodeConfig");
+                if (config != null) {
+                    result.putAll(config);
+                    return; // 找到后直接返回，如果需找多个可以改为收集到List
+                }
+            }
+        }
+
+        // 递归检查子节点
+        JSONObject childNode = node.getJSONObject("childNode");
+        if (childNode != null) {
+            findNodeConfigRecursive(childNode, processId, result);
+        }
+    }
+
+    public static List<NodeAssignee> findAssigneesByNodeKey(JSONObject rootNode, String targetNodeKey) {
+        List<NodeAssignee> result = new ArrayList<>();
+        findInNode(rootNode, targetNodeKey, result);
+        return result;
+    }
+
+    private static void findInNode(JSONObject node, String targetKey, List<NodeAssignee> result) {
+        if (node == null || result.size() > 0) return; // 找到后停止搜索
+
+        // 检查当前节点
+        String nodeKey = node.getString("nodeKey");
+        if (targetKey.equals(nodeKey)) {
+            JSONArray assignees = node.getJSONArray("nodeAssigneeList");
+            if (assignees != null) {
+                result.addAll(assignees.toJavaList(NodeAssignee.class));
+            }
+            return;
+        }
+
+        // 递归查找子节点
+        JSONObject childNode = node.getJSONObject("childNode");
+        if (childNode != null) {
+            findInNode(childNode, targetKey, result);
+        }
+    }
 
     /**
      * 根据流程对象启动流程实例
@@ -105,7 +159,7 @@ public class TaskController implements TaskActorProvider {
     }
 
     @PostMapping("start/{businessKey}")
-    public CommonResult<Boolean> start(@PathVariable Long businessKey, @RequestBody FlwProcess flwProcess) {
+    public CommonResult<Boolean> start(@PathVariable Long businessKey, @RequestBody FlwProcessDTO flwProcess) {
         List<NodeModel> list = getUnsetAssigneeNodes(ModelHelper.buildProcessModel(flwProcess.getModelContent()).getNodeConfig());
 
         if (list.size() > 0) {
@@ -139,7 +193,7 @@ public class TaskController implements TaskActorProvider {
                                 .ifPresent(e -> {
                                     e.stream().findFirst()
                                             .ifPresent(task -> {
-                                                flowLongEngine.executeTask(task.getId(), testCreator);
+                                                flowLongEngine.executeTask(task.getId(), testCreator, flwProcess.getVariable());
                                             });
                                 });
                         //} else {
@@ -159,7 +213,7 @@ public class TaskController implements TaskActorProvider {
             FlwProcess process = flowLongEngine.processService()
                     .getProcessByKey(null, flwProcess.getProcessKey());
             process.setModelContent(flwProcess.getModelContent());
-            flowLongEngine.startProcessInstance(process, testCreator, null, false, () -> FlwInstance.of(String.valueOf(businessKey)))
+            flowLongEngine.startProcessInstance(process, testCreator, flwProcess.getVariable(), false, () -> FlwInstance.of(String.valueOf(businessKey)))
                     .ifPresent(e -> result.set(true));
         }
 
@@ -235,7 +289,6 @@ public class TaskController implements TaskActorProvider {
         //        .orElseGet(() -> CommonResult.success(Arrays.asList()));
     }
 
-
     /**
      * 根据subProcessId获取子流程实例ID
      */
@@ -244,7 +297,7 @@ public class TaskController implements TaskActorProvider {
         List<FlwHisInstance> list = ChainWrappers.lambdaQueryChain(flwHisInstanceMapper)
                 .eq(FlwHisInstance::getProcessId, subProcessId)
                 .list();
-        if(ObjectUtils.isEmpty(list)){
+        if (ObjectUtils.isEmpty(list)) {
             return CommonResult.success(null);
         }
 
@@ -420,13 +473,11 @@ public class TaskController implements TaskActorProvider {
                                                         .getExtInstance(instance.getId()).model();
                                                 NodeModel parentNode = processModel.getNode(task.getTaskKey())
                                                         .getParentNode();
-                                                HashMap<String, Object> variable = data.getVariable();
-                                                variable.putIfAbsent("rejectNodeName", parentNode.getNodeName());
                                                 flowLongEngine.executeRejectTask(
                                                         task,
                                                         parentNode.getNodeKey(),
                                                         testCreator,
-                                                        variable,
+                                                        data.getVariable(),
                                                         TaskType.major.eq(parentNode.getType())
                                                 ).ifPresent(e1 -> {
                                                     flowLongEngine.createCcTask(task, data.getCcUsers(), testCreator);
@@ -497,6 +548,10 @@ public class TaskController implements TaskActorProvider {
                                                         testCreator,
                                                         data.getVariable()
                                                 ).ifPresent(e1 -> {
+                                                    ChainWrappers.lambdaUpdateChain(flwHisTaskMapper)
+                                                            .set(FlwHisTask::getTaskState, TaskState.jump.getValue())
+                                                            .eq(FlwHisTask::getId, task.getId())
+                                                            .update();
                                                     flowLongEngine.createCcTask(task, data.getCcUsers(), testCreator);
                                                     result.set(true);
                                                 });
@@ -576,7 +631,7 @@ public class TaskController implements TaskActorProvider {
                                                         data.getVariable(),
                                                         data.getSignType()
                                                 );
-                                                if(addResult){
+                                                if (addResult) {
                                                     result.set(data.getSignType() ? true : flowLongEngine.executeTask(task.getId(), testCreator, data.getVariable()));
                                                 }
                                                 flowLongEngine.createCcTask(task, data.getCcUsers(), testCreator);
@@ -633,8 +688,8 @@ public class TaskController implements TaskActorProvider {
         final Integer actorType = this.getActorType(nodeModel);
         List<NodeAssignee> nodeAssigneeList = nodeModel.getNodeAssigneeList();
         FlwInstance instance = execution.getFlwInstance();
-        if(ObjectUtils.isEmpty(instance.getBusinessKey())
-            && ObjectUtils.isNotEmpty(instance.getParentInstanceId())){
+        if (ObjectUtils.isEmpty(instance.getBusinessKey())
+                && ObjectUtils.isNotEmpty(instance.getParentInstanceId())) {
             String modelContent = ChainWrappers.lambdaQueryChain(flwExtInstanceMapper)
                     .select(FlwExtInstance::getModelContent)
                     .eq(FlwExtInstance::getId, instance.getParentInstanceId())
@@ -715,59 +770,5 @@ public class TaskController implements TaskActorProvider {
             return 3;
         }
         return 0;
-    }
-
-    public static JSONObject findNodeConfig(JSONObject root, String processId) {
-        JSONObject result = new JSONObject();
-        findNodeConfigRecursive(root, processId, result);
-        return result;
-    }
-
-    private static void findNodeConfigRecursive(JSONObject node, String processId, JSONObject result) {
-        if (node == null) return;
-
-        // 检查当前节点是否符合条件
-        if (node.getIntValue("type") == 5) {
-            String callProcess = node.getString("callProcess");
-            if (callProcess != null && callProcess.startsWith(processId + ":")) {
-                JSONObject config = node.getJSONObject("nodeConfig");
-                if (config != null) {
-                    result.putAll(config);
-                    return; // 找到后直接返回，如果需找多个可以改为收集到List
-                }
-            }
-        }
-
-        // 递归检查子节点
-        JSONObject childNode = node.getJSONObject("childNode");
-        if (childNode != null) {
-            findNodeConfigRecursive(childNode, processId, result);
-        }
-    }
-
-    public static List<NodeAssignee> findAssigneesByNodeKey(JSONObject rootNode, String targetNodeKey) {
-        List<NodeAssignee> result = new ArrayList<>();
-        findInNode(rootNode, targetNodeKey, result);
-        return result;
-    }
-
-    private static void findInNode(JSONObject node, String targetKey, List<NodeAssignee> result) {
-        if (node == null || result.size() > 0) return; // 找到后停止搜索
-
-        // 检查当前节点
-        String nodeKey = node.getString("nodeKey");
-        if (targetKey.equals(nodeKey)) {
-            JSONArray assignees = node.getJSONArray("nodeAssigneeList");
-            if (assignees != null) {
-                result.addAll(assignees.toJavaList(NodeAssignee.class));
-            }
-            return;
-        }
-
-        // 递归查找子节点
-        JSONObject childNode = node.getJSONObject("childNode");
-        if (childNode != null) {
-            findInNode(childNode, targetKey, result);
-        }
     }
 }
