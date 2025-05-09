@@ -275,8 +275,15 @@ watchEffect(async () => {
 });
 
 const traverseNode = async (node, taskList) => {
+  console.log('遍历节点:', node);
   if (node?.childNode) {
     await traverseNode(node.childNode, taskList);
+  }
+  if (node?.type === 4) {
+    // 这是一个条件分支节点
+    node.conditionNodes.forEach(async (conditionNode) => {
+      await traverseNode(conditionNode.childNode, taskList);
+    });
   }
   if (node?.type === 5) {
     // 这是一个子流程节点
@@ -295,7 +302,8 @@ const traverseNode = async (node, taskList) => {
         node.nodeConfig = processModel.nodeConfig;
     }
   }
-  if (node?.nodeKey && [0, 1, 3].includes(node.type)) {
+  // if (node?.nodeKey && [0, 1, 3].includes(node.type)) {
+  if (node?.nodeKey) {
     const list = taskList.filter(t => t.taskKey === node.nodeKey);
     const task = list[list.length - 1];
     if (task) {

@@ -9,9 +9,7 @@ import com.aizuda.bpm.engine.core.enums.InstanceState;
 import com.aizuda.bpm.engine.core.enums.TaskEventType;
 import com.aizuda.bpm.engine.core.enums.TaskType;
 import com.aizuda.bpm.engine.entity.*;
-import com.aizuda.bpm.engine.model.ModelHelper;
-import com.aizuda.bpm.engine.model.NodeModel;
-import com.aizuda.bpm.engine.model.ProcessModel;
+import com.aizuda.bpm.engine.model.*;
 import com.aizuda.bpm.mybatisplus.mapper.FlwExtInstanceMapper;
 import com.aizuda.bpm.mybatisplus.mapper.FlwHisInstanceMapper;
 import com.aizuda.bpm.spring.event.TaskEvent;
@@ -217,10 +215,41 @@ public class ProcessListener {
                 handler.accept(taskEvent, updates);
             }
 
-
             // 执行更新
             if (!updates.isEmpty()) {
                 updateTable(tableName, businessKey, updates);
+            }
+            if (TaskEventType.create.eq(eventType)) {
+                Optional<NodeModel> optional = Optional.ofNullable(flowLongEngine.queryService()
+                        .getExtInstance(instanceId)
+                        .model()
+                        .getNode(flwTask.getTaskKey())
+                        .getChildNode());
+                if (optional.isPresent()) {
+                    boolean isConditionNode = optional.get().conditionNode();
+                    if (isConditionNode) {
+                        Map<String, Object> collect = optional.get().getConditionNodes().stream()
+                                .filter(ObjectUtils::isNotEmpty)
+                                .flatMap(conditionNode -> Optional.ofNullable(conditionNode.getConditionList())
+                                        .orElse(Collections.emptyList())
+                                        .stream()
+                                        .flatMap(innerList -> Optional.ofNullable(innerList)
+                                                .orElse(Collections.emptyList())
+                                                .stream()))
+                                .filter(ObjectUtils::isNotEmpty)
+                                .map(NodeExpression::getField)
+                                .filter(ObjectUtils::isNotEmpty)
+                                .collect(Collectors.toMap(
+                                        field -> field,
+                                        field -> 0,
+                                        (v1, v2) -> v1
+                                ));
+
+                        Map<String, Object> variable = queryTable(tableName, businessKey, collect);
+                        flowLongEngine.runtimeService()
+                                .addVariable(instanceId, variable);
+                    }
+                }
             }
         } catch (Exception e) {
             log.error("流程事件处理失败", e);
@@ -276,20 +305,23 @@ public class ProcessListener {
             ProcessModel processModel = flowLongEngine.queryService()
                     .getExtInstance(instanceId).model();
 
-            List<NodeModel> nextChildNodes = ModelHelper.getNextChildNodes(
-                    flowLongEngine.getContext(),
-                    new Execution(FlowCreator.of(flwTask.getCreateId(), flwTask.getCreateBy(),
-                            flwTask.getCreateBy()), null),
-                    processModel.getNodeConfig(),
-                    flwTask.getTaskKey()
-            );
+            Optional<NodeModel> nextNode = processModel.getNodeConfig()
+                    .nextNode(Arrays.asList(flwTask.getTaskKey()))
+                    .filter(ObjectUtils::isNotEmpty);
+            //List<NodeModel> nextChildNodes = ModelHelper.getNextChildNodes(
+            //        flowLongEngine.getContext(),
+            //        new Execution(FlowCreator.of(flwTask.getCreateId(), flwTask.getCreateBy(),
+            //                flwTask.getCreateBy()), null),
+            //        processModel.getNodeConfig(),
+            //        flwTask.getTaskKey()
+            //);
 
             Optional<List<FlwTask>> activeTaskList = flowLongEngine.queryService()
                     .getActiveTasksByInstanceId(instanceId)
                     .filter(ObjectUtils::isNotEmpty);
 
             // 仅在最终步骤设置状态为2
-            if (isFinalStep(nextChildNodes) && !activeTaskList.isPresent()) {
+            if ((!nextNode.isPresent() || isFinalStep(nextNode.get())) && !activeTaskList.isPresent()) {
                 updates.put("state", 2);  // 审批通过状态
                 updates.put("handler", "");  // 清空处理人
             }
@@ -304,6 +336,10 @@ public class ProcessListener {
     private boolean isFinalStep(List<NodeModel> nextNodes) {
         return nextNodes.isEmpty() ||
                 nextNodes.stream().noneMatch(ModelHelper::checkExistApprovalNode);
+    }
+
+    private boolean isFinalStep(NodeModel nextNode) {
+        return ModelHelper.checkExistApprovalNode(nextNode);
     }
 
     /**
@@ -344,5 +380,37 @@ public class ProcessListener {
                 .map(col -> col + " = ?")
                 .collect(Collectors.joining(", "));
         return String.format("UPDATE %s SET %s WHERE %s = ?", tableName, setClause, pkColumn);
+    }
+
+    /**
+     * 查询表数据
+     */
+    public Map<String, Object> queryTable(String tableName, String businessKey, Map<String, Object> fields) {
+        try (Connection conn = dataSource.getConnection()) {
+            DatabaseMetaData metaData = conn.getMetaData();
+            String pkColumn = getPrimaryKeyColumn(metaData, tableName);
+            String sql = buildSelectSql(tableName, pkColumn, fields);
+
+            // 查询数据
+            Map<String, Object> result = jdbcTemplate.queryForMap(sql, businessKey);
+            log.info("执行的SQL: {}", sql);
+            log.info("执行的参数: [{}]", businessKey);
+            log.info("查询结果: {}", result);
+
+            return result;
+        } catch (SQLException e) {
+            log.error("获取表元数据失败", e);
+        } catch (Exception e) {
+            log.error("查询表数据失败", e);
+        }
+        return null;
+    }
+
+    /**
+     * 构建查询SQL语句
+     */
+    private String buildSelectSql(String tableName, String pkColumn, Map<String, Object> fields) {
+        String selectClause = String.join(", ", fields.keySet());
+        return String.format("SELECT %s FROM %s WHERE %s = ?", selectClause, tableName, pkColumn);
     }
 }

@@ -135,11 +135,11 @@
   <!-- 条件分支节点 -->
   <div v-else-if="node.type === 4" class="workflow-item condition-branch">
     <div class="workflow-icon">
-      <span>条</span>
+      <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
     </div>
     <div class="workflow-line"></div>
     <div class="workflow-content">
-      <div class="workflow-title">条件分支</div>
+      <div class="workflow-title">{{ node.nodeName || '条件分支' }}</div>
       <div class="condition-groups">
         <div v-for="(cn, index) in node.conditionNodes" :key="index" class="condition-group">
           <div class="condition-title">{{ cn.nodeName || '条件' + (index + 1) }}</div>
@@ -410,7 +410,6 @@ const getProcessStateText = (state) => {
 };
 
 watchEffect(() => {
-  console.log('node', props.node);
   // 如果节点已有审批人列表，则不需要处理
   if (props.node?.nodeAssigneeList?.length > 0) return;
   

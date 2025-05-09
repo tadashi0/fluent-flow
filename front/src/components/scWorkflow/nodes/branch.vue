@@ -135,7 +135,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch, inject, watchEffect } from 'vue'
+import { ref, reactive, watch, inject } from 'vue'
 import addNode from './addNode.vue'
 import { getTableFields } from '@/api/process'
 
@@ -157,13 +157,13 @@ const nodeConfig = reactive({
 
 const fieldOptions = ref([])
 
-watchEffect(async () => {
-  const tableName = inject('tableName')
-  if (tableName) {
-    const res = await getTableFields(tableName)
+const injectedTableName = inject('tableName', ref(''))
+watch(injectedTableName, async (newVal) => {
+  if (newVal) {
+    const res = await getTableFields(newVal)
     fieldOptions.value = res.data || []
   }
-})
+}, { immediate: true })
 
 function syncLabel(condition, fieldVal) {
   const match = fieldOptions.value.find(item => item.field === fieldVal)

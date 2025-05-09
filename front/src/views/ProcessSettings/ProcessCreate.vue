@@ -104,7 +104,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, provide, watchEffect } from 'vue'
+import { ref, computed, onMounted, provide } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import WorkFlow from '@/components/workFlow.vue'
 import { getTableList, createProcess } from '@/api/process'
@@ -173,9 +173,8 @@ const initFormData = computed(() => {
 // 表单数据
 const formData = ref(initFormData.value)
 
-watchEffect(() => {
-    provide('tableName', formData.value.processType)
-})
+const tableName = computed(() => formData.value.processType)
+provide('tableName', tableName)
 
 // 流程设计组件引用
 const workflowRef = ref(null)
