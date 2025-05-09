@@ -145,19 +145,18 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
+const nodeConfig = ref({})
 const drawer = ref(false)
 const isEditTitle = ref(false)
 const index = ref(0)
 const form = reactive({})
 const nodeTitle = ref(null)
 
-const nodeConfig = reactive({
-  ...props.modelValue
-})
 
 const fieldOptions = ref([])
 
 const injectedTableName = inject('tableName', ref(''))
+
 watch(injectedTableName, async (newVal) => {
   if (newVal) {
     const res = await getTableFields(newVal)
@@ -172,13 +171,10 @@ function syncLabel(condition, fieldVal) {
   }
 }
 
-watch(
-  () => props.modelValue,
-  () => {
-    Object.assign(nodeConfig, props.modelValue)
-  },
-  { deep: true }
-)
+// 初始值同步
+watch(() => props.modelValue, (newVal) => {
+  nodeConfig.value = newVal
+}, { immediate: true })
 
 
 function show(i) {
@@ -263,12 +259,12 @@ function deleteConditionGroup(idx) {
 }
 
 function toText(i) {
-  const conditionList = nodeConfig.conditionNodes[i].conditionList
+  const conditionList = nodeConfig.conditionNodes?.[i].conditionList
   if (conditionList?.length === 1) {
     return conditionList.map(group => group.map(item => `${item.label}${item.operator}${item.value}`).join(' 和 ')).join(' 或 ')
   } else if (conditionList?.length > 1) {
     return `${conditionList.length}个条件，或满足`
-  } else if (i === nodeConfig.conditionNodes.length - 1) {
+  } else if (i === nodeConfig.conditionNodes?.length - 1) {
     return '其他条件进入此流程'
   }
   return false
