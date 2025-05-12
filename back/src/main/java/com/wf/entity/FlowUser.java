@@ -31,7 +31,6 @@ public class FlowUser {
      * 主键
      */
     @TableId(type = IdType.ASSIGN_ID)
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     Long id;
 
     /**
