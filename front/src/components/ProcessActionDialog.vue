@@ -415,7 +415,7 @@ watch(() => props.visible, (newVal) => {
 }
 
 .reclaim-node-item {
-  display: block;
+  display: flex;
   width: 100%;
   margin: 8px 0;
   padding: 8px 12px;

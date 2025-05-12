@@ -80,6 +80,7 @@ export default {
 					termMode: 1,		//审批期限超时后执行类型
 					examineMode: 1,		//多人审批时审批方式
 					directorMode: 0,	//连续主管审批方式
+					approveSelf: 0,		//审批人与提交人为同一人时
 					childNode: this.modelValue
 				}
 			} else if (type == 2) {

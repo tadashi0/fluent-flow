@@ -135,7 +135,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch, inject } from 'vue'
+import { ref, watch, inject } from 'vue'
 import addNode from './addNode.vue'
 import { getTableFields } from '@/api/process'
 
@@ -149,7 +149,7 @@ const nodeConfig = ref({})
 const drawer = ref(false)
 const isEditTitle = ref(false)
 const index = ref(0)
-const form = reactive({})
+const form = ref({})
 const nodeTitle = ref(null)
 
 
@@ -179,7 +179,7 @@ watch(() => props.modelValue, (newVal) => {
 
 function show(i) {
   index.value = i
-  Object.assign(form, JSON.parse(JSON.stringify(nodeConfig.conditionNodes[i])))
+  form.value = JSON.parse(JSON.stringify(nodeConfig.value.conditionNodes?.[i]))
   drawer.value = true
 }
 
@@ -193,13 +193,13 @@ function saveTitle() {
 }
 
 function save() {
-  nodeConfig.conditionNodes[index.value] = JSON.parse(JSON.stringify(form))
-  emit('update:modelValue', nodeConfig)
+  nodeConfig.value.conditionNodes[index.value] = JSON.parse(JSON.stringify(form.value))
+  emit('update:modelValue', nodeConfig.value)
 }
 
 function addTerm() {
-  const len = nodeConfig.conditionNodes.length + 1
-  nodeConfig.conditionNodes.push({
+  const len = nodeConfig.value.conditionNodes.length + 1
+  nodeConfig.value.conditionNodes.push({
     nodeName: '条件' + len,
     type: 3,
     priorityLevel: len,
@@ -209,14 +209,14 @@ function addTerm() {
 }
 
 function delTerm(i) {
-  nodeConfig.conditionNodes.splice(i, 1)
-  if (nodeConfig.conditionNodes.length === 1 && nodeConfig.childNode) {
-    if (nodeConfig.conditionNodes[0].childNode) {
-      reData(nodeConfig.conditionNodes[0].childNode, nodeConfig.childNode)
+  nodeConfig.value.conditionNodes.splice(i, 1)
+  if (nodeConfig.value.conditionNodes.length === 1 && nodeConfig.value.childNode) {
+    if (nodeConfig.value.conditionNodes[0].childNode) {
+      reData(nodeConfig.value.conditionNodes[0].childNode, nodeConfig.value.childNode)
     } else {
-      nodeConfig.conditionNodes[0].childNode = nodeConfig.childNode
+      nodeConfig.value.conditionNodes[0].childNode = nodeConfig.value.childNode
     }
-    emit('update:modelValue', nodeConfig.conditionNodes[0].childNode)
+    emit('update:modelValue', nodeConfig.value.conditionNodes[0].childNode)
   }
 }
 
@@ -229,10 +229,10 @@ function reData(data, addData) {
 }
 
 function arrTransfer(i, type = 1) {
-  const moved = nodeConfig.conditionNodes.splice(i, 1)[0]
-  nodeConfig.conditionNodes.splice(i + type, 0, moved)
-  nodeConfig.conditionNodes.forEach((item, idx) => (item.priorityLevel = idx + 1))
-  emit('update:modelValue', nodeConfig)
+  const moved = nodeConfig.value.conditionNodes.splice(i, 1)[0]
+  nodeConfig.value.conditionNodes.splice(i + type, 0, moved)
+  nodeConfig.value.conditionNodes.forEach((item, idx) => (item.priorityLevel = idx + 1))
+  emit('update:modelValue', nodeConfig.value)
 }
 
 function addConditionList(group) {
@@ -251,20 +251,20 @@ function deleteConditionList(group, idx) {
 function addConditionGroup() {
   const group = []
   addConditionList(group)
-  form.conditionList.push(group)
+  form.value.conditionList.push(group)
 }
 
 function deleteConditionGroup(idx) {
-  form.conditionList.splice(idx, 1)
+  form.value.conditionList.splice(idx, 1)
 }
 
 function toText(i) {
-  const conditionList = nodeConfig.conditionNodes?.[i].conditionList
+  const conditionList = nodeConfig.value.conditionNodes?.[i].conditionList
   if (conditionList?.length === 1) {
     return conditionList.map(group => group.map(item => `${item.label}${item.operator}${item.value}`).join(' 和 ')).join(' 或 ')
   } else if (conditionList?.length > 1) {
     return `${conditionList.length}个条件，或满足`
-  } else if (i === nodeConfig.conditionNodes?.length - 1) {
+  } else if (i === nodeConfig.value.conditionNodes?.length - 1) {
     return '其他条件进入此流程'
   }
   return false

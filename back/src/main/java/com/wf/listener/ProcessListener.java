@@ -45,6 +45,7 @@ public class ProcessListener {
                 put(TaskEventType.start, 1);
                 put(TaskEventType.restart, 1);
                 put(TaskEventType.revoke, 0);
+                put(TaskEventType.autoComplete, 2);
                 put(TaskEventType.reject, 3);
                 put(TaskEventType.autoReject, 3);
                 put(TaskEventType.terminate, 3);
@@ -125,7 +126,11 @@ public class ProcessListener {
 
         // 终止类事件
         handlers.put(TaskEventType.terminate, mergeActions(handlers.get(TaskEventType.terminate), clearHandlerAction));
+        handlers.put(TaskEventType.autoReject, mergeActions(handlers.get(TaskEventType.autoReject), clearHandlerAction));
         handlers.put(TaskEventType.revoke, mergeActions(handlers.get(TaskEventType.revoke), clearHandlerAction));
+
+        // 自动完成
+        handlers.put(TaskEventType.autoComplete, mergeActions(handlers.get(TaskEventType.autoComplete), clearHandlerAction));
 
         // 委派和唤醒任务
         handlers.put(TaskEventType.delegateResolve, setHandlerAction);
@@ -140,7 +145,6 @@ public class ProcessListener {
 
         // 处理完成事件
         handlers.put(TaskEventType.complete, this::handleCompleteEvent);
-        handlers.put(TaskEventType.autoComplete, this::handleCompleteEvent);
 
         // 各种跳转事件
         handlers.put(TaskEventType.jump, setHandlerAction);

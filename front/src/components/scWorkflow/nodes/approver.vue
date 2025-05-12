@@ -93,6 +93,15 @@
                 <p style="width: 100%;"><el-radio :label="3">或签 (有一人审批通过即可)</el-radio></p>
               </el-radio-group>
             </el-form-item>
+
+            <el-form-item label="审批人与提交人为同一人时">
+              <el-radio-group v-model="form.approveSelf">
+                <el-radio :label="0">由发起人对自己审批</el-radio>
+                <el-radio :label="1">自动跳过</el-radio>
+                <el-radio :label="2">转交给直接上级审批</el-radio>
+                <el-radio :label="3">转交给部门负责人审批</el-radio>
+              </el-radio-group>
+            </el-form-item>
           </el-form>
         </el-main>
       </el-container>
