@@ -29,13 +29,13 @@ public interface TaskMapper {
             "       AND t.task_type = 1 " +
             "       <if test='tenantId != null'> AND ta.tenant_id = #{tenantId} </if> " +
             "    ) AS todo, " +
-            "    SUM(CASE WHEN ht.task_type NOT IN (0, 2, 25) THEN 1 ELSE 0 END) AS done, " +
-            "    SUM(CASE WHEN ht.perform_type = 0 THEN 1 ELSE 0 END) AS submit, " +
-            "    SUM(CASE WHEN hta.weight = 6 THEN 1 ELSE 0 END) AS about " +
+            "    COALESCE(SUM(CASE WHEN ht.task_type NOT IN (0, 2, 25) THEN 1 ELSE 0 END), 0) AS done, " +
+            "    COALESCE(SUM(CASE WHEN ht.perform_type = 0 THEN 1 ELSE 0 END), 0) AS submit, " +
+            "    COALESCE(SUM(CASE WHEN hta.weight = 6 THEN 1 ELSE 0 END), 0) AS about " +
             "FROM flw_his_task_actor hta " +
-            "INNER JOIN flw_his_task ht ON hta.task_id = ht.id " +
-            "WHERE hta.actor_id = #{userId} " +
-            "  <if test='tenantId != null'> AND hta.tenant_id = #{tenantId} </if>" +
+            "RIGHT JOIN flw_his_task ht ON hta.task_id = ht.id " +
+            "WHERE 1=1 " +
+            "   <if test='tenantId != null'> AND (hta.tenant_id = #{tenantId} OR hta.tenant_id IS NULL) </if>" +
             "</script>")
     Map<String, Long> taskCount(@Param("userId") String userId, @Param("tenantId") String tenantId);
 
@@ -107,8 +107,10 @@ public interface TaskMapper {
             "    hi.end_time AS endTime, " +
             "    hi.current_node_name AS currentNode, " +
             "    hi.instance_state AS taskState, " +
-            "    COALESCE(task_sum.total_duration,  " +
-            "             TIMESTAMPDIFF(SECOND, hi.create_time, COALESCE(hi.end_time, NOW())) * 1000 AS duration " +
+            "    COALESCE( " +
+            "        task_sum.total_duration, " +
+            "        TIMESTAMPDIFF(SECOND, hi.create_time, COALESCE(hi.end_time, NOW())) * 1000 " +
+            "    ) AS duration " +
             "FROM flw_his_task ht " +
             "INNER JOIN flw_his_task_actor hta ON ht.id = hta.task_id " +
             "INNER JOIN flw_his_instance hi ON ht.instance_id = hi.id " +
@@ -118,12 +120,16 @@ public interface TaskMapper {
             "    FROM flw_his_task " +
             "    GROUP BY instance_id " +
             ") task_sum ON hi.id = task_sum.instance_id " +
-            "WHERE ht.parent_task_id = 0 " +
-            "  AND hta.actor_id = #{userId} " +
-            "  <if test='tenantId != null'> AND hi.tenant_id = #{tenantId} </if> " +
+            "WHERE ht.parent_task_id = '0' " +  // 修正点：确保类型匹配
+            "  <if test='userId != null'> " +
+            "      AND hta.actor_id = #{userId} " +
+            "  </if> " +
+            "  <if test='tenantId != null'> " +
+            "      AND hi.tenant_id = #{tenantId} " +
+            "  </if> " +
             "ORDER BY hi.create_time DESC" +
             "</script>")
-    IPage<SubmitListVO> submitList(@Param("userId") String userId, @Param("tenantId") String tenantId, Page page);
+    IPage<SubmitListVO> submitList(@Param("userId") String userId, @Param("tenantId") String tenantId, Page<SubmitListVO> page);
 
     @Select("<script>" +
             "SELECT " +
