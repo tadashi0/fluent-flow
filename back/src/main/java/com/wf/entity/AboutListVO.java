@@ -16,8 +16,8 @@ import java.util.Date;
 public class AboutListVO {
     // 实例ID
     Long instanceId;
-    // 任务ID
-    Long taskId;
+    // 标题
+    String title;
     // 审批类型
     String processName;
     // 发起人

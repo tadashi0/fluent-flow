@@ -106,10 +106,25 @@ export const transferProcess = (businessKey, data) => {
 export const countersignProcess = (businessKey, data) => {
   return request.put(`/task/countersign/${businessKey}`, data)
 }
+    
+// 待我处理数量
+export const todoCount = () => {
+  return request.get('/task/todoCount')
+}
 
-// 任务统计
-export const taskCount = () => {
-  return request.get('/task/count')
+// 已处理数量
+export const doneCount = () => {
+  return request.get('/task/doneCount')
+}
+
+// 我发起的数量
+export const submitCount = () => {
+  return request.get('/task/submitCount')
+}
+
+// 抄送我的数量
+export const aboutCount = () => {
+  return request.get('/task/aboutCount')
 }
 
 // 待我处理

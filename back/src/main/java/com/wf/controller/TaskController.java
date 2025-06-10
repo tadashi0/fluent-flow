@@ -60,7 +60,8 @@ public class TaskController implements TaskActorProvider {
     }
 
     private static void findNodeConfigRecursive(JSONObject node, String processId, JSONObject result) {
-        if (node == null) return;
+        if (node == null)
+            return;
 
         // 检查当前节点是否符合条件
         if (node.getIntValue("type") == 5) {
@@ -88,7 +89,8 @@ public class TaskController implements TaskActorProvider {
     }
 
     private static void findInNode(JSONObject node, String targetKey, List<NodeAssignee> result) {
-        if (node == null || result.size() > 0) return; // 找到后停止搜索
+        if (node == null || result.size() > 0)
+            return; // 找到后停止搜索
 
         // 检查当前节点
         String nodeKey = node.getString("nodeKey");
@@ -110,21 +112,27 @@ public class TaskController implements TaskActorProvider {
     /**
      * 根据流程对象启动流程实例
      */
-    //@PostMapping("{businessKey}")
-    //public CommonResult<FlwInstance> start(@PathVariable Long businessKey, @RequestBody FlwProcess flwProcess) {
-    //    FlwProcess process = flowLongEngine.processService()
-    //            .getProcessByKey(null, flwProcess.getProcessKey());
-    //    process.setModelContent(flwProcess.getModelContent());
-    //    return flowLongEngine.startProcessInstance(process, testCreator, null, () -> FlwInstance.of(String.valueOf(businessKey)))
-    //            .map(CommonResult::success)
-    //            .orElseGet(() -> CommonResult.error(GlobalErrorCodeConstants.INTERNAL_SERVER_ERROR, "启动流程失败, 请稍后重试!"));
-    //}
+    // @PostMapping("{businessKey}")
+    // public CommonResult<FlwInstance> start(@PathVariable Long businessKey,
+    // @RequestBody FlwProcess flwProcess) {
+    // FlwProcess process = flowLongEngine.processService()
+    // .getProcessByKey(null, flwProcess.getProcessKey());
+    // process.setModelContent(flwProcess.getModelContent());
+    // return flowLongEngine.startProcessInstance(process, testCreator, null, () ->
+    // FlwInstance.of(String.valueOf(businessKey)))
+    // .map(CommonResult::success)
+    // .orElseGet(() ->
+    // CommonResult.error(GlobalErrorCodeConstants.INTERNAL_SERVER_ERROR, "启动流程失败,
+    // 请稍后重试!"));
+    // }
     public List<NodeModel> getUnsetAssigneeNodes(NodeModel rootNodeModel) {
         List<NodeModel> nodeModels = ModelHelper.getRootNodeAllChildNodes(rootNodeModel);
         //
-        return nodeModels.stream().filter(t -> ObjectUtils.isEmpty(t.getNodeAssigneeList()) && (NodeSetType.specifyMembers.eq(t.getSetType())
-                || NodeSetType.initiatorThemselves.eq(t.getSetType())
-                || NodeSetType.initiatorSelected.eq(t.getSetType()))).collect(Collectors.toList());
+        return nodeModels.stream().filter(
+                t -> ObjectUtils.isEmpty(t.getNodeAssigneeList()) && (NodeSetType.specifyMembers.eq(t.getSetType())
+                        || NodeSetType.initiatorThemselves.eq(t.getSetType())
+                        || NodeSetType.initiatorSelected.eq(t.getSetType())))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -137,21 +145,23 @@ public class TaskController implements TaskActorProvider {
         AtomicReference<Boolean> result = new AtomicReference<>(false);
         if (optional.isPresent() && optional.get()
                 .stream()
-                .anyMatch(e ->
-                        Arrays.asList(InstanceState.saveAsDraft)
-                                .contains(InstanceState.get(e.getInstanceState())))) {
+                .anyMatch(e -> Arrays.asList(InstanceState.saveAsDraft)
+                        .contains(InstanceState.get(e.getInstanceState())))) {
             optional.get().stream()
                     .sorted(Comparator.comparing(FlwHisInstance::getId).reversed())
                     .findFirst()
                     .ifPresent(instance -> {
                         result.set(flowLongEngine.runtimeService()
-                                .updateInstanceModelById(instance.getId(), ModelHelper.buildProcessModel(flwProcess.getModelContent())));
+                                .updateInstanceModelById(instance.getId(),
+                                        ModelHelper.buildProcessModel(flwProcess.getModelContent())));
                     });
         } else {
             FlwProcess process = flowLongEngine.processService()
                     .getProcessByKey(null, flwProcess.getProcessKey());
             process.setModelContent(flwProcess.getModelContent());
-            flowLongEngine.startProcessInstance(process, testCreator, null, true, () -> FlwInstance.of(String.valueOf(businessKey)))
+            flowLongEngine
+                    .startProcessInstance(process, testCreator, null, true,
+                            () -> FlwInstance.of(String.valueOf(businessKey)))
                     .ifPresent(e -> result.set(true));
         }
 
@@ -160,7 +170,8 @@ public class TaskController implements TaskActorProvider {
 
     @PostMapping("start/{businessKey}")
     public CommonResult<Boolean> start(@PathVariable Long businessKey, @RequestBody FlwProcessDTO flwProcess) {
-        List<NodeModel> list = getUnsetAssigneeNodes(ModelHelper.buildProcessModel(flwProcess.getModelContent()).getNodeConfig());
+        List<NodeModel> list = getUnsetAssigneeNodes(
+                ModelHelper.buildProcessModel(flwProcess.getModelContent()).getNodeConfig());
 
         if (list.size() > 0) {
             String name = list.stream()
@@ -174,46 +185,49 @@ public class TaskController implements TaskActorProvider {
         AtomicReference<Boolean> result = new AtomicReference<>(false);
         if (optional.isPresent() && optional.get()
                 .stream()
-                .anyMatch(e ->
-                        Arrays.asList(InstanceState.saveAsDraft)
-                                .contains(InstanceState.get(e.getInstanceState())))) {
+                .anyMatch(e -> Arrays.asList(InstanceState.saveAsDraft)
+                        .contains(InstanceState.get(e.getInstanceState())))) {
             optional.get().stream()
                     .sorted(Comparator.comparing(FlwHisInstance::getId).reversed())
                     .findFirst()
                     .ifPresent(instance -> {
                         flowLongEngine.runtimeService()
-                                .updateInstanceModelById(instance.getId(), ModelHelper.buildProcessModel(flwProcess.getModelContent()));
-                        //Optional<List<FlwHisTask>> hisTaskList = flowLongEngine.queryService()
-                        //        .getHisTasksByInstanceId(instance.getId());
+                                .updateInstanceModelById(instance.getId(),
+                                        ModelHelper.buildProcessModel(flwProcess.getModelContent()));
+                        // Optional<List<FlwHisTask>> hisTaskList = flowLongEngine.queryService()
+                        // .getHisTasksByInstanceId(instance.getId());
                         //// 如果不存在历史流程,则说明还未启动, 只需要正常执行流程就好
-                        //if (hisTaskList.isPresent() && hisTaskList.get().size() == 0) {
+                        // if (hisTaskList.isPresent() && hisTaskList.get().size() == 0) {
                         flowLongEngine.queryService()
                                 .getActiveTasksByInstanceId(instance.getId())
                                 .filter(ObjectUtils::isNotEmpty)
                                 .ifPresent(e -> {
                                     e.stream().findFirst()
                                             .ifPresent(task -> {
-                                                flowLongEngine.executeTask(task.getId(), testCreator, flwProcess.getVariable());
+                                                flowLongEngine.executeTask(task.getId(), testCreator,
+                                                        flwProcess.getVariable());
                                             });
                                 });
-                        //} else {
-                        //    // 如果存在历史流程, 则需要唤醒历史流程
-                        //    hisTaskList.ifPresent(e -> {
-                        //        e.forEach(task -> {
-                        //            if (task.getTaskState() == TaskState.revoke.getValue()) {
-                        //                flowLongEngine.taskService()
-                        //                        .resume(task.getId(), testCreator);
-                        //            }
-                        //        });
-                        //    });
-                        //}
+                        // } else {
+                        // // 如果存在历史流程, 则需要唤醒历史流程
+                        // hisTaskList.ifPresent(e -> {
+                        // e.forEach(task -> {
+                        // if (task.getTaskState() == TaskState.revoke.getValue()) {
+                        // flowLongEngine.taskService()
+                        // .resume(task.getId(), testCreator);
+                        // }
+                        // });
+                        // });
+                        // }
                         result.set(true);
                     });
         } else {
             FlwProcess process = flowLongEngine.processService()
                     .getProcessByKey(null, flwProcess.getProcessKey());
             process.setModelContent(flwProcess.getModelContent());
-            flowLongEngine.startProcessInstance(process, testCreator, flwProcess.getVariable(), false, () -> FlwInstance.of(String.valueOf(businessKey)))
+            flowLongEngine
+                    .startProcessInstance(process, testCreator, flwProcess.getVariable(), false,
+                            () -> FlwInstance.of(String.valueOf(businessKey)))
                     .ifPresent(e -> result.set(true));
         }
 
@@ -280,13 +294,14 @@ public class TaskController implements TaskActorProvider {
 
         return CommonResult.success(list);
 
-        //return optional.map(e -> CommonResult.success(e.stream()
-        //                .filter(task -> TaskType.approval.eq(task.getTaskType())
-        //                        && TaskState.complete.eq(task.getTaskState())
-        //                        && !optionalFlwTasks.get().stream().map(FlwTask::getTaskKey).collect(Collectors.toList()).contains(task.getTaskKey()))
-        //                .sorted(Comparator.comparing(FlwHisTask::getId))
-        //                .collect(Collectors.toList())))
-        //        .orElseGet(() -> CommonResult.success(Arrays.asList()));
+        // return optional.map(e -> CommonResult.success(e.stream()
+        // .filter(task -> TaskType.approval.eq(task.getTaskType())
+        // && TaskState.complete.eq(task.getTaskState())
+        // &&
+        // !optionalFlwTasks.get().stream().map(FlwTask::getTaskKey).collect(Collectors.toList()).contains(task.getTaskKey()))
+        // .sorted(Comparator.comparing(FlwHisTask::getId))
+        // .collect(Collectors.toList())))
+        // .orElseGet(() -> CommonResult.success(Arrays.asList()));
     }
 
     /**
@@ -303,11 +318,13 @@ public class TaskController implements TaskActorProvider {
 
         List<FlwHisInstance> parentList = ChainWrappers.lambdaQueryChain(flwHisInstanceMapper)
                 .eq(FlwHisInstance::getBusinessKey, businessKey)
-                .in(FlwHisInstance::getId, list.stream().map(FlwHisInstance::getParentInstanceId).collect(Collectors.toList()))
+                .in(FlwHisInstance::getId,
+                        list.stream().map(FlwHisInstance::getParentInstanceId).collect(Collectors.toList()))
                 .list();
 
         return CommonResult.success(list.stream()
-                .filter(e -> parentList.stream().map(FlwHisInstance::getId).collect(Collectors.toList()).contains(e.getParentInstanceId()))
+                .filter(e -> parentList.stream().map(FlwHisInstance::getId).collect(Collectors.toList())
+                        .contains(e.getParentInstanceId()))
                 .findFirst()
                 .orElse(new FlwHisInstance())
                 .getId());
@@ -407,7 +424,7 @@ public class TaskController implements TaskActorProvider {
      */
     @PutMapping("/revoke/{businessKey}")
     public CommonResult<Boolean> revoke(@PathVariable Long businessKey) {
-        //TODO:流程审批中的人才可以撤销
+        // TODO:流程审批中的人才可以撤销
         Optional<List<FlwHisInstance>> optional = flowLongEngine.queryService()
                 .getHisInstancesByBusinessKey(String.valueOf(businessKey));
         AtomicReference<Boolean> result = new AtomicReference<>(false);
@@ -440,12 +457,14 @@ public class TaskController implements TaskActorProvider {
                                         .last("limit 1")
                                         .oneOpt()
                                         .filter(ObjectUtils::isNotEmpty);
-                                flowLongEngine.queryService().getActiveTasksByInstanceId(childInstance.isPresent() ? childInstance.get().getId() : instance.getId())
+                                flowLongEngine.queryService().getActiveTasksByInstanceId(
+                                        childInstance.isPresent() ? childInstance.get().getId() : instance.getId())
                                         .filter(ObjectUtils::isNotEmpty)
                                         .ifPresent(task -> {
                                             FlwTask flwTask = task.get(0);
                                             flowLongEngine.createCcTask(flwTask, data.getCcUsers(), testCreator);
-                                            result.set(flowLongEngine.executeTask(flwTask.getId(), testCreator, data.getVariable()));
+                                            result.set(flowLongEngine.executeTask(flwTask.getId(), testCreator,
+                                                    data.getVariable()));
                                         });
                             });
                 });
@@ -479,21 +498,22 @@ public class TaskController implements TaskActorProvider {
                                                         parentNode.getNodeKey(),
                                                         testCreator,
                                                         data.getVariable(),
-                                                        TaskType.major.eq(parentNode.getType())
-                                                ).ifPresent(e1 -> {
-                                                    flowLongEngine.createCcTask(task, data.getCcUsers(), testCreator);
-                                                    result.set(true);
-                                                });
-                                                //if(TaskType.major.eq(parentNode.getType())){
-                                                //    flowLongEngine.executeJumpTask(task.getParentTaskId(), parentNode.getNodeKey(), testCreator, null, TaskType.reApproveJump)
-                                                //                    .ifPresent(e1 -> {
-                                                //                        // 需要改变一下流程实例的状态为reject
-                                                //                        result.set(true);
-                                                //                    });
-                                                //}else {
-                                                //    flowLongEngine.taskService()
-                                                //            .rejectTask(task, testCreator);
-                                                //}
+                                                        TaskType.major.eq(parentNode.getType())).ifPresent(e1 -> {
+                                                            flowLongEngine.createCcTask(task, data.getCcUsers(),
+                                                                    testCreator);
+                                                            result.set(true);
+                                                        });
+                                                // if(TaskType.major.eq(parentNode.getType())){
+                                                // flowLongEngine.executeJumpTask(task.getParentTaskId(),
+                                                // parentNode.getNodeKey(), testCreator, null, TaskType.reApproveJump)
+                                                // .ifPresent(e1 -> {
+                                                // // 需要改变一下流程实例的状态为reject
+                                                // result.set(true);
+                                                // });
+                                                // }else {
+                                                // flowLongEngine.taskService()
+                                                // .rejectTask(task, testCreator);
+                                                // }
                                             });
                                 });
                     });
@@ -516,7 +536,8 @@ public class TaskController implements TaskActorProvider {
                         flowLongEngine.queryService()
                                 .getActiveTasksByInstanceId(instance.getId())
                                 .ifPresent(tasks -> {
-                                    flowLongEngine.createCcTask(tasks.stream().findFirst().get(), data.getCcUsers(), testCreator);
+                                    flowLongEngine.createCcTask(tasks.stream().findFirst().get(), data.getCcUsers(),
+                                            testCreator);
                                 });
                         result.set(flowLongEngine.runtimeService()
                                 .terminate(instance.getId(), testCreator));
@@ -547,23 +568,25 @@ public class TaskController implements TaskActorProvider {
                                                         task,
                                                         data.getReclaimNodeKey(),
                                                         testCreator,
-                                                        data.getVariable()
-                                                ).ifPresent(e1 -> {
-                                                    ChainWrappers.lambdaUpdateChain(flwHisTaskMapper)
-                                                            .set(FlwHisTask::getTaskState, TaskState.jump.getValue())
-                                                            .eq(FlwHisTask::getId, task.getId())
-                                                            .update();
-                                                    flowLongEngine.createCcTask(task, data.getCcUsers(), testCreator);
-                                                    result.set(true);
-                                                });
+                                                        data.getVariable()).ifPresent(e1 -> {
+                                                            ChainWrappers.lambdaUpdateChain(flwHisTaskMapper)
+                                                                    .set(FlwHisTask::getTaskState,
+                                                                            TaskState.jump.getValue())
+                                                                    .eq(FlwHisTask::getId, task.getId())
+                                                                    .update();
+                                                            flowLongEngine.createCcTask(task, data.getCcUsers(),
+                                                                    testCreator);
+                                                            result.set(true);
+                                                        });
                                             });
                                 });
                     });
         });
-        //flowLongEngine.executeJumpTask(taskId, flwTask.getTaskKey(), testCreator, null, TaskType.jump)
-        //        .ifPresent(e -> {
-        //            result.set(true);
-        //        });
+        // flowLongEngine.executeJumpTask(taskId, flwTask.getTaskKey(), testCreator,
+        // null, TaskType.jump)
+        // .ifPresent(e -> {
+        // result.set(true);
+        // });
 
         return CommonResult.success(result.get());
     }
@@ -586,16 +609,18 @@ public class TaskController implements TaskActorProvider {
                                             .findFirst()
                                             .ifPresent(task -> {
                                                 result.set(flowLongEngine.taskService()
-                                                        .transferTask(task.getId(), testCreator, data.getTransferUsers(), data.getVariable()));
+                                                        .transferTask(task.getId(), testCreator,
+                                                                data.getTransferUsers(), data.getVariable()));
                                                 flowLongEngine.createCcTask(task, data.getCcUsers(), testCreator);
                                             });
                                 });
                     });
         });
-        //flowLongEngine.executeJumpTask(taskId, flwTask.getTaskKey(), testCreator, null, TaskType.jump)
-        //        .ifPresent(e -> {
-        //            result.set(true);
-        //        });
+        // flowLongEngine.executeJumpTask(taskId, flwTask.getTaskKey(), testCreator,
+        // null, TaskType.jump)
+        // .ifPresent(e -> {
+        // result.set(true);
+        // });
 
         return CommonResult.success(result.get());
     }
@@ -627,13 +652,14 @@ public class TaskController implements TaskActorProvider {
                                                 boolean addResult = flowLongEngine.executeAppendNodeModel(
                                                         task.getId(),
                                                         nodeModel,
-                                                        //FlowCreator.of(task.getCreateId(), task.getCreateBy()),
+                                                        // FlowCreator.of(task.getCreateId(), task.getCreateBy()),
                                                         testCreator,
                                                         data.getVariable(),
-                                                        data.getSignType()
-                                                );
+                                                        data.getSignType());
                                                 if (addResult) {
-                                                    result.set(data.getSignType() ? true : flowLongEngine.executeTask(task.getId(), testCreator, data.getVariable()));
+                                                    result.set(data.getSignType() ? true
+                                                            : flowLongEngine.executeTask(task.getId(), testCreator,
+                                                                    data.getVariable()));
                                                 }
                                                 flowLongEngine.createCcTask(task, data.getCcUsers(), testCreator);
                                             });
@@ -644,11 +670,35 @@ public class TaskController implements TaskActorProvider {
     }
 
     /**
-     * 任务统计
+     * 待我处理任务数量
      */
-    @GetMapping("/count")
-    public CommonResult<JSONObject> taskCount() {
-        return CommonResult.success(taskService.taskCount());
+    @GetMapping("/todoCount")
+    public CommonResult<Long> todoCount() {
+        return CommonResult.success(taskService.todoCount());
+    }
+
+    /**
+     * 已处理任务数量
+     */
+    @GetMapping("/doneCount")
+    public CommonResult<Long> doneCount() {
+        return CommonResult.success(taskService.doneCount());
+    }
+
+    /**
+     * 我发起的数量
+     */
+    @GetMapping("/submitCount")
+    public CommonResult<Long> submitCount() {
+        return CommonResult.success(taskService.submitCount());
+    }
+
+    /**
+     * 抄送我的数量
+     */
+    @GetMapping("/aboutCount")
+    public CommonResult<Long> aboutCount() {
+        return CommonResult.success(taskService.aboutCount());
     }
 
     /**
@@ -697,7 +747,8 @@ public class TaskController implements TaskActorProvider {
                     .last("limit 1")
                     .one().getModelContent();
             JSONObject root = JSON.parseObject(modelContent);
-            JSONObject nodeConfig = findNodeConfig(root.getJSONObject("nodeConfig"), instance.getProcessId().toString());
+            JSONObject nodeConfig = findNodeConfig(root.getJSONObject("nodeConfig"),
+                    instance.getProcessId().toString());
             nodeAssigneeList.addAll(findAssigneesByNodeKey(nodeConfig, nodeModel.getNodeKey()));
         }
         if (ActorType.user.eq(actorType)) {
@@ -767,7 +818,8 @@ public class TaskController implements TaskActorProvider {
         }
 
         // 3，主管 && 连续多级主管
-        if (NodeSetType.supervisor.eq(nodeModel.getSetType()) || NodeSetType.multiLevelSupervisors.eq(nodeModel.getSetType())) {
+        if (NodeSetType.supervisor.eq(nodeModel.getSetType())
+                || NodeSetType.multiLevelSupervisors.eq(nodeModel.getSetType())) {
             return 3;
         }
         return 0;

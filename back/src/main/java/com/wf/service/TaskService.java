@@ -12,11 +12,18 @@ import java.util.List;
 
 /**
  * @author chonghui. tian
- * date 2025/4/17 17:26
- * description 
- */public interface TaskService {
+ *         date 2025/4/17 17:26
+ *         description
+ */
+public interface TaskService {
 
-    JSONObject taskCount();
+    Long todoCount();
+
+    Long doneCount();
+
+    Long submitCount();
+
+    Long aboutCount();
 
     IPage<TodoListVO> todoList(Page page);
 
