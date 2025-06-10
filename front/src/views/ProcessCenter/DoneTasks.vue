@@ -12,6 +12,7 @@
                       {{ (queryParams.current - 1) * queryParams.size + $index + 1 }}
                   </template>
               </el-table-column>
+              <el-table-column prop="title" label="标题" align="center" />
               <el-table-column prop="processName" label="审批类型" align="center" />
               <el-table-column prop="startName" label="发起人" align="center" />
               <el-table-column prop="currentNode" label="任务节点名" align="center" />

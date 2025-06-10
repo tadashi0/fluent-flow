@@ -38,14 +38,14 @@ const handleCancel = () => {
 const handleSave = async () => {
   try {
     // 1. 先调用父组件保存逻辑
-    const businessKey = await props.onSave()
+    const params = await props.onSave()
     // 2. 执行子组件保存逻辑
     const data = {
       processKey: props.processKey,
       modelContent: JSON.stringify(modelContent.value)
     }
     // await request?.post('/task/save/' + businessKey, data)
-    await saveProcess(businessKey, data)
+    await saveProcess(params.id, data)
     handleCancel()
     emit('refresh');
     ElMessage.success('保存成功')
