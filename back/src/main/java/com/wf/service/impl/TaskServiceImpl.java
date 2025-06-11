@@ -69,7 +69,9 @@ public class TaskServiceImpl implements TaskService {
     public IPage<DoneListVO> doneList(Page page) {
         // 获取当前用户
         String userId = "20240815";
+        page.setSearchCount(false);
         IPage<DoneListVO> pageResult = mapper.doneList(userId, null, page);
+        pageResult.setTotal(1000000);
         return pageResult;
     }
 
@@ -77,7 +79,9 @@ public class TaskServiceImpl implements TaskService {
     public IPage<SubmitListVO> submitList(boolean isAll, Page page) {
         // 获取当前用户
         String userId = "20240815";
+        page.setSearchCount(false);
         IPage<SubmitListVO> pageResult = mapper.submitList(isAll ? null : userId, null, page);
+        pageResult.setTotal(200000);
         return pageResult;
     }
 
@@ -85,7 +89,9 @@ public class TaskServiceImpl implements TaskService {
     public IPage<AboutListVO> aboutList(Page page) {
         // 获取当前用户
         String userId = "20240815";
+        page.setSearchCount(false);
         IPage<AboutListVO> pageResult = mapper.aboutList(userId, null, page);
+        pageResult.setTotal(200000);
         return pageResult;
     }
 

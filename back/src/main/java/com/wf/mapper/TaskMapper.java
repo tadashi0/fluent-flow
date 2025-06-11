@@ -235,5 +235,5 @@ public interface TaskMapper {
                 "<if test='tenantId != null'> AND i.tenant_id = #{tenantId} </if> " +
                 "LIMIT #{current}, #{size} " +
                 "</script>")
-        List<Long> getBusinessKeys(@Param("userId") Long userId, @Param("tenantId") Long tenantId, @Param("current") long current, @Param("size") long size);
+        List<Long> getBusinessKeys(@Param("userId") String userId, @Param("tenantId") String tenantId, @Param("size") long size, @Param("current") long current);
 }
