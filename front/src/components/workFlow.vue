@@ -1,14 +1,14 @@
 <template>
   <el-affix :offset="16" style="height: 74px; width: 100%">
     <div class="btn-container">
-      <div class="slider">
-        <el-button type="primary" icon="el-icon-minus" style="margin-right: 16px; width: 32px" @click="zoom -= 0.1" />
-        <el-slider v-model="zoom" :marks="marks" :min="0.1" :max="5" :step="0.1" height="200px" />
-        <el-button type="primary" icon="el-icon-plus" style="margin-left: 16px; width: 32px" @click="zoom += 0.1" />
+      <div class="zoom-control">
+        <el-button circle type="default" icon="el-icon-minus" @click="decreaseZoom" />
+        <span class="zoom-percentage">{{ Math.round(zoom * 100) }}%</span>
+        <el-button circle type="default" icon="el-icon-plus" @click="increaseZoom" />
       </div>
     </div>
   </el-affix>
-  <div class="affix-container" :style="`transform: scale(${zoom})`" style="transform-origin: 0 0">
+  <div class="affix-container" :style="`transform: scale(${zoom}); transform-origin: 50% 0`">
     <sc-workflow class="workflow" ref="workflowRef" id="content-to-capture" v-model="data.nodeConfig" />
   </div>
 </template>
@@ -37,14 +37,17 @@ const props = defineProps({
 
 // 缩放控制
 const zoom = ref(1)
-const marks = reactive({
-  0.1: 'min',
-  1: '1',
-  2: '2',
-  3: '3',
-  4: '4',
-  5: 'max'
-})
+// 增加和减少缩放的方法
+const increaseZoom = () => {
+  if (zoom.value < 5) {
+    zoom.value = Math.min(5, zoom.value + 0.05)
+  }
+}
+const decreaseZoom = () => {
+  if (zoom.value > 0.1) {
+    zoom.value = Math.max(0.1, zoom.value - 0.05)
+  }
+}
 
 // 流程数据
 const defaultData = computed(() => ({
@@ -165,10 +168,18 @@ body {
   justify-content: flex-end;
 }
 
-.slider {
-  width: 300px;
+.zoom-control {
   display: flex;
-  margin-left: 0;
+  align-items: center;
   margin-right: 16px;
+  border-radius: 20px;
+  padding: 4px 8px;
+}
+
+.zoom-percentage {
+  margin: 0 3px;
+  font-size: 16px;
+  min-width: 40px;
+  text-align: center;
 }
 </style>
