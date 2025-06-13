@@ -134,10 +134,10 @@ public class FlowUserServiceImpl extends ServiceImpl<FlowUserMapper, FlowUser> i
         log.info("businessKeys: {}", businessKeys);
         LambdaQueryWrapper<FlowUser> wrapper = new LambdaQueryWrapper<>();
         // Example: wrapper.like(flowUser.getName() != null, FlowUser::getName, flowUser.getName());
-        wrapper.and(e -> {
-            e.eq(FlowUser::getCreatedBy, userId)
-                    .or().in(FlowUser::getId, businessKeys);
-        });
+        //wrapper.and(e -> {
+        //    e.eq(FlowUser::getCreatedBy, userId)
+        //            .or().in(FlowUser::getId, businessKeys);
+        //});
         wrapper.like(StringUtils.isNotBlank(flowUser.getName()), FlowUser::getName, flowUser.getName());
         wrapper.eq(Objects.nonNull(flowUser.getAge()), FlowUser::getAge, flowUser.getAge());
         wrapper.eq(Objects.nonNull(flowUser.getState()), FlowUser::getState, flowUser.getState());
@@ -146,6 +146,8 @@ public class FlowUserServiceImpl extends ServiceImpl<FlowUserMapper, FlowUser> i
         wrapper.eq(Objects.nonNull(flowUser.getCreatedTime()), FlowUser::getCreatedTime, flowUser.getCreatedTime());
         wrapper.eq(Objects.nonNull(flowUser.getModifyBy()), FlowUser::getModifyBy, flowUser.getModifyBy());
         wrapper.eq(Objects.nonNull(flowUser.getModifyTime()), FlowUser::getModifyTime, flowUser.getModifyTime());
+        wrapper.eq(FlowUser::getCreatedBy, userId);
+        wrapper.or().in(FlowUser::getId, businessKeys);
         wrapper.orderByDesc(FlowUser::getId);
         IPage<FlowUser> resultPage = flowUserMapper.selectPage(page, wrapper);
         resultPage.getRecords().forEach(e -> {

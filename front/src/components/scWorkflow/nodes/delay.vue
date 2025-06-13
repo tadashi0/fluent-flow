@@ -19,7 +19,7 @@
       v-model="drawer"
       destroy-on-close
       append-to-body
-      :size="500"
+      :size="600"
       @closed="save"
     >
       <template #header>
@@ -75,6 +75,7 @@
                 v-model="autoTime"
                 format="HH:mm:ss"
                 value-format="HH:mm:ss"
+                placeholder="时间点"
               />
               <span style="margin-left: 10px;">后进入下一步</span>
             </el-form-item>

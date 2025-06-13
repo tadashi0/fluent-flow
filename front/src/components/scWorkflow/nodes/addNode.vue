@@ -32,6 +32,18 @@
 							<p>触发器</p>
 						</li>
 						<li>
+							<el-icon style="color: #626AEF;" @click="addType(8)"><el-icon-operation /></el-icon>
+							<p>并行分支</p>
+						</li>
+						<li>
+							<el-icon style="color: #345DA2;" @click="addType(9)"><el-icon-copy-document /></el-icon>
+							<p>包容分支</p>
+						</li>
+						<li>
+							<el-icon style="color: #DD2626;" @click="addType(23)"><el-icon-share /></el-icon>
+							<p>路由分支</p>
+						</li>
+						<li>
 							<el-icon style="color: #67C23A;" @click="addType(30)"><el-icon-circle-check-filled /></el-icon>
 							<p>自动通过</p>
 						</li>
@@ -132,7 +144,7 @@ export default {
 					type: 6,
 					delayType: '1',
 					extendConfig: {
-						time: "0:m"
+						time: "1:m"
 					},
 					childNode: this.modelValue
 				}
@@ -141,14 +153,103 @@ export default {
 					nodeName: "触发器",
 					nodeKey: this.getNodeKey(),
 					type: 7,
-					triggerType: 1,
 					delayType: '1',
+					triggerType: '1',
 					extendConfig: {
-						time: "0:m"
+						time: "1:m",
+						args: "",
+    					trigger: ""
 					},
 					childNode: this.modelValue
 				}
-			} else if (type == 30) {
+			}else if (type == 8) {
+				node = {
+					nodeName: "并行分支",
+					nodeKey: this.getNodeKey(),
+					type: 8,
+					delayType: '1',
+					triggerType: '1',
+					extendConfig: {
+						time: "1:m",
+						args: "",
+    					trigger: ""
+					},
+					parallelNodes: [
+						{
+							nodeName: "并行分支1",
+							nodeKey: this.getNodeKey(),
+							type: 3,
+							priorityLevel: 1,
+							conditionMode: 1,
+							conditionList: []
+						},
+						{
+							nodeName: "并行分支2",
+							nodeKey: this.getNodeKey(),
+							type: 3,
+							priorityLevel: 2,
+							conditionMode: 1,
+							conditionList: []
+						}
+					],
+					childNode: this.modelValue
+				}
+			}else if (type == 9) {
+				node = {
+					nodeName: "包容分支",
+					nodeKey: this.getNodeKey(),
+					type: 9,
+					delayType: '1',
+					triggerType: '1',
+					extendConfig: {
+						time: "1:m",
+						args: "",
+    					trigger: ""
+					},
+					inclusiveNodes: [
+						{
+							nodeName: "包容条件1",
+							nodeKey: this.getNodeKey(),
+							type: 3,
+							priorityLevel: 1,
+							conditionMode: 1,
+							conditionList: []
+						},
+						{
+							nodeName: "包容条件2",
+							nodeKey: this.getNodeKey(),
+							type: 3,
+							priorityLevel: 2,
+							conditionMode: 1,
+							conditionList: []
+						}
+					],
+					childNode: this.modelValue
+				}
+			}else if (type == 23) {
+				node = {
+					nodeName: "路由分支",
+					nodeKey: this.getNodeKey(),
+					type: 23,
+					delayType: '1',
+					triggerType: '1',
+					extendConfig: {
+						time: "1:m",
+						args: "",
+    					trigger: ""
+					},
+					routeNodes: [
+						{
+							nodeName: "路由1",
+							nodeKey: this.getNodeKey(),
+							priorityLevel: 1,
+							conditionMode: 1,
+							conditionList: []
+						}
+					],
+					childNode: this.modelValue
+				}
+			}else if (type == 30) {
 				node = {
 					nodeName: "自动通过",
 					nodeKey: this.getNodeKey(),

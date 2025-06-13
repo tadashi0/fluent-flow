@@ -19,7 +19,13 @@
 
 	<trigger v-if="nodeConfig.type==7" v-model="nodeConfig"></trigger>
 
-	<through v-if="nodeConfig.type==30" v-model="nodeConfig"></through>
+	<trigger v-if="nodeConfig.type==8" v-model="nodeConfig"></trigger>
+
+	<parallel v-if="nodeConfig.type==9" v-model="nodeConfig"></parallel>
+
+	<inclusive v-if="nodeConfig.type==23" v-model="nodeConfig"></inclusive>
+
+	<route v-if="nodeConfig.type==30" v-model="nodeConfig"></route>
 
 	<refuse v-if="nodeConfig.type==31" v-model="nodeConfig"></refuse>
 
@@ -38,6 +44,9 @@ import through from './nodes/through.vue'
 import refuse from './nodes/refuse.vue'
 import delay from './nodes/delay.vue'
 import trigger from './nodes/trigger.vue'
+import parallel from './nodes/parallel.vue'
+import inclusive from './nodes/inclusive.vue'
+import route from './nodes/route.vue'
 
 
 export default {
@@ -54,7 +63,10 @@ export default {
 		through,
 		refuse,
 		delay,
-		trigger
+		trigger,
+		parallel,
+		inclusive,
+		route,
 	},
 	data() {
 		return {

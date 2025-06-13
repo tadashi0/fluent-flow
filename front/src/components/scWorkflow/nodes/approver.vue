@@ -12,7 +12,7 @@
       </div>
     </div>
     <add-node v-model="nodeConfig.childNode"></add-node>
-    <el-drawer title="审批人设置" v-model="drawer" destroy-on-close append-to-body :size="500" @closed="save">
+    <el-drawer title="审批人设置" v-model="drawer" destroy-on-close append-to-body :size="600" @closed="save">
       <template #header>
         <div class="node-wrap-drawer__title">
           <label @click="editTitle" v-if="!isEditTitle">{{form.nodeName}}<el-icon class="node-wrap-drawer__title-edit"><el-icon-edit /></el-icon></label>

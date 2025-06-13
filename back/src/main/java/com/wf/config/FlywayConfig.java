@@ -84,6 +84,7 @@ public class FlywayConfig {
                         .outOfOrder(OUT_OF_ORDER)
                         .validateOnMigrate(VALIDATE_ON_MIGRATE)
                         .load();
+                flyway.repair();
                 flyway.migrate();
             }
         });

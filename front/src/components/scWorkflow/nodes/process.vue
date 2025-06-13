@@ -19,7 +19,7 @@
       v-model="drawer" 
       destroy-on-close 
       append-to-body 
-      :size="500"
+      :size="600"
       @closed="save"
     >
       <template #header>
