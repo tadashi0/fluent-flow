@@ -1,219 +1,264 @@
 <template>
-  <div class="node-wrap">
-    <div class="node-wrap-box" @click="show">
-      <div class="title" style="background: #38B58B;">
-        <el-icon class="icon"><el-icon-set-up /></el-icon>
-        <span>{{ nodeConfig.nodeName }}</span>
-        <el-icon class="close" @click.stop="delNode"><el-icon-close /></el-icon>
-      </div>
-      <div class="content">
-        <span v-if="displayTime">{{ displayTime }}</span>
-        <span v-else class="placeholder">请设置触发器</span>
-      </div>
-    </div>
+  <div class="branch-wrap">
+    <div class="branch-box-wrap">
+      <div class="branch-box">
+        <el-button class="add-branch" plain round @click="addTerm">
+          添加分支
+        </el-button>
 
-    <add-node v-model="nodeConfig.childNode" />
+        <div class="col-box" v-for="(item, index) in nodeConfig.parallelNodes" :key="index">
+          <div class="condition-node">
+            <div class="condition-node-box">
+              <div class="auto-judge">
+                <div class="sort-left" v-if="index !== 0" @click.stop="arrTransfer(index, -1)">
+                  <el-icon><el-icon-arrow-left /></el-icon>
+                </div>
+                <div class="title">
+                  <span class="node-title8">{{ item.nodeName }}</span>
+                  <span class="priority-title">并行执行</span>
+                  <el-icon class="copy" @click.stop="copyNode(index)">
+                    <el-icon-copy-document />
+                  </el-icon>
+                  <el-icon class="close" @click.stop="delTerm(index)">
+                    <el-icon-close />
+                  </el-icon>
+                </div>
+                <div class="content">
+                  <span>并行任务（同时进行）</span>
+                </div>
+                <div class="sort-right" v-if="index !== nodeConfig.parallelNodes.length - 1" @click.stop="arrTransfer(index)">
+                  <el-icon><el-icon-arrow-right /></el-icon>
+                </div>
+              </div>
+              <add-node v-model="item.childNode" />
+            </div>
+          </div>
 
-    <el-drawer
-      title="触发器设置"
-      v-model="drawer"
-      destroy-on-close
-      append-to-body
-      :size="600"
-      @closed="save"
-    >
-      <template #header>
-        <div class="node-wrap-drawer__title">
-          <label @click="editTitle" v-if="!isEditTitle">
-            {{ form.nodeName }}
-            <el-icon class="node-wrap-drawer__title-edit">
-              <el-icon-edit />
-            </el-icon>
-          </label>
-          <el-input
-            v-if="isEditTitle"
-            ref="nodeTitle"
-            v-model="form.nodeName"
-            clearable
-            @blur="saveTitle"
-            @keyup.enter="saveTitle"
-          />
+          <slot v-if="item.childNode" :node="item"></slot>
+
+          <div class="top-left-cover-line" v-if="index === 0"></div>
+          <div class="bottom-left-cover-line" v-if="index === 0"></div>
+          <div class="top-right-cover-line" v-if="index === nodeConfig.parallelNodes.length - 1"></div>
+          <div class="bottom-right-cover-line" v-if="index === nodeConfig.parallelNodes.length - 1"></div>
         </div>
-      </template>
-
-      <el-container>
-        <el-main style="padding: 0 20px 20px 20px;">
-          <el-form label-position="top">
-            <el-form-item>
-              <el-radio-group v-model="triggerType">
-                <el-radio label="1">立即执行</el-radio>
-                <el-radio label="2">延迟执行</el-radio>
-              </el-radio-group>
-            </el-form-item>
-
-            <!-- 延迟执行时显示 -->
-            <template v-if="triggerType === '2'">
-              <el-form-item>
-                <el-radio-group v-model="delayType">
-                  <el-radio-button label="1">固定时长</el-radio-button>
-                  <el-radio-button label="2">自动计算</el-radio-button>
-                </el-radio-group>
-              </el-form-item>
-              <el-form-item v-if="delayType === '1'">
-                <el-input
-                  type="number"
-                  v-model="fixedValue"
-                  style="max-width: 200px"
-                >
-                  <template #append>
-                    <el-select v-model="fixedUnit" style="width: 80px">
-                      <el-option label="天" value="d" />
-                      <el-option label="小时" value="h" />
-                      <el-option label="分钟" value="m" />
-                    </el-select>
-                  </template>
-                </el-input>
-                <span style="margin-left: 10px;">后进入下一步</span>
-              </el-form-item>
-              <el-form-item v-if="delayType === '2'">
-                <el-time-picker
-                  v-model="autoTime"
-                  format="HH:mm:ss"
-                  value-format="HH:mm:ss"
-                  placeholder="时间点"
-                />
-                <span style="margin-left: 10px;">后进入下一步</span>
-              </el-form-item>
-            </template>
-              <!-- 立即执行和延迟执行下都显示参数和触发器输入框 -->
-              <el-form-item>
-                  <el-input
-                    type="textarea"
-                    v-model="args"
-                    :rows="4"
-                    placeholder="请输入执行参数(json格式)"
-                  />
-              </el-form-item>
-            <el-form-item>
-              <el-input
-                v-model="trigger"
-                placeholder="必填项，接口 TaskTrigger 实现 class 如果不配置，调用全局实现子类"
-              />
-            </el-form-item>
-          </el-form>
-        </el-main>
-      </el-container>
-    </el-drawer>
+      </div>
+      <add-node v-model="nodeConfig.childNode" />
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, computed, nextTick } from 'vue'
-import AddNode from './addNode.vue'
+import { ref, watch, inject } from 'vue'
+import addNode from './addNode.vue'
+import { getTableFields } from '@/api/process'
 
 const props = defineProps({
-  modelValue: {
-    type: Object,
-    default: () => ({})
-  }
+  modelValue: { type: Object, default: () => ({}) }
 })
+
 const emit = defineEmits(['update:modelValue'])
 
 const nodeConfig = ref({})
-const drawer = ref(false)
-const form = ref({})
-const isEditTitle = ref(false)
-const nodeTitle = ref(null)
+const fieldOptions = ref([])
 
-const triggerType = ref('1')
-const delayType = ref('1')
-const fixedValue = ref(0)
-const fixedUnit = ref('m')
-const autoTime = ref('')
-const args = ref('')
-const trigger = ref('')
+const injectedTableName = inject('tableName', ref(''))
 
-// 展示时间格式
-const displayTime = computed(() => {
-  const { triggerType, delayType, extendConfig } = nodeConfig.value
-  
-  // 如果是立即执行
-  if (triggerType === '1') {
-    return '立即执行'
+watch(injectedTableName, async (newVal) => {
+  if (newVal) {
+    const res = await getTableFields(newVal)
+    fieldOptions.value = res.data || []
   }
-  
-  // 如果是延迟执行
-  const time = extendConfig?.time
-  if (!time) return null
-
-  if (delayType === '1') {
-    const map = { m: '分钟', h: '小时', d: '天' }
-    const [val, unit] = time.split(':')
-    return `延迟执行，等待 ${val} ${map[unit] || ''}`
-  }
-  return `延迟执行，至当天 ${time}`
-})
+}, { immediate: true })
 
 // 初始值同步
 watch(() => props.modelValue, (newVal) => {
   nodeConfig.value = newVal
 }, { immediate: true })
 
-// 打开抽屉并同步值
-const show = () => {
-  form.value = JSON.parse(JSON.stringify(nodeConfig.value))
-  triggerType.value = form.value.triggerType || '1'
-  delayType.value = form.value.delayType || '1'
-  args.value = form.value.extendConfig?.args || ''
-  trigger.value = form.value.extendConfig?.trigger || ''
-
-  const time = form.value.extendConfig?.time
-  if (delayType.value === '1' && time) {
-    const [val, unit] = time.split(':')
-    fixedValue.value = parseInt(val)
-    fixedUnit.value = unit
-  } else if (delayType.value === '2') {
-    autoTime.value = time || ''
+function copyNode(i) {
+  const nodeToCopy = JSON.parse(JSON.stringify(nodeConfig.value.parallelNodes[i]))
+  
+  // 复制节点，修改名称和Key
+  const newNode = {
+    ...nodeToCopy,
+    nodeName: `${nodeToCopy.nodeName}_copy`,
+    nodeKey: Date.now().toString(),
+    priorityLevel: i + 2 // 设置为当前节点的下一个优先级
   }
-
-  drawer.value = true
+  
+  // 在当前节点后插入复制的节点
+  nodeConfig.value.parallelNodes.splice(i + 1, 0, newNode)
+  
+  // 更新后续节点的优先级
+  nodeConfig.value.parallelNodes.forEach((item, idx) => {
+    item.priorityLevel = idx + 1
+  })
+  
+  emit('update:modelValue', nodeConfig.value)
 }
 
-const editTitle = () => {
-  isEditTitle.value = true
-  nextTick(() => nodeTitle.value?.focus())
+function addTerm() {
+  const len = nodeConfig.value.parallelNodes.length
+  
+  // 创建新节点
+  const newNode = {
+    nodeName: '并行分支' + (len + 1),
+    nodeKey: Date.now().toString(),
+    type: 3,
+    priorityLevel: len + 1,
+    conditionMode: 1,
+    conditionList: []
+  }
+  
+  // 添加到末尾
+  nodeConfig.value.parallelNodes.push(newNode)
+  
+  // 更新优先级
+  nodeConfig.value.parallelNodes.forEach((item, idx) => {
+    item.priorityLevel = idx + 1
+  })
+  
+  emit('update:modelValue', nodeConfig.value)
 }
 
-const saveTitle = () => {
-  isEditTitle.value = false
-}
-
-const save = () => {
-  form.value.triggerType = triggerType.value
-  if (!form.value.extendConfig) form.value.extendConfig = {}
-
-  if (triggerType.value === '2') {
-    form.value.delayType = delayType.value
-    if (delayType.value === '1') {
-      form.value.extendConfig.time = `${fixedValue.value}:${fixedUnit.value}`
-    } else if (delayType.value === '2') {
-      form.value.extendConfig.time = autoTime.value
+function delTerm(i) {
+  nodeConfig.value.parallelNodes.splice(i, 1)
+  
+  // 更新优先级
+  nodeConfig.value.parallelNodes.forEach((item, idx) => {
+    item.priorityLevel = idx + 1
+  })
+  
+  // 如果删除完所有节点
+  if (nodeConfig.value.parallelNodes.length === 0) {
+    // 如果有子节点，则直接返回子节点
+    if (nodeConfig.value.childNode) {
+      emit('update:modelValue', nodeConfig.value.childNode)
+    } else {
+      // 否则返回null，让父组件知道此节点已被完全删除
+      emit('update:modelValue', null)
     }
+    return
   }
-
-  form.value.extendConfig.args = args.value
-  form.value.extendConfig.trigger = trigger.value
-
-  emit('update:modelValue', form.value)
+  
+  emit('update:modelValue', nodeConfig.value)
 }
 
-const delNode = () => {
-  emit('update:modelValue', nodeConfig.value.childNode)
+function arrTransfer(i, type = 1) {
+  const targetIndex = i + type
+  
+  // 不允许移动超出范围
+  if (targetIndex < 0 || targetIndex >= nodeConfig.value.parallelNodes.length) return
+  
+  const moved = nodeConfig.value.parallelNodes.splice(i, 1)[0]
+  nodeConfig.value.parallelNodes.splice(targetIndex, 0, moved)
+  nodeConfig.value.parallelNodes.forEach((item, idx) => (item.priorityLevel = idx + 1))
+  emit('update:modelValue', nodeConfig.value)
 }
 </script>
 
-<style scoped>
-::v-deep .el-input .el-input__inner {
-  line-height: var(--el-input-inner-height) !important;
+<style scoped lang="scss">
+.top-tips {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  color: #646a73;
 }
+
+.or-branch-link-tip {
+  margin: 10px 0;
+  color: #646a73;
+}
+
+.condition-group-editor {
+  user-select: none;
+  border-radius: 4px;
+  border: 1px solid #e4e5e7;
+  position: relative;
+  margin-bottom: 16px;
+
+  .branch-delete-icon {
+    font-size: 18px;
+  }
+
+  .header {
+    background-color: #f4f6f8;
+    padding: 0 12px;
+    font-size: 14px;
+    color: #171e31;
+    height: 36px;
+    display: flex;
+    align-items: center;
+
+    span {
+      flex: 1;
+    }
+  }
+
+  .main-content {
+    padding: 0 12px;
+
+    .condition-relation {
+      color: #9ca2a9;
+      display: flex;
+      align-items: center;
+      height: 36px;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 2px;
+    }
+
+    .condition-content-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      div {
+        width: 100%;
+        min-width: 120px;
+      }
+
+      div:not(:first-child) {
+        margin-left: 16px;
+      }
+    }
+
+    .cell-box {
+      div {
+        padding: 16px 0;
+        width: 100%;
+        min-width: 120px;
+        color: #909399;
+        font-size: 14px;
+        font-weight: 600;
+        text-align: center;
+      }
+    }
+
+    .condition-content {
+      display: flex;
+      flex-direction: column;
+
+      :deep(.el-input__wrapper) {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+      }
+
+      .content {
+        flex: 1;
+        padding: 0 0 4px 0;
+        display: flex;
+        align-items: center;
+        min-height: 31.6px;
+        flex-wrap: wrap;
+      }
+    }
+  }
+
+  .sub-content {
+    padding: 12px;
+  }
+}
+
 </style>

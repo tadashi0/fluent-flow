@@ -40,8 +40,8 @@
 							<p>包容分支</p>
 						</li>
 						<li>
-							<el-icon style="color: #DD2626;" @click="addType(23)"><el-icon-share /></el-icon>
-							<p>路由分支</p>
+							<el-icon style="color: #DD2626;" @click="addType(23)"><el-icon-paperclip /></el-icon>
+							<p>路由跳转</p>
 						</li>
 						<li>
 							<el-icon style="color: #67C23A;" @click="addType(30)"><el-icon-circle-check-filled /></el-icon>
@@ -120,8 +120,8 @@ export default {
 							conditionList: []
 						},
 						{
-							nodeName: "条件2",
-							nodeKey: 'flk' + (Date.now() + 1),
+							nodeName: "默认条件",
+							nodeKey: this.getNodeKey(),
 							type: 3,
 							priorityLevel: 2,
 							conditionMode: 1,
@@ -167,13 +167,6 @@ export default {
 					nodeName: "并行分支",
 					nodeKey: this.getNodeKey(),
 					type: 8,
-					delayType: '1',
-					triggerType: '1',
-					extendConfig: {
-						time: "1:m",
-						args: "",
-    					trigger: ""
-					},
 					parallelNodes: [
 						{
 							nodeName: "并行分支1",
@@ -194,18 +187,11 @@ export default {
 					],
 					childNode: this.modelValue
 				}
-			}else if (type == 9) {
+			} else if (type == 9) {
 				node = {
 					nodeName: "包容分支",
 					nodeKey: this.getNodeKey(),
 					type: 9,
-					delayType: '1',
-					triggerType: '1',
-					extendConfig: {
-						time: "1:m",
-						args: "",
-    					trigger: ""
-					},
 					inclusiveNodes: [
 						{
 							nodeName: "包容条件1",
@@ -216,7 +202,7 @@ export default {
 							conditionList: []
 						},
 						{
-							nodeName: "包容条件2",
+							nodeName: "默认条件",
 							nodeKey: this.getNodeKey(),
 							type: 3,
 							priorityLevel: 2,
@@ -228,20 +214,12 @@ export default {
 				}
 			}else if (type == 23) {
 				node = {
-					nodeName: "路由分支",
+					nodeName: "路由跳转",
 					nodeKey: this.getNodeKey(),
 					type: 23,
-					delayType: '1',
-					triggerType: '1',
-					extendConfig: {
-						time: "1:m",
-						args: "",
-    					trigger: ""
-					},
 					routeNodes: [
 						{
 							nodeName: "路由1",
-							nodeKey: this.getNodeKey(),
 							priorityLevel: 1,
 							conditionMode: 1,
 							conditionList: []

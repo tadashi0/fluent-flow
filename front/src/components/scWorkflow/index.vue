@@ -1,68 +1,87 @@
-<!--
- * @Descripttion: 仿钉钉流程设计器
- * @version: 1.3
- * @Author: sakuya
- * @Date: 2021年9月14日08:38:35
- * @LastEditors: sakuya
- * @LastEditTime: 2022年5月14日19:43:46
--->
-
 <template>
   <div class="sc-workflow-design">
     <div class="box-scale">
       <node-wrap
         v-if="nodeConfig"
-        v-model="nodeConfig"></node-wrap>
+        v-model="nodeConfig"
+      />
     </div>
     <use-select
       v-if="selectVisible"
       ref="useselect"
-      @closed="selectVisible = false"></use-select>
+      @closed="selectVisible = false"
+    />
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, watch, onMounted, provide, nextTick } from 'vue'
 import nodeWrap from './nodeWrap.vue'
 import useSelect from './select.vue'
 
-export default {
-  provide() {
-    return {
-      select: this.selectHandle
+const props = defineProps({
+  modelValue: {
+    type: Object,
+    default: () => ({})
+  }
+})
+
+const emit = defineEmits(['update:modelValue'])
+
+const nodeConfig = ref(props.modelValue)
+const selectVisible = ref(false)
+const availableNodes = ref([])
+const useselect = ref(null)
+
+// 提供给子组件使用的方法
+const openSelect = (type, data) => {
+  selectVisible.value = true
+  nextTick(() => {
+    useselect.value?.open(type, data)
+  })
+}
+provide('select', openSelect)
+provide('availableNodes', availableNodes)
+
+// 计算所有可用节点（优化后的逻辑）
+const getAvailableNodes = (rootNode) => {
+  const result = []
+
+  const traverse = (node) => {
+    if (!node) return
+
+    const { type, nodeKey, nodeName } = node
+    if ([0, 1].includes(type)) {
+      result.push({ nodeKey, nodeName })
     }
-  },
-  props: {
-    modelValue: { type: Object, default: () => {} }
-  },
-  components: {
-    nodeWrap,
-    useSelect
-  },
-  data() {
-    return {
-      nodeConfig: this.modelValue,
-      selectVisible: false
-    }
-  },
-  watch: {
-    modelValue(val) {
-      this.nodeConfig = val
-    },
-    nodeConfig(val) {
-      this.$emit('update:modelValue', val)
-    }
-  },
-  mounted() {},
-  methods: {
-    selectHandle(type, data) {
-      this.selectVisible = true
-      this.$nextTick(() => {
-        this.$refs.useselect.open(type, data)
-      })
+
+    const children = node.childNode
+    if (Array.isArray(children)) {
+      children.forEach(traverse)
+    } else if (children) {
+      traverse(children)
     }
   }
+
+  traverse(rootNode)
+  return result
 }
+
+// 更新节点配置时同步 availableNodes
+watch(() => props.modelValue, (newVal) => {
+  nodeConfig.value = newVal
+}, { immediate: true })
+
+watch(nodeConfig, (newVal) => {
+  emit('update:modelValue', newVal)
+  availableNodes.value = getAvailableNodes(newVal)
+}, { deep: true })
+
+onMounted(() => {
+  availableNodes.value = getAvailableNodes(nodeConfig.value)
+})
 </script>
+
 
 <style lang="scss">
 .sc-workflow-design {
@@ -284,8 +303,22 @@ export default {
   .auto-judge .title {
     line-height: 16px;
   }
-  .auto-judge .title .node-title {
+  .auto-judge .title .node-title4 {
     color: #15bc83;
+  }
+  .auto-judge .title .node-title8 {
+    color: #626AEF;
+  }
+  .auto-judge .title .node-title9 {
+    color: #345DA2;
+  }
+  .auto-judge .title .copy {
+    font-size: 15px;
+    position: absolute;
+    top: 15px;
+    right: 35px;
+    color: #999;
+    display: none;
   }
   .auto-judge .title .close {
     font-size: 15px;
@@ -309,6 +342,9 @@ export default {
     color: #999;
   }
   .auto-judge:hover {
+    .copy {
+      display: block;
+    }
     .close {
       display: block;
     }

@@ -19,13 +19,21 @@
 
 	<trigger v-if="nodeConfig.type==7" v-model="nodeConfig"></trigger>
 
-	<trigger v-if="nodeConfig.type==8" v-model="nodeConfig"></trigger>
+	<parallel v-if="nodeConfig.type==8" v-model="nodeConfig">
+		<template v-slot="slot">
+			<node-wrap v-if="slot.node" v-model="slot.node.childNode"></node-wrap>
+		</template>
+	</parallel>
 
-	<parallel v-if="nodeConfig.type==9" v-model="nodeConfig"></parallel>
+	<inclusive v-if="nodeConfig.type==9" v-model="nodeConfig">
+		<template v-slot="slot">
+			<node-wrap v-if="slot.node" v-model="slot.node.childNode"></node-wrap>
+		</template>
+	</inclusive>
 
-	<inclusive v-if="nodeConfig.type==23" v-model="nodeConfig"></inclusive>
+	<route v-if="nodeConfig.type==23" v-model="nodeConfig" :available-nodes="availableNodes"></route>
 
-	<route v-if="nodeConfig.type==30" v-model="nodeConfig"></route>
+	<through v-if="nodeConfig.type==30" v-model="nodeConfig"></through>
 
 	<refuse v-if="nodeConfig.type==31" v-model="nodeConfig"></refuse>
 
@@ -53,6 +61,7 @@ export default {
 	props: {
 		modelValue: { type: Object, default: () => {} }
 	},
+	inject: ['availableNodes'],  // 注入全局节点数据
 	components: {
 		approver,
 		promoter,
@@ -82,7 +91,7 @@ export default {
 		}
 	},
 	mounted() {
-		this.nodeConfig = this.modelValue
+		this.nodeConfig = this.modelValue;
 	},
 	methods: {
 	}
