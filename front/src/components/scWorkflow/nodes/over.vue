@@ -1,6 +1,6 @@
 <template>
   <div class="node-wrap">
-    <div class="node-wrap-box start-node">
+    <div class="node-wrap-box">
       <div class="title" style="background: #909399;">
         <span>{{ nodeConfig.nodeName }}</span>
       </div>

@@ -3,11 +3,16 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import JsonEditorVue from 'json-editor-vue3'
 import ElementPlus from 'element-plus'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import 'element-plus/dist/index.css'
 import * as elIcons from '@element-plus/icons-vue'
 import router from './router'
 
 const app = createApp(App)
+
+app.use(ElementPlus, {
+  locale: zhCn,
+})
 
 app.use(JsonEditorVue)
 app.use(ElementPlus)
