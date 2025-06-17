@@ -1,5 +1,6 @@
 package com.wf.service.impl;
 
+import com.aizuda.bpm.engine.assist.ObjectUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
@@ -8,6 +9,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.wf.common.exception.ServiceException;
 import com.wf.entity.FlowUser;
 import com.wf.mapper.FlowUserMapper;
+import com.wf.mapper.TaskMapper;
 import com.wf.service.FlowUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,7 @@ import java.util.*;
 public class FlowUserServiceImpl extends ServiceImpl<FlowUserMapper, FlowUser> implements FlowUserService {
 
     private final FlowUserMapper flowUserMapper;
+    private final TaskMapper taskMapper;
 
     /**
      * Create a FlowUser.
@@ -36,6 +39,7 @@ public class FlowUserServiceImpl extends ServiceImpl<FlowUserMapper, FlowUser> i
      */
     @Override
     public Optional<FlowUser> createFlowUser(FlowUser flowUser) {
+        flowUser.setCreatedBy(20240815L);
         int insert = flowUserMapper.insert(flowUser);
         if (insert > 0) {
             return Optional.of(flowUser);
@@ -122,19 +126,34 @@ public class FlowUserServiceImpl extends ServiceImpl<FlowUserMapper, FlowUser> i
     @Override
     public IPage<FlowUser> pageFlowUser(FlowUser flowUser) {
         Page<FlowUser> page = Page.of(flowUser.getCurrent(), flowUser.getSize());
+        String userId = "20240815";
+        List<Long> businessKeys = Optional.ofNullable(taskMapper.getBusinessKeys(userId, null, page.getSize(), page.getCurrent()))
+                .filter(ObjectUtils::isNotEmpty)
+                .orElse(Arrays.asList(0L));
+
+        log.info("businessKeys: {}", businessKeys);
         LambdaQueryWrapper<FlowUser> wrapper = new LambdaQueryWrapper<>();
         // Example: wrapper.like(flowUser.getName() != null, FlowUser::getName, flowUser.getName());
-                    wrapper.like(StringUtils.isNotBlank(flowUser.getName()), FlowUser::getName, flowUser.getName());
-                    wrapper.eq(Objects.nonNull(flowUser.getAge()), FlowUser::getAge, flowUser.getAge());
-                    wrapper.eq(Objects.nonNull(flowUser.getState()), FlowUser::getState, flowUser.getState());
-                    wrapper.eq(Objects.nonNull(flowUser.getStatus()), FlowUser::getStatus, flowUser.getStatus());
-                    wrapper.eq(Objects.nonNull(flowUser.getHandler()), FlowUser::getHandler, flowUser.getHandler());
-                    wrapper.eq(Objects.nonNull(flowUser.getCreatedBy()), FlowUser::getCreatedBy, flowUser.getCreatedBy());
-                    wrapper.eq(Objects.nonNull(flowUser.getCreatedTime()), FlowUser::getCreatedTime, flowUser.getCreatedTime());
-                    wrapper.eq(Objects.nonNull(flowUser.getModifyBy()), FlowUser::getModifyBy, flowUser.getModifyBy());
-                    wrapper.eq(Objects.nonNull(flowUser.getModifyTime()), FlowUser::getModifyTime, flowUser.getModifyTime());
-                    wrapper.orderByDesc(FlowUser::getId);
-        return flowUserMapper.selectPage(page, wrapper);
+        //wrapper.and(e -> {
+        //    e.eq(FlowUser::getCreatedBy, userId)
+        //            .or().in(FlowUser::getId, businessKeys);
+        //});
+        wrapper.like(StringUtils.isNotBlank(flowUser.getName()), FlowUser::getName, flowUser.getName());
+        wrapper.eq(Objects.nonNull(flowUser.getAge()), FlowUser::getAge, flowUser.getAge());
+        wrapper.eq(Objects.nonNull(flowUser.getState()), FlowUser::getState, flowUser.getState());
+        wrapper.eq(Objects.nonNull(flowUser.getStatus()), FlowUser::getStatus, flowUser.getStatus());
+        wrapper.eq(Objects.nonNull(flowUser.getHandler()), FlowUser::getHandler, flowUser.getHandler());
+        wrapper.eq(Objects.nonNull(flowUser.getCreatedTime()), FlowUser::getCreatedTime, flowUser.getCreatedTime());
+        wrapper.eq(Objects.nonNull(flowUser.getModifyBy()), FlowUser::getModifyBy, flowUser.getModifyBy());
+        wrapper.eq(Objects.nonNull(flowUser.getModifyTime()), FlowUser::getModifyTime, flowUser.getModifyTime());
+        wrapper.eq(FlowUser::getCreatedBy, userId);
+        wrapper.or().in(FlowUser::getId, businessKeys);
+        wrapper.orderByDesc(FlowUser::getId);
+        IPage<FlowUser> resultPage = flowUserMapper.selectPage(page, wrapper);
+        resultPage.getRecords().forEach(e -> {
+            e.setHandlerName(e.getHandler());
+        });
+        return resultPage;
     }
 
     /**

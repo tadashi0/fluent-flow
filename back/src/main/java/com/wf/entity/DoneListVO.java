@@ -18,20 +18,18 @@ import java.util.Date;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class DoneListVO {
     // 实例ID
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     Long instanceId;
-    // 任务ID
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
-    Long taskId;
+    // 标题
+    String title;
     // 审批类型
     String processName;
     // 发起人
     String startName;
     // 当前节点
     String currentNode;
-    // 开始时间
+    //任务到达时间
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    Date startTime;
+    Date arriveTime;
     // 结束时间
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     Date finishTime;

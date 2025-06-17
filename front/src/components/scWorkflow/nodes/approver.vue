@@ -1,7 +1,7 @@
 <template>
   <div class="node-wrap">
     <div class="node-wrap-box" @click="show">
-      <div class="title" style="background: #ff943e;">
+      <div class="title" style="background: #F8AD16;">
         <el-icon class="icon"><el-icon-user-filled /></el-icon>
         <span>{{ nodeConfig.nodeName }}</span>
         <el-icon class="close" @click.stop="delNode()"><el-icon-close /></el-icon>
@@ -12,10 +12,10 @@
       </div>
     </div>
     <add-node v-model="nodeConfig.childNode"></add-node>
-    <el-drawer title="审批人设置" v-model="drawer" destroy-on-close append-to-body :size="500" @closed="save">
+    <el-drawer title="审批人设置" v-model="drawer" destroy-on-close append-to-body :size="600" @closed="save">
       <template #header>
         <div class="node-wrap-drawer__title">
-          <label @click="editTitle" v-if="!isEditTitle">{{form.nodeName}}<el-icon class="node-wrap-drawer__title-edit"><Edit /></el-icon></label>
+          <label @click="editTitle" v-if="!isEditTitle">{{form.nodeName}}<el-icon class="node-wrap-drawer__title-edit"><el-icon-edit /></el-icon></label>
           <el-input v-if="isEditTitle" ref="nodeTitle" v-model="form.nodeName" clearable @blur="saveTitle" @keyup.enter="saveTitle"></el-input>
         </div>
       </template>
@@ -24,14 +24,15 @@
           <el-form label-position="top">
 
             <el-form-item label="审批人员类型">
-              <el-select v-model="form.setType" @change="changeSetType">
-                <el-option :value="1" label="指定成员"></el-option>
-                <el-option :value="2" label="主管"></el-option>
-                <el-option :value="3" label="角色"></el-option>
-                <el-option :value="4" label="发起人自选"></el-option>
-                <el-option :value="5" label="发起人自己"></el-option>
-                <el-option :value="6" label="连续多级主管"></el-option>
-              </el-select>
+              <div class="approver-type-grid">
+                <div 
+                  v-for="option in approverTypeOptions" 
+                  :key="option.value"
+                  @click="selectApproverType(option.value)"
+                >
+                  <el-radio :label="option.value" v-model="form.setType">{{ option.label }}</el-radio>
+                </div>
+              </div>
             </el-form-item>
 
             <el-form-item v-if="form.setType==1" label="选择成员">
@@ -70,6 +71,7 @@
             <el-divider></el-divider>
             <el-form-item label="">
               <el-checkbox v-model="form.termAuto" label="超时自动审批"></el-checkbox>
+              <el-checkbox v-model="form.remind" label="审批提醒"></el-checkbox>
             </el-form-item>
             <template v-if="form.termAuto">
               <el-form-item label="审批期限（为 0 则不生效）">
@@ -90,6 +92,15 @@
                 <p style="width: 100%;"><el-radio :label="1">按顺序依次审批</el-radio></p>
                 <p style="width: 100%;"><el-radio :label="2">会签 (可同时审批，每个人必须审批通过)</el-radio></p>
                 <p style="width: 100%;"><el-radio :label="3">或签 (有一人审批通过即可)</el-radio></p>
+              </el-radio-group>
+            </el-form-item>
+
+            <el-form-item label="审批人与提交人为同一人时">
+              <el-radio-group v-model="form.approveSelf">
+                <p style="width: 100%;"><el-radio :label="0">由发起人对自己审批</el-radio></p>
+                <p style="width: 100%;"><el-radio :label="1">自动跳过</el-radio></p>
+                <p style="width: 100%;"><el-radio :label="2">转交给直接上级审批</el-radio></p>
+                <p style="width: 100%;"><el-radio :label="3">转交给部门负责人审批</el-radio></p>
               </el-radio-group>
             </el-form-item>
           </el-form>
@@ -118,6 +129,16 @@ const drawer = ref(false);
 const isEditTitle = ref(false);
 const form = ref({});
 const nodeTitle = ref(null);
+
+// 审批人员类型选项
+const approverTypeOptions = ref([
+  { value: 1, label: '指定成员' },
+  { value: 2, label: '主管' },
+  { value: 3, label: '角色' },
+  { value: 4, label: '发起人自选' },
+  { value: 5, label: '发起人自己' },
+  { value: 6, label: '连续多级主管' }
+]);
 
 // 计算属性：判断是否为多人审批
 const isMultipleApprovers = computed(() => {
@@ -182,7 +203,8 @@ const selectHandle = (type, data) => {
   select(type, data);
 };
 
-const changeSetType = () => {
+const selectApproverType = (value) => {
+  form.value.setType = value;
   form.value.nodeAssigneeList = [];
 };
 
@@ -212,6 +234,12 @@ const toText = (nodeConfig) => {
   }
 };
 </script>
-<style>
-/* 保留原有样式 */
+
+<style scoped>
+/* 审批人员类型网格布局 */
+.approver-type-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px; 
+}
 </style>

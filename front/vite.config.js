@@ -21,7 +21,9 @@ export default defineConfig({
     open: true, //启动后是否自动打开浏览器
     proxy: {
       '/api': {
-        target: 'http://172.16.2.148:8080',
+        // target: 'http://localhost:8080',
+        target: 'http://localhost:11001',
+        // target: 'http://172.16.1.70:11001',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }

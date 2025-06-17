@@ -31,7 +31,6 @@ public class FlowUser {
      * 主键
      */
     @TableId(type = IdType.ASSIGN_ID)
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     Long id;
 
     /**
@@ -50,9 +49,14 @@ public class FlowUser {
     Integer state;
 
     /**
-     * 待处理人
+     * 待处理人ID
      */
     String handler;
+    /**
+     * 待处理人名称
+     */
+    @TableField(exist = false)
+    String handlerName;
 
     /**
      * 数据状态（0:正常;1:删除）

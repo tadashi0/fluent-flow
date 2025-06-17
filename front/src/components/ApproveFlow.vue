@@ -19,6 +19,9 @@
               <el-button type="warning" @click="openActionDialog('reclaim')">回退</el-button>
             </el-dropdown-item>
             <el-dropdown-item>
+              <el-button type="success" @click="openActionDialog('countersign')">加签</el-button>
+            </el-dropdown-item>
+            <el-dropdown-item>
               <el-button type="danger" @click="openActionDialog('terminate')">终止</el-button>
             </el-dropdown-item>
           </el-dropdown-menu>
@@ -42,7 +45,7 @@
 <script setup>
 import { ref, computed, watchEffect } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { getInstanceModel, getInstanceInfo, getTaskList, getBackList, approveProcess, rejectProcess, reclaimProcess, terminateProcess, transferProcess } from '@/api/process';
+import { getInstanceModel, getInstanceInfo, getTaskList, getSubInstanceId, getBackList, approveProcess, rejectProcess, reclaimProcess, terminateProcess, transferProcess, countersignProcess } from '@/api/process';
 import NodeRenderer from './NodeRenderer.vue';
 import ProcessActionDialog from './ProcessActionDialog.vue';
 
@@ -54,7 +57,8 @@ const props = defineProps({
   mode: {
     type: String,
     default: 'edit'
-  }
+  },
+  onApprove: Function,
 });
 
 const emit = defineEmits(['cancel', 'refresh']);
@@ -127,6 +131,10 @@ const handleActionConfirm = async (data) => {
         await handleTerminate(data);
         ElMessage.success('终止成功');
         break;
+      case 'countersign':
+        await handleCountersign(data);
+        ElMessage.success('加签成功');
+        break;
     }
     // 刷新流程数据
     handleCancel();
@@ -139,6 +147,7 @@ const handleActionConfirm = async (data) => {
 // 同意操作
 const handleApprove = async (data) => {
   try {
+    await props.onApprove()
     await approveProcess(data.businessKey,{
         comment: data.comment,
         ccUsers: data.ccUsers
@@ -184,6 +193,7 @@ const handleReclaim = async (data) => {
       comment: data.comment,
       ccUsers: data.ccUsers,
       reclaimNodeKey: data.reclaimNode?.taskKey,
+      reclaimNodeName: data.reclaimNode?.taskName,
     });
   } catch (error) {
     console.error('回退操作失败:', error);
@@ -200,6 +210,22 @@ const handleTerminate = async (data) => {
     });
   } catch (error) {
     console.error('终止操作失败:', error);
+    throw error;
+  }
+};
+
+// 加签操作
+const handleCountersign = async (data) => {
+  try {
+    await countersignProcess(data.businessKey, {
+      comment: data.comment,
+      ccUsers: data.ccUsers,
+      signType: data.signType, // 前加签(true)或后加签(false)
+      counterSignUsers: data.counterSignUsers, // 加签人员
+      nodeName: data.nodeName // 节点名称
+    });
+  } catch (error) {
+    console.error('加签操作失败:', error);
     throw error;
   }
 };
@@ -237,10 +263,11 @@ watchEffect(async () => {
       ]);
       
       // 处理数据逻辑
-      const { taskState } = instanceInfoResult.data;
+      const { taskState, currentNodeKey } = instanceInfoResult.data;
       state.value = taskState;
-      const processModel = JSON.parse(modelResult.data);
-      traverseNode(processModel.nodeConfig, taskResult.data);
+      const processModel = JSON.parse(modelResult.data.modelContent);
+      await traverseAutoNode(processModel.nodeConfig, taskState, currentNodeKey);
+      await traverseNode(processModel.nodeConfig, taskResult.data);
       modelContent.value = processModel;
     } catch (error) {
       console.error('数据加载失败:', error);
@@ -248,11 +275,51 @@ watchEffect(async () => {
   }
 });
 
-const traverseNode = (node, taskList) => {
+const traverseAutoNode = async (node, taskState, currentNodeKey) => { 
   if (node?.childNode) {
-    traverseNode(node.childNode, taskList);
+    await traverseAutoNode(node.childNode, taskState, currentNodeKey);
   }
-  if (node?.nodeKey && [0, 1, 3].includes(node.type)) {
+  if (node?.type === 4) {
+    // 这是一个条件分支节点
+    node.conditionNodes.forEach(async (conditionNode) => {
+      await traverseAutoNode(conditionNode.childNode, taskState, currentNodeKey);
+    });
+  }
+  if (node.nodeKey === currentNodeKey) {
+    node.taskState = taskState + 2;
+  }
+}
+
+const traverseNode = async (node, taskList) => {
+  console.log('遍历节点:', node);
+  if (node?.childNode) {
+    await traverseNode(node.childNode, taskList);
+  }
+  if (node?.type === 4) {
+    // 这是一个条件分支节点
+    node.conditionNodes.forEach(async (conditionNode) => {
+      await traverseNode(conditionNode.childNode, taskList);
+    });
+  }
+  if (node?.type === 5) {
+    // 这是一个子流程节点
+    const instanceId = await getSubInstanceId(parseCallProcess(node.callProcess).id, props.businessKey);
+    if(instanceId.data) {
+      const [instanceInfoResult, modelResult, taskResult] = await Promise.all([
+          getInstanceInfo(instanceId.data),
+          getInstanceModel(instanceId.data),
+          getTaskList(instanceId.data),
+      ]);
+        // 处理数据逻辑
+        const { taskState } = instanceInfoResult.data;
+        node.state = taskState;
+        const processModel = JSON.parse(modelResult.data.modelContent);
+        await traverseNode(processModel.nodeConfig, taskResult.data);
+        node.nodeConfig = processModel.nodeConfig;
+    }
+  }
+  // if (node?.nodeKey && [0, 1, 3].includes(node.type)) {
+  if (node?.nodeKey) {
     const list = taskList.filter(t => t.taskKey === node.nodeKey);
     const task = list[list.length - 1];
     if (task) {
@@ -263,6 +330,16 @@ const traverseNode = (node, taskList) => {
       console.log('任务信息:', list);
     }
   }
+};
+
+// 解析callProcess值
+const parseCallProcess = (callProcess) => {
+  if (!callProcess) return null;
+  const parts = callProcess.split(':');
+  return {
+    id: parts[0],
+    name: parts[1] || '未命名子流程'
+  };
 };
 </script>
 
@@ -286,4 +363,3 @@ const traverseNode = (node, taskList) => {
   gap: 8px;
 }
 </style>
-

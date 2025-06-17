@@ -29,7 +29,7 @@
             <div v-if="task.duration" class="task-history-duration">
               处理耗时: {{ formatDuration(task.duration) }}
             </div>
-            <div v-if="task.variable" class="task-history-comment">
+            <div v-if="task.variable && JSON.parse(task.variable)?.comment && task.taskState !== 0" class="task-history-comment">
               {{ JSON.parse(task.variable)?.comment || '' }}
             </div>
           </div>
@@ -90,8 +90,11 @@
             <div v-if="task.variable && task.taskState !== 0" class="task-history-comment">
               {{ JSON.parse(task.variable)?.comment || '' }}
             </div>
+            <div v-if="task.taskState === 1 && task.variable && JSON.parse(task.variable)?.reclaimNodeName" class="task-history-reclaim">
+              回退至: {{ JSON.parse(task.variable)?.reclaimNodeName }}
+            </div>
             <div v-if="task.expireTime" class="task-history-expire">
-              期望完成时间: {{ task.expireTime }}
+              期望完成时间: {{ formatTime(task.expireTime) }}
             </div>
             <div v-if="task.nodeTransfer" class="task-history-transfer">
               {{ task.nodeTransfer }}
@@ -132,11 +135,11 @@
   <!-- 条件分支节点 -->
   <div v-else-if="node.type === 4" class="workflow-item condition-branch">
     <div class="workflow-icon">
-      <span>条</span>
+      <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
     </div>
     <div class="workflow-line"></div>
     <div class="workflow-content">
-      <div class="workflow-title">条件分支</div>
+      <div class="workflow-title">{{ node.nodeName || '条件分支' }}</div>
       <div class="condition-groups">
         <div v-for="(cn, index) in node.conditionNodes" :key="index" class="condition-group">
           <div class="condition-title">{{ cn.nodeName || '条件' + (index + 1) }}</div>
@@ -162,11 +165,15 @@
   <!-- 办理子流程 -->
   <div v-else-if="node.type === 5" class="workflow-item">
     <div class="workflow-icon">
-      <span>子</span>
+      <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
+      <div v-if="node.taskState !== undefined" class="status-indicator" :class="getStatusIndicatorClass(node)"></div>
     </div>
     <div class="workflow-line"></div>
     <div class="workflow-content">
-      <div class="workflow-title">{{ node.nodeName || '子流程' }}</div>
+      <div class="workflow-title">
+        {{ node.nodeName || '子流程' }}
+        <span v-if="node.taskState !== undefined" class="state-tag">{{ getNodeStateText(node) }}</span>
+      </div>
       <div class="workflow-desc">
         <div v-if="node.callProcess">
           调用流程: {{ getProcessName(node.callProcess) }}
@@ -174,6 +181,14 @@
         <div v-if="node.actionUrl">
           表单URL: {{ node.actionUrl }}
         </div>
+        <div v-if="node.state">
+          审批状态:流程{{getProcessStateText(node.state) || '待发起'}}
+        </div>
+      </div>
+      
+      <!-- 子流程内容渲染 -->
+      <div v-if="node.nodeConfig" class="sub-process-container">
+        <node-renderer :node="node.nodeConfig" :mode="mode" />
       </div>
     </div>
   </div>
@@ -181,13 +196,13 @@
   <!-- 定时器任务 -->
   <div v-else-if="node.type === 6" class="workflow-item">
     <div class="workflow-icon">
-      <span>时</span>
+      <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
     </div>
     <div class="workflow-line"></div>
     <div class="workflow-content">
-      <div class="workflow-title">{{ node.nodeName || '定时器' }}</div>
+      <div class="workflow-title">{{ node.nodeName || '延时处理' }}</div>
       <div class="workflow-desc" v-if="node.extendConfig?.time">
-        触发时间: {{ node.extendConfig.time }}
+        触发时间: {{ displayTime(node)  }}
       </div>
     </div>
   </div>
@@ -291,13 +306,37 @@
     </div>
   </div>
 
+  <!-- 自动通过 -->
+  <div v-else-if="node.type === 30" class="workflow-item">
+    <div class="workflow-icon">
+      <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
+      <div v-if="node.taskState !== undefined" class="status-indicator" :class="getStatusIndicatorClass(node)"></div>
+    </div>
+    <div class="workflow-line"></div>
+    <div class="workflow-content">
+      <div class="workflow-title">{{ node.nodeName || '自动通过' }} <span v-if="node.taskState !== undefined" class="state-tag">{{ getNodeStateText(node) }}</span></div>
+    </div>
+  </div>
+
+    <!-- 自动拒绝 -->
+    <div v-else-if="node.type === 31" class="workflow-item">
+    <div class="workflow-icon">
+      <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
+      <div v-if="node.taskState !== undefined" class="status-indicator" :class="getStatusIndicatorClass(node)"></div>
+    </div>
+    <div class="workflow-line"></div>
+    <div class="workflow-content">
+      <div class="workflow-title">{{ node.nodeName || '自动拒绝' }} <span v-if="node.taskState !== undefined" class="state-tag">{{ getNodeStateText(node) }}</span></div>
+    </div>
+  </div>
+
   <!-- 结束节点 -->
   <div v-else-if="node.type === -1" class="workflow-item">
     <div class="workflow-icon">
       <span>结</span>
     </div>
     <div class="workflow-content">
-      <div class="workflow-title">结束</div>
+      <div class="workflow-title">流程结束</div>
     </div>
   </div>
 
@@ -328,7 +367,7 @@
 </template>
 
 <script setup>
-import { defineProps, inject, provide, ref, watchEffect } from 'vue';
+import { defineProps, inject, provide, ref, watch, watchEffect } from 'vue';
 import UserRoleSelector from './scWorkflow/select.vue';
 
 const props = defineProps({
@@ -355,8 +394,24 @@ const currentUserInfo = ref({
   name: '田重辉'
 })
 
+// 获取流程状态文本
+const getProcessStateText = (state) => {
+  const stateTexts = {
+    0: '暂存待审',
+    1: '审批中',
+    2: '审批通过',
+    3: '审批拒绝【 驳回结束流程 】',
+    4: '撤销审批',
+    5: '超时结束',
+    6: '强制终止',
+    7: '自动通过',
+    8: '自动拒绝'
+  };
+  
+  return stateTexts[state + 1] || '';
+};
+
 watchEffect(() => {
-  console.log('node', props.node);
   // 如果节点已有审批人列表，则不需要处理
   if (props.node?.nodeAssigneeList?.length > 0) return;
   
@@ -369,58 +424,10 @@ watchEffect(() => {
   if (props.node.type === 0) {
     // 发起人节点
     props.node.nodeAssigneeList.push(currentUserInfo.value);
-  } else if (props.node.type === 1) {
-    // 审批节点
-    handleApprovalNode();
+  } else if (props.node.type === 1 && props.node.setType === 5) {
+    props.node.nodeAssigneeList.push(currentUserInfo.value);
   }
 });
-
-// 处理审批节点的函数
-function handleApprovalNode() {
-  const { setType, directorMode, examineLevel, directorLevel } = props.node;
-
-  switch (setType) {
-    case 5: // 指定人员
-      props.node.nodeAssigneeList.push(currentUserInfo.value);
-      break;
-    case 2: // 指定层级主管
-      props.node.nodeAssigneeList.push(getLeaderByLevel(examineLevel));
-      break;
-    case 6: // 主管审批
-      if (directorMode === 0) {
-        props.node.nodeAssigneeList.push(...getTopLevelListDirector());
-      } else if (directorMode === 1) {
-        props.node.nodeAssigneeList.push(...getDirectorListByLevel(directorLevel));
-      }
-      break;
-    // 可以添加其他情况的处理
-  }
-}
-
-// 根据层级获取领导
-function getLeaderByLevel(level) {
-  // 实现获取发起人指定层级领导的逻辑
-  console.log(`获取发起人的第${level}层级领导`);
-  // TODO: 实现具体逻辑并将结果添加到nodeAssigneeList
-  return currentUserInfo.value;
-}
-
-// 获取顶级主管
-function getTopLevelListDirector() {
-  // 实现获取发起人的所有主管
-  console.log('获取发起人的所有主管');
-  // TODO: 实现具体逻辑并将结果添加到nodeAssigneeList
-  return [currentUserInfo.value];
-}
-
-// 根据层级获取主管
-function getDirectorListByLevel(level) {
-  // 实现获取发起人指定层级下的主管
-  console.log(`获取发起人指定${level}层级下的主管`);
-  // TODO: 实现具体逻辑并将结果添加到nodeAssigneeList
-  return [currentUserInfo.value];
-}
-
 
 // 用于控制选择器模态框的显示
 const selectorVisible = ref(false);
@@ -460,7 +467,7 @@ const getStatusIndicatorClass = (node) => {
 const getStartNodeStateText = (node) => {
   const stateTexts = {
     0: '待发起',
-    1: '跳转',
+    1: '回退跳转',
     2: '已发起',
     3: '已拒绝',
     4: '已撤销',
@@ -482,7 +489,7 @@ const getStartNodeStateText = (node) => {
 const getNodeStateText = (node) => {
   const stateTexts = {
     0: '审批中', 
-    1: '跳转',
+    1: '回退跳转',
     2: '已通过',
     3: '已拒绝',
     4: '已撤销',
@@ -517,6 +524,11 @@ const formatTime = (time) => {
 // 格式化处理耗时
 const formatDuration = (duration) => {
   if (!duration) return '';
+
+  // 如果是数字字符串，转换成 number 处理（假设是毫秒）
+  if (typeof duration === 'string' && /^\d+$/.test(duration)) {
+    duration = Number(duration);
+  }
   
   // 如果是数字，假设是毫秒
   if (typeof duration === 'number') {
@@ -642,6 +654,20 @@ const formatAssignees = (assigneeList) => {
   }).join('、');
 };
 
+// 展示时间格式
+const displayTime = (node) => {
+  const { delayType, extendConfig } = node
+  const time = extendConfig?.time
+  if (!time) return null
+
+  if (delayType === '1') {
+    const map = { m: '分钟', h: '小时', d: '天' }
+    const [val, unit] = time.split(':')
+    return `等待 ${val} ${map[unit] || ''}`
+  }
+  return `至当天 ${time}`
+}
+
 const getApproveTypeText = (setType) => {
   const types = {
     1: '指定成员',
@@ -691,7 +717,7 @@ const getLevelText = (node) => {
 };
 
 const showAssignees = (node) => {
-  return [1, 3, 4, 7, 8].includes(node.setType) && node.nodeAssigneeList?.length > 0;
+  return node.nodeAssigneeList?.length > 0;
 };
 
 const getProcessName = (callProcess) => {
@@ -985,6 +1011,35 @@ const getRouteTarget = (nodeKey) => {
 
 .workflow-desc>div {
  margin-bottom: 4px;
+}
+
+/* 子流程容器样式 */
+.sub-process-container {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+}
+
+/* 子流程内部的连线样式调整 */
+.sub-process-container .workflow-line {
+  left: 30px;
+}
+
+.sub-process-container .workflow-icon {
+  width: 30px;
+  height: 30px;
+  font-size: 12px;
+}
+
+.loading-sub-process {
+  padding: 10px;
+  color: #666;
+  font-size: 12px;
+  text-align: center;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  margin-top: 10px;
 }
 
 /* 任务历史记录样式 */

@@ -5,13 +5,13 @@
  Source Server Type    : MySQL
  Source Server Version : 50743 (5.7.43)
  Source Host           : 172.16.1.63:3306
- Source Schema         : flowlong
+ Source Schema         : chonghui
 
  Target Server Type    : MySQL
  Target Server Version : 50743 (5.7.43)
  File Encoding         : 65001
 
- Date: 14/04/2025 11:33:03
+ Date: 12/05/2025 17:20:15
 */
 
 SET NAMES utf8mb4;
@@ -53,7 +53,7 @@ CREATE TABLE `flw_his_instance` (
   `expire_time` timestamp NULL DEFAULT NULL COMMENT '期望完成时间',
   `last_update_by` varchar(50) DEFAULT NULL COMMENT '上次更新人',
   `last_update_time` timestamp NULL DEFAULT NULL COMMENT '上次更新时间',
-  `instance_state` tinyint(1) NOT NULL DEFAULT '0' COMMENT '状态 0，审批中 1，审批通过 2，审批拒绝 3，撤销审批 4，超时结束 5，强制终止',
+  `instance_state` tinyint(1) NOT NULL DEFAULT '0' COMMENT '流程状态 -2，已暂停状态 -1，暂存待审 0，审批中 1，审批通过 2，审批拒绝 3，撤销审批 4，超时结束 5，强制终止 6，自动通过 7，自动拒绝',
   `end_time` timestamp NULL DEFAULT NULL COMMENT '结束时间',
   `duration` bigint(20) DEFAULT NULL COMMENT '处理耗时',
   PRIMARY KEY (`id`) USING BTREE,
@@ -88,7 +88,7 @@ CREATE TABLE `flw_his_task` (
   `remind_repeat` tinyint(1) NOT NULL DEFAULT '0' COMMENT '提醒次数',
   `viewed` tinyint(1) NOT NULL DEFAULT '0' COMMENT '已阅 0，否 1，是',
   `finish_time` timestamp NULL DEFAULT NULL COMMENT '任务完成时间',
-  `task_state` tinyint(1) NOT NULL DEFAULT '0' COMMENT '任务状态 0，活动 1，跳转 2，完成 3，拒绝 4，撤销审批  5，超时 6，终止 7，驳回终止',
+  `task_state` tinyint(1) NOT NULL DEFAULT '0' COMMENT '任务状态 0，活动 1，跳转 2，完成 3，拒绝 4，撤销审批 5，超时 6，终止 7，驳回终止 8，自动完成 9，自动驳回 10，自动跳转 11，驳回跳转 12，驳回重新审批跳转 13，路由跳转',
   `duration` bigint(20) DEFAULT NULL COMMENT '处理耗时',
   PRIMARY KEY (`id`) USING BTREE,
   KEY `idx_his_task_instance_id` (`instance_id`) USING BTREE,
@@ -156,11 +156,11 @@ CREATE TABLE `flw_process` (
   `process_key` varchar(100) NOT NULL COMMENT '流程定义 key 唯一标识',
   `process_name` varchar(100) NOT NULL COMMENT '流程定义名称',
   `process_icon` varchar(255) DEFAULT NULL COMMENT '流程图标地址',
-  `process_type` varchar(100) DEFAULT NULL COMMENT '流程类型',
+  `process_type` varchar(100) DEFAULT NULL COMMENT '关联表名',
   `process_version` int(11) NOT NULL DEFAULT '1' COMMENT '流程版本，默认 1',
   `instance_url` varchar(200) DEFAULT NULL COMMENT '实例地址',
   `remark` varchar(255) DEFAULT NULL COMMENT '备注说明',
-  `use_scope` tinyint(1) NOT NULL DEFAULT '0' COMMENT '使用范围 0，全员 1，指定人员（业务关联） 2，均不可提交',
+  `use_scope` tinyint(1) NOT NULL DEFAULT '0' COMMENT '使用范围 1，主流程 2，子流程',
   `process_state` tinyint(1) NOT NULL DEFAULT '1' COMMENT '流程状态 0，不可用 1，可用 2，历史版本',
   `model_content` text COMMENT '流程模型定义JSON内容',
   `sort` tinyint(1) DEFAULT '0' COMMENT '排序',
@@ -182,8 +182,8 @@ CREATE TABLE `flw_task` (
   `parent_task_id` bigint(20) DEFAULT NULL COMMENT '父任务ID',
   `task_name` varchar(100) NOT NULL COMMENT '任务名称',
   `task_key` varchar(100) NOT NULL COMMENT '任务 key 唯一标识',
-  `task_type` tinyint(1) NOT NULL COMMENT '任务类型',
-  `perform_type` tinyint(1) DEFAULT NULL COMMENT '参与类型',
+  `task_type` tinyint(1) NOT NULL COMMENT '任务类型 -1，结束节点 0，主办 1，审批 2，抄送 3，条件审批 4，条件分支 5，调用外部流程任务 6，定时器任务 7，触发器任务 8，并行分支 9，包容分支 10，转办 11，委派 12，委派归还 13，代理人任务 14，代理人归还 15，代理人协办 16，被代理人自己完成 17，拿回任务 18，待撤回历史任务 19，拒绝任务 20，跳转任务 21，驳回跳转 22，路由跳转 23，路由分支 24，驳回重新审批跳转 25，暂存待审 30，自动通过 31，自动拒绝',
+  `perform_type` tinyint(1) DEFAULT NULL COMMENT '参与类型 0，发起 1，按顺序依次审批 2，会签 3，或签 4，票签 6，定时器 7，触发器 9，抄送',
   `action_url` varchar(200) DEFAULT NULL COMMENT '任务处理的url',
   `variable` text COMMENT '变量json',
   `assignor_id` varchar(100) DEFAULT NULL COMMENT '委托人ID',
@@ -218,4 +218,4 @@ CREATE TABLE `flw_task_actor` (
   CONSTRAINT `fk_task_actor_task_id` FOREIGN KEY (`task_id`) REFERENCES `flw_task` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='任务参与者表';
 
-INSERT INTO `flw_process` (`id`, `tenant_id`, `create_id`, `create_by`, `create_time`, `process_key`, `process_name`, `process_icon`, `process_type`, `process_version`, `instance_url`, `remark`, `use_scope`, `process_state`, `model_content`, `sort`) VALUES (1910267986054934530, NULL, '20240815', '田重辉', '2025-04-10 17:45:54', 'user', '用户流程', NULL, NULL, 1, NULL, '用户流程', 0, 1, '{\"name\":\"用户流程\",\"key\":\"user\",\"nodeConfig\":{\"nodeName\":\"发起人\",\"nodeKey\":\"flk001\",\"type\":0,\"nodeAssigneeList\":[],\"childNode\":{\"nodeName\":\"审批人1\",\"nodeKey\":\"flk002\",\"type\":1,\"setType\":4,\"examineLevel\":1,\"examineMode\":1,\"directorLevel\":1,\"directorMode\":0,\"selectMode\":1,\"termAuto\":false,\"term\":0,\"termMode\":1,\"childNode\":{\"nodeName\":\"审批人2\",\"nodeKey\":\"flk003\",\"type\":1,\"setType\":1,\"examineLevel\":1,\"examineMode\":1,\"directorLevel\":1,\"directorMode\":0,\"selectMode\":2,\"termAuto\":false,\"term\":0,\"termMode\":1,\"nodeAssigneeList\":[{\"id\":\"20240815\",\"name\":\"田重辉\"}]}}}}', 0);
+SET FOREIGN_KEY_CHECKS = 1;

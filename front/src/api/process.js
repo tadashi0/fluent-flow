@@ -1,19 +1,29 @@
 import request from './request'
 
-export const getProcessList = (processKey, query) => {
-  return request.get(`process/getList/${processKey}`, {params: query})
+// 获取数据库表列表
+export const getTableList = (query) => {
+  return request.get('/process/tables', {params: query})
+}
+
+// 获取数据库表字段列表
+export const getTableFields = (tableName) => {
+  return request.get(`/process/fields/${tableName}`)
+}
+
+export const getProcessList = (query) => {
+  return request.get(`process/getList`, {params: query})
 }
 
 export const getProcessInfo = (processKey) => {
-  return request.get(`process/${processKey}`)
+  return request.get(`process`, {params: {processKey}})
 }
 
 export const createProcess = (data) => {
   return request.post('/process', data)
 }
 
-export const deleteProcess = (processKey, version) => {
-  return request.delete(`/process/${processKey}`, {params: {version}})
+export const deleteProcess = (params) => {
+  return request.delete('/process', {params})
 }
 
 /**
@@ -32,13 +42,19 @@ export const saveProcess = (businessKey, data) => {
 export const startProcess = (businessKey, data) => {
   return request.post(`/task/start/${businessKey}`, {
     processKey: data.processKey,
-    modelContent: data.modelContent
+    modelContent: data.modelContent,
+    variable: data.variable || {}
   })
 }
 
 // 根据instanceId获取可回退节点列表
 export const getBackList = (businessKey) => {
   return request.get(`/task/getBackList/${businessKey}`)
+}
+
+// 根据businessKey和processId获取流程实例ID
+export const getSubInstanceId = (getSubInstanceId, businessKey) => {
+  return request.get(`/task/getSubInstanceId/${getSubInstanceId}`, {params: {businessKey}})
 }
 
 // 根据businessKey获取历史流程实例模型
@@ -77,10 +93,8 @@ export const terminateProcess = (businessKey, data) => {
 }
 
 // 根据businessKey和taskKey回退流程
-export const reclaimProcess = (businessKey, taskKey) => {
-  return request.put(`/task/reclaim/${businessKey}`, {
-    taskKey
-  })
+export const reclaimProcess = (businessKey, data) => {
+  return request.put(`/task/reclaim/${businessKey}`, data)
 }
 
 // 根据businessKey和转交人转交任务
@@ -88,9 +102,29 @@ export const transferProcess = (businessKey, data) => {
   return request.put(`/task/transfer/${businessKey}`, data)
 }
 
-// 任务统计
-export const taskCount = () => {
-  return request.get('/task/count')
+// 根据businessKey加签任务
+export const countersignProcess = (businessKey, data) => {
+  return request.put(`/task/countersign/${businessKey}`, data)
+}
+    
+// 待我处理数量
+export const todoCount = () => {
+  return request.get('/task/todoCount')
+}
+
+// 已处理数量
+export const doneCount = () => {
+  return request.get('/task/doneCount')
+}
+
+// 我发起的数量
+export const submitCount = () => {
+  return request.get('/task/submitCount')
+}
+
+// 抄送我的数量
+export const aboutCount = () => {
+  return request.get('/task/aboutCount')
 }
 
 // 待我处理

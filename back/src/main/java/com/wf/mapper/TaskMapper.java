@@ -8,144 +8,232 @@ import com.wf.entity.SubmitListVO;
 import com.wf.entity.TodoListVO;
 import org.apache.ibatis.annotations.*;
 
+import java.util.List;
 import java.util.Map;
-
 
 /**
  * @author chonghui. tian
- * date 2025/4/18 11:47
- * description
+ *         date 2025/4/18 11:47
+ *         description
  */
 @Mapper
 public interface TaskMapper {
 
-    @Select("<script>" +
-            "SELECT " +
-            "  (SELECT COUNT(DISTINCT ta.task_id) " +  // 待办数：独立子查询，避免关联历史表
-            "   FROM flw_task_actor ta " +
-            "   JOIN flw_task t ON ta.task_id = t.id " +
-            "   WHERE ta.actor_id = #{userId} " +
-            "     AND t.perform_type != 0 " +
-            "     <if test='tenantId != null'> AND ta.tenant_id = #{tenantId} </if>" +
-            "  ) AS todo, " +
-            "  COUNT(DISTINCT CASE WHEN ht.perform_type = 1 THEN hta.task_id END) AS done, " +  // 已办数
-            "  COUNT(DISTINCT CASE WHEN ht.perform_type = 0 THEN hta.task_id END) AS submit, " + // 提交数
-            "  COUNT(DISTINCT CASE WHEN ht.perform_type = 9 THEN hta.task_id END) AS about " +   // 抄送数
-            "FROM flw_his_task_actor hta " +
-            "JOIN flw_his_task ht ON hta.task_id = ht.id " +  // 历史表联查
-            "WHERE hta.actor_id = #{userId} " +
-            "  <if test='tenantId != null'> AND hta.tenant_id = #{tenantId} </if>" +
-            "</script>")
-    Map<String, Long> taskCount(@Param("userId") String userId, @Param("tenantId") String tenantId);
+        @Select("<script>" +
+                        "SELECT COUNT(1) FROM flw_task_actor " +
+                        "WHERE actor_id = #{userId} AND actor_type = 0 " +
+                        "<if test='tenantId != null'> AND tenant_id = #{tenantId} </if>" +
+                        "</script>")
+        Long todoCount(@Param("userId") String userId, @Param("tenantId") String tenantId);
 
-    @Select("<script>" +
-            "SELECT " +
-            "  hi.id AS instanceId, " +
-            "  ta.task_id, " +
-            "  ei.process_name, " +
-            "  hta.actor_name AS startName, " +
-            "  ht.finish_time AS submitTime, " +
-            "  t.task_name AS currentNode, " +
-            "  t.create_time AS arriveTime, " +
-            "  hi.instance_state AS taskState " +
-            "FROM flw_task_actor ta " +
-            "JOIN flw_task t ON ta.task_id = t.id " +
-            "LEFT JOIN flw_his_task ht ON ta.instance_id = ht.instance_id AND ht.parent_task_id = 0 " +
-            "LEFT JOIN flw_his_task_actor hta ON ht.id = hta.task_id " +
-            "LEFT JOIN flw_his_instance hi ON t.instance_id = hi.id " +
-            "LEFT JOIN flw_ext_instance ei ON t.instance_id = ei.id " +
-            "WHERE ta.actor_id = #{userId} " +
-            "  AND t.perform_type != 0 " +
-            "<if test='tenantId != null'> AND t.tenant_id = #{tenantId} </if>" +
-            "ORDER BY t.create_time DESC" +
-            "</script>")
-    IPage<TodoListVO> todoList(@Param("userId") String userId, @Param("tenantId") String tenantId, Page page);
+        @Select("<script>" +
+                        "SELECT COUNT(1) FROM flw_his_task_actor " +
+                        "WHERE actor_id = #{userId} AND actor_type = 0 " +
+                        "<if test='tenantId != null'> AND tenant_id = #{tenantId} </if>" +
+                        "</script>")
+        Long doneCount(@Param("userId") String userId, @Param("tenantId") String tenantId);
 
-    @Select("<script>" +
-            "SELECT" +
-            "  ei.id AS instanceId," +
-            "  a.task_id, ei.process_name," +
-            "  (SELECT hta_start.actor_name " +
-            "   FROM flw_his_task ht_start " +
-            "   JOIN flw_his_task_actor hta_start ON ht_start.id = hta_start.task_id " +
-            "   WHERE ht_start.instance_id = b.instance_id " +
-            "     AND ht_start.parent_task_id = 0 " +
-            "   LIMIT 1) AS startName, " +
-            "  b.task_name AS currentNode, " +
-            "  b.create_time AS startTime, " +
-            "  b.finish_time, b.duration, b.task_state " +
-            "FROM flw_his_task_actor a " +
-            "JOIN flw_his_task b ON a.task_id = b.id " +
-            "LEFT JOIN flw_ext_instance ei ON b.instance_id = ei.id " +
-            "WHERE a.actor_id = #{userId} " +
-            "  AND b.perform_type = 1 " +
-            "<if test='tenantId != null'> AND b.tenant_id = #{tenantId} </if>" +
-            "ORDER BY b.create_time DESC" +
-            "</script>")
-    IPage<DoneListVO> doneList(@Param("userId") String userId, @Param("tenantId") String tenantId, Page page);
+        @Select("<script>" +
+                        "SELECT COUNT(1) FROM flw_his_instance " +
+                        "WHERE create_id = #{userId} " +
+                        "<if test='tenantId != null'> AND tenant_id = #{tenantId} </if>" +
+                        "</script>")
+        Long submitCount(@Param("userId") String userId, @Param("tenantId") String tenantId);
 
-    @Select("<script>" +
-            "SELECT" +
-            "    hi.id AS instanceId," +
-            "    ht.id AS taskId," +
-            "    ei.process_name," +
-            "    hta.actor_name AS startName," +
-            "    hi.create_time AS submitTime," +
-            "    hi.end_time AS endTime," +
-            "    hi.current_node_name AS currentNode," +
-            "    hi.instance_state AS taskState," +
-            "    CASE" +
-            "        WHEN hi.end_time IS NOT NULL THEN (" +
-            "            SELECT SUM(t.duration)" +
-            "            FROM flw_his_task t" +
-            "            WHERE t.instance_id = hi.id" +
-            "        )" +
-            "        ELSE TIMESTAMPDIFF(SECOND, ht.create_time, NOW()) * 1000" +
-            "    END AS duration " +
-            "FROM flw_his_task_actor hta " +
-            "JOIN flw_his_task ht ON hta.task_id = ht.id " +
-            "JOIN flw_his_instance hi ON ht.instance_id = hi.id " +
-            "LEFT JOIN flw_ext_instance ei ON ht.instance_id = ei.id " +
-            "WHERE ht.parent_task_id = 0 " +
-            "<if test='userId != null'> AND hta.actor_id = #{userId} </if>" +
-            "<if test='tenantId != null'> AND hi.tenant_id = #{tenantId} </if>" +
-            "ORDER BY hi.create_time DESC" +
-            "</script>")
-    IPage<SubmitListVO> submitList(@Param("userId") String userId, @Param("tenantId") String tenantId, Page page);
+        @Select("<script>" +
+                        "SELECT COUNT(1) FROM flw_his_task_actor " +
+                        "WHERE actor_id = #{userId} AND actor_type = 0 AND weight = 6 " +
+                        "<if test='tenantId != null'> AND tenant_id = #{tenantId} </if>" +
+                        "</script>")
+        Long aboutCount(@Param("userId") String userId, @Param("tenantId") String tenantId);
 
+        /**
+         * SELECT
+         * 	hi.id AS instanceId,
+         * 	CONCAT(
+         * 		COALESCE ( hi.create_by, '系统' ),
+         * 		'发起的',
+         * 	COALESCE ( ei.process_name, '未知流程' )) AS title,
+         * 	ei.process_name,
+         * 	hi.create_by AS startName,
+         * 	hi.create_time AS submitTime,
+         * 	hi.current_node_name AS currentNode,
+         * 	hi.instance_state AS taskState,
+         * 	t.create_time AS arriveTime
+         * FROM
+         * 	flw_task_actor ta
+         * 	LEFT JOIN flw_task t ON t.id = ta.task_id
+         * 	LEFT JOIN flw_his_instance hi ON hi.id = ta.instance_id
+         * 	LEFT JOIN flw_ext_instance ei ON ei.id = hi.id
+         * WHERE
+         * 	ta.actor_id = '20240815'
+         * 	AND ta.actor_type = 0
+         * ORDER BY
+         * 	ta.id DESC
+         * 	LIMIT 10
+         */
+        @Select("<script>" +
+                "SELECT " +
+                "    hi.id AS instanceId, " +
+                "    CONCAT(COALESCE(hi.create_by, '系统'), '发起的', COALESCE(ei.process_name, '未知流程')) AS title, " +
+                "    ei.process_name, " +
+                "    hi.create_by AS startName, " +
+                "    hi.create_time AS submitTime, " +
+                "    hi.current_node_name AS currentNode, " +
+                "    hi.instance_state AS taskState, " +
+                "    t.create_time AS arriveTime " +
+                "FROM flw_task_actor ta " +
+                "LEFT JOIN flw_task t ON t.id = ta.task_id " +
+                "LEFT JOIN flw_his_instance hi ON hi.id = ta.instance_id " +
+                "LEFT JOIN flw_ext_instance ei ON ei.id = hi.id " +
+                "WHERE ta.actor_id = #{userId} " +
+                "  AND ta.actor_type = 0 " +
+                "  <if test='tenantId != null'> AND hi.tenant_id = #{tenantId} </if> " +
+                "ORDER BY ta.id DESC " +
+                "</script>")
+        IPage<TodoListVO> todoList(@Param("userId") String userId, @Param("tenantId") String tenantId, Page page);
 
-    @Select("<script>" +
-            "SELECT" +
-            "  hi.id AS instanceId, " +
-            "  a.task_id, " +
-            "  ei.process_name, " +
-            "  (SELECT hta.actor_name " +
-            "   FROM flw_his_task ht_start " +
-            "   JOIN flw_his_task_actor hta ON ht_start.id = hta.task_id " +
-            "   WHERE ht_start.instance_id = b.instance_id " +
-            "     AND ht_start.parent_task_id = 0 " +
-            "   LIMIT 1) AS startName, " +
-            "  hi.create_time AS submitTime, " +
-            "  b.task_name AS currentNode, " +
-            "  hi.instance_state AS taskState, " +
-            "  CASE " +
-            "    WHEN hi.end_time IS NOT NULL THEN (" +
-            "      SELECT SUM(t.duration) " +
-            "      FROM flw_his_task t " +
-            "      WHERE t.instance_id = hi.id " +
-            "    ) " +
-            "    ELSE TIMESTAMPDIFF(SECOND, hi.create_time, NOW()) * 1000 " +
-            "  END AS duration, " +
-            "  b.finish_time AS endTime " +
-            "FROM flw_his_task_actor a " +
-            "JOIN flw_his_task b ON a.task_id = b.id " +
-            "JOIN flw_his_instance hi ON b.instance_id = hi.id " +
-            "LEFT JOIN flw_ext_instance ei ON b.instance_id = ei.id " +
-            "WHERE a.actor_id = #{userId} " +
-            "  AND a.weight = 6 " +
-            "<if test='tenantId != null'> AND hi.tenant_id = #{tenantId} </if>" +
-            "ORDER BY hi.create_time DESC" +
-            "</script>")
-    IPage<AboutListVO> aboutList(@Param("userId") String userId, @Param("tenantId") String tenantId, Page page);
+        /**
+         * SELECT
+         * 	hi.id AS instanceId,
+         * 	CONCAT(
+         * 		COALESCE ( hi.create_by, '系统' ),
+         * 		'发起的',
+         * 	COALESCE ( ei.process_name, '未知流程' )) AS title,
+         * 	ei.process_name,
+         * 	hi.create_by AS startName,
+         * 	ht.task_name AS currentNode,
+         * 	ht.task_state,
+         * 	ht.create_time AS arriveTime,
+         * 	ht.finish_time
+         * FROM
+         * 	flw_his_task_actor hta
+         * 	LEFT JOIN flw_his_task ht ON ht.id = hta.task_id
+         * 	LEFT JOIN flw_his_instance hi ON hi.id = hta.instance_id
+         * 	LEFT JOIN flw_ext_instance ei ON ei.id = hi.id
+         * WHERE
+         * 	hta.actor_id = '20240815'
+         * 	AND hta.actor_type = 0
+         * 	-- AND ht.task_type NOT IN (-1, 2, 25)
+         * ORDER BY
+         * 	hta.id DESC
+         * 	LIMIT 10
+         */
+        @Select("<script>" +
+                "SELECT " +
+                "    hi.id AS instanceId, " +
+                "    CONCAT(COALESCE(hi.create_by, '系统'), '发起的', COALESCE(ei.process_name, '未知流程')) AS title, " +
+                "    ei.process_name, " +
+                "    hi.create_by AS startName, " +
+                "    ht.task_name AS currentNode, " +
+                "    ht.task_state, " +
+                "    ht.create_time AS arriveTime, " +
+                "    ht.finish_time " +
+                "FROM flw_his_task_actor hta " +
+                "LEFT JOIN flw_his_task ht ON ht.id = hta.task_id " +
+                "LEFT JOIN flw_his_instance hi ON hi.id = hta.instance_id " +
+                "LEFT JOIN flw_ext_instance ei ON ei.id = hi.id " +
+                "WHERE hta.actor_id = #{userId} " +
+                "  AND hta.actor_type = 0 " +
+                //"  AND (hta.weight != 6 OR hta.weight IS NULL) " +
+                "  <if test='tenantId != null'> AND hi.tenant_id = #{tenantId} </if> " +
+                "ORDER BY hta.id DESC " +
+                "</script>")
+        IPage<DoneListVO> doneList(@Param("userId") String userId, @Param("tenantId") String tenantId, Page page);
 
+        /**
+         * SELECT
+         * 	hi.id AS instanceId,
+         * 	CONCAT( COALESCE ( hi.create_by, '系统' ), '发起的', COALESCE ( ei.process_name, '未知流程' ) ) AS title,
+         * 	ei.process_name,
+         * 	hi.create_by AS startName,
+         * 	hi.current_node_name AS currentNode,
+         * 	hi.instance_state AS taskState,
+         * 	hi.create_time AS submitTime,
+         * 	hi.end_time
+         * FROM
+         * 	flw_his_instance hi
+         * 	LEFT JOIN flw_ext_instance ei ON ei.id = hi.id
+         * WHERE
+         * 	hi.create_id = '20240815'
+         * 	and ei.process_type = 'flow_user'
+         * 	and hi.instance_state = 1
+         * ORDER BY
+         * 	hi.id DESC
+         * 	LIMIT 10
+         */
+        @Select("<script>" +
+                "SELECT " +
+                "    hi.id AS instanceId, " +
+                "    CONCAT( COALESCE( hi.create_by, '系统' ), '发起的', COALESCE( ei.process_name, '未知流程' ) ) AS title, " +
+                "    ei.process_name, " +
+                "    hi.create_by AS startName, " +
+                "    hi.current_node_name AS currentNode, " +
+                "    hi.instance_state AS taskState, " +
+                "    hi.create_time AS submitTime, " +
+                "    hi.end_time " +
+                "FROM flw_his_instance hi " +
+                "LEFT JOIN flw_ext_instance ei ON hi.id = ei.id " +
+                "<where> " +
+                "    <if test='userId != null'> " +
+                "        hi.create_id = #{userId} " +
+                "    </if> " +
+                "    <if test='tenantId != null'> " +
+                "        AND hi.tenant_id = #{tenantId} " +
+                "    </if> " +
+                "</where> " +
+                "ORDER BY hi.id DESC " +
+                "</script>")
+        IPage<SubmitListVO> submitList(@Param("userId") String userId, @Param("tenantId") String tenantId, Page<SubmitListVO> page);
+
+        /**
+         * select
+         *     hi.id AS instanceId,
+         *     CONCAT(COALESCE(hi.create_by, '系统'), '发起的', COALESCE(ei.process_name, '未知流程')) AS title,
+         *     ei.process_name,
+         *     hi.create_by AS startName,
+         *     hi.current_node_name AS currentNode,
+         *     hi.instance_state AS taskState,
+         *     hi.create_time AS submitTime,
+         *     hi.end_time
+         * from flw_his_task_actor hta
+         * LEFT JOIN flw_his_instance hi ON hi.id = hta.instance_id
+         * LEFT JOIN flw_ext_instance ei ON ei.id = hi.id
+         * where
+         * hta.actor_id = '20240815' and hta.actor_type = 0 and hta.weight = 6
+         * ORDER BY hta.id desc
+         * limit 10
+         */
+        @Select("<script>" +
+                "SELECT " +
+                "    hi.id AS instanceId, " +
+                "    CONCAT(COALESCE(hi.create_by, '系统'), '发起的', COALESCE(ei.process_name, '未知流程')) AS title, " +
+                "    ei.process_name, " +
+                "    hi.create_by AS startName, " +
+                "    hi.current_node_name AS currentNode, " +
+                "    hi.instance_state AS taskState, " +
+                "    hi.create_time AS submitTime, " +
+                "    hi.end_time " +
+                "FROM flw_his_task_actor hta " +
+                "LEFT JOIN flw_his_instance hi ON hi.id = hta.instance_id " +
+                "LEFT JOIN flw_ext_instance ei ON ei.id = hi.id " +
+                "WHERE hta.actor_id = #{userId} " +
+                "AND hta.actor_type = 0 " +
+                "AND hta.weight = 6 " +
+                "<if test='tenantId != null'> " +
+                "    AND hi.tenant_id = #{tenantId} " +
+                "</if> " +
+                "ORDER BY hta.id DESC " +
+                "</script>")
+        IPage<AboutListVO> aboutList(@Param("userId") String userId, @Param("tenantId") String tenantId, Page page);
+
+        @Select("<script>" +
+                "SELECT i.business_key " +
+                "FROM flw_instance i " +
+                "INNER JOIN flw_task_actor ta ON i.id = ta.instance_id " +
+                "WHERE ta.actor_id = #{userId} " +
+                "<if test='tenantId != null'> AND i.tenant_id = #{tenantId} </if> " +
+                "LIMIT #{current}, #{size} " +
+                "</script>")
+        List<Long> getBusinessKeys(@Param("userId") String userId, @Param("tenantId") String tenantId, @Param("size") long size, @Param("current") long current);
 }

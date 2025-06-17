@@ -6,7 +6,7 @@
           添加条件
         </el-button>
 
-        <div class="col-box" v-for="(item, index) in nodeConfig.conditionNodes" :key="index">
+        <div class="col-box" v-for="(item, index) in nodeConfig.inclusiveNodes" :key="index">
           <div class="condition-node">
             <div class="condition-node-box">
               <div class="auto-judge" @click="isDefaultCondition(index) ? null : show(index)">
@@ -14,8 +14,7 @@
                   <el-icon><el-icon-arrow-left /></el-icon>
                 </div>
                 <div class="title">
-                  <span class="node-title4" :class="{ 'default-condition': isDefaultCondition(index) }">{{ item.nodeName }}</span>
-                  <span class="priority-title">优先级{{ item.priorityLevel }}</span>
+                  <span class="node-title9" :class="{ 'default-condition': isDefaultCondition(index) }">{{ item.nodeName }}</span>
                   <el-icon class="copy" v-if="!isDefaultCondition(index)" @click.stop="copyNode(index)" >
                     <el-icon-copy-document />
                   </el-icon>
@@ -27,7 +26,7 @@
                   <span v-if="toText(index)">{{ toText(index) }}</span>
                   <span v-else class="placeholder">{{ isDefaultCondition(index) ? '默认条件' : '请设置条件' }}</span>
                 </div>
-                <div class="sort-right" v-if="index !== nodeConfig.conditionNodes.length - 1 && !isDefaultCondition(index+1)" @click.stop="arrTransfer(index)">
+                <div class="sort-right" v-if="index !== nodeConfig.inclusiveNodes.length - 1 && !isDefaultCondition(index+1)" @click.stop="arrTransfer(index)">
                   <el-icon><el-icon-arrow-right /></el-icon>
                 </div>
               </div>
@@ -39,8 +38,8 @@
 
           <div class="top-left-cover-line" v-if="index === 0"></div>
           <div class="bottom-left-cover-line" v-if="index === 0"></div>
-          <div class="top-right-cover-line" v-if="index === nodeConfig.conditionNodes.length - 1"></div>
-          <div class="bottom-right-cover-line" v-if="index === nodeConfig.conditionNodes.length - 1"></div>
+          <div class="top-right-cover-line" v-if="index === nodeConfig.inclusiveNodes.length - 1"></div>
+          <div class="bottom-right-cover-line" v-if="index === nodeConfig.inclusiveNodes.length - 1"></div>
         </div>
       </div>
       <add-node v-model="nodeConfig.childNode" />
@@ -181,7 +180,7 @@ watch(() => props.modelValue, (newVal) => {
 
 // 判断是否为默认条件
 function isDefaultCondition(index) {
-  const node = nodeConfig.value.conditionNodes?.[index]
+  const node = nodeConfig.value.inclusiveNodes?.[index]
   return node && node.nodeName === "默认条件"
 }
 
@@ -189,7 +188,7 @@ function show(i) {
   if (isDefaultCondition(i)) return
   
   index.value = i
-  form.value = JSON.parse(JSON.stringify(nodeConfig.value.conditionNodes?.[i]))
+  form.value = JSON.parse(JSON.stringify(nodeConfig.value.inclusiveNodes?.[i]))
   drawer.value = true
 }
 
@@ -203,12 +202,12 @@ function saveTitle() {
 }
 
 function save() {
-  nodeConfig.value.conditionNodes[index.value] = JSON.parse(JSON.stringify(form.value))
+  nodeConfig.value.inclusiveNodes[index.value] = JSON.parse(JSON.stringify(form.value))
   emit('update:modelValue', nodeConfig.value)
 }
 
 function addTerm() {
-  const len = nodeConfig.value.conditionNodes.length
+  const len = nodeConfig.value.inclusiveNodes.length
   
   // 添加在默认条件之前
   const newNode = {
@@ -221,22 +220,22 @@ function addTerm() {
   }
   
   // 如果有默认条件，插入到默认条件之前
-  const defaultIndex = nodeConfig.value.conditionNodes.findIndex(node => node.nodeName === "默认条件")
+  const defaultIndex = nodeConfig.value.inclusiveNodes.findIndex(node => node.nodeName === "默认条件")
   if (defaultIndex > 0) {
-    nodeConfig.value.conditionNodes.splice(defaultIndex, 0, newNode)
+    nodeConfig.value.inclusiveNodes.splice(defaultIndex, 0, newNode)
   } else {
     // 否则添加在最后
-    nodeConfig.value.conditionNodes.push(newNode)
+    nodeConfig.value.inclusiveNodes.push(newNode)
   }
   
   // 更新优先级
-  nodeConfig.value.conditionNodes.forEach((item, idx) => {
+  nodeConfig.value.inclusiveNodes.forEach((item, idx) => {
     item.priorityLevel = idx + 1
   })
 }
 
 function copyNode(i) {
-  const nodeToCopy = JSON.parse(JSON.stringify(nodeConfig.value.conditionNodes[i]))
+  const nodeToCopy = JSON.parse(JSON.stringify(nodeConfig.value.inclusiveNodes[i]))
   
   // 复制节点，修改名称和Key
   const newNode = {
@@ -247,10 +246,10 @@ function copyNode(i) {
   }
   
   // 在当前节点后插入复制的节点
-  nodeConfig.value.conditionNodes.splice(i + 1, 0, newNode)
+  nodeConfig.value.inclusiveNodes.splice(i + 1, 0, newNode)
   
   // 更新后续节点的优先级
-  nodeConfig.value.conditionNodes.forEach((item, idx) => {
+  nodeConfig.value.inclusiveNodes.forEach((item, idx) => {
     item.priorityLevel = idx + 1
   })
   
@@ -258,20 +257,20 @@ function copyNode(i) {
 }
 
 function delTerm(i) {  
-  nodeConfig.value.conditionNodes.splice(i, 1)
+  nodeConfig.value.inclusiveNodes.splice(i, 1)
   
   // 更新优先级
-  nodeConfig.value.conditionNodes.forEach((item, idx) => {
+  nodeConfig.value.inclusiveNodes.forEach((item, idx) => {
     item.priorityLevel = idx + 1
   })
   
-  if (nodeConfig.value.conditionNodes.length === 1 && nodeConfig.value.childNode) {
-    if (nodeConfig.value.conditionNodes[0].childNode) {
-      reData(nodeConfig.value.conditionNodes[0].childNode, nodeConfig.value.childNode)
+  if (nodeConfig.value.inclusiveNodes.length === 1 && nodeConfig.value.childNode) {
+    if (nodeConfig.value.inclusiveNodes[0].childNode) {
+      reData(nodeConfig.value.inclusiveNodes[0].childNode, nodeConfig.value.childNode)
     } else {
-      nodeConfig.value.conditionNodes[0].childNode = nodeConfig.value.childNode
+      nodeConfig.value.inclusiveNodes[0].childNode = nodeConfig.value.childNode
     }
-    emit('update:modelValue', nodeConfig.value.conditionNodes[0].childNode)
+    emit('update:modelValue', nodeConfig.value.inclusiveNodes[0].childNode)
   }
 }
 
@@ -292,9 +291,9 @@ function arrTransfer(i, type = 1) {
   // 不允许把条件移到默认条件的位置
   if (isDefaultCondition(targetIndex)) return
   
-  const moved = nodeConfig.value.conditionNodes.splice(i, 1)[0]
-  nodeConfig.value.conditionNodes.splice(targetIndex, 0, moved)
-  nodeConfig.value.conditionNodes.forEach((item, idx) => (item.priorityLevel = idx + 1))
+  const moved = nodeConfig.value.inclusiveNodes.splice(i, 1)[0]
+  nodeConfig.value.inclusiveNodes.splice(targetIndex, 0, moved)
+  nodeConfig.value.inclusiveNodes.forEach((item, idx) => (item.priorityLevel = idx + 1))
   emit('update:modelValue', nodeConfig.value)
 }
 
@@ -326,7 +325,7 @@ function toText(i) {
     return '未满足其他条件时，将进入默认流程'
   }
   
-  const conditionList = nodeConfig.value.conditionNodes?.[i].conditionList
+  const conditionList = nodeConfig.value.inclusiveNodes?.[i].conditionList
   if (conditionList?.length === 1) {
     return conditionList.map(group => group.map(item => `${item.label}${item.operator}${item.value}`).join(' 和 ')).join(' 或 ')
   } else if (conditionList?.length > 1) {

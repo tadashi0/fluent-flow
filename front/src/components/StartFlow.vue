@@ -38,14 +38,14 @@ const handleCancel = () => {
 const handleSave = async () => {
   try {
     // 1. 先调用父组件保存逻辑
-    const businessKey = await props.onSave()
+    const params = await props.onSave()
     // 2. 执行子组件保存逻辑
     const data = {
       processKey: props.processKey,
       modelContent: JSON.stringify(modelContent.value)
     }
     // await request?.post('/task/save/' + businessKey, data)
-    await saveProcess(businessKey, data)
+    await saveProcess(params.id, data)
     handleCancel()
     emit('refresh');
     ElMessage.success('保存成功')
@@ -57,20 +57,52 @@ const handleSave = async () => {
 const handleSubmit = async () => {
   try {
     // 1. 先调用父组件提交逻辑
-    const businessKey = await props.onSubmit()
+    const params = await props.onSubmit()
     
     // 2. 执行子组件提交逻辑
     const data = {
       processKey: props.processKey,
-      modelContent: JSON.stringify(modelContent.value)
+      modelContent: JSON.stringify(modelContent.value),
     }
-    await startProcess(businessKey, data)
+    const firstNode = modelContent.value?.nodeConfig?.childNode
+    if (firstNode?.type === 4) {
+      const variable = collectFields(firstNode.conditionNodes)
+      for (const key in variable) {
+        if (variable.hasOwnProperty(key) && params.hasOwnProperty(key)) {
+          variable[key] = params[key];
+        }
+      } 
+      data.variable = variable
+    }
+    await startProcess(params.id, data)
     handleCancel()
     emit('refresh');
     ElMessage.success('流程发起成功')
   } catch (error) {
     console.error('流程发起失败:', error)
   }
+}
+
+function collectFields(conditionNodes) {
+    const collect = {};
+
+    if (!Array.isArray(conditionNodes)) return collect;
+
+    conditionNodes
+        .forEach(conditionNode => {
+            const conditionList = conditionNode.conditionList || [];
+            conditionList.forEach(innerList => {
+              (innerList || []).forEach(expression => {
+                    if (expression && expression.field) {
+                        if (!(expression.field in collect)) {
+                            collect[expression.field] = 0;
+                        }
+                    }
+                });
+            });
+        });
+
+    return collect;
 }
 
 // 提供更新函数给所有子组件
@@ -81,11 +113,40 @@ provide('updateNodeConfig', (updateFn) => {
 // 初始化调用接口获取流程数据
 watchEffect(async () => {
   console.log('props', props)
-  const res = !props.businessKey ? await getProcessInfo(props.processKey) : await getInstanceModel(props.businessKey)
-  if (res.code == 0) {
-    modelContent.value = JSON.parse(res.data.modelContent || res.data)
+  var res = {}
+  if(!props.businessKey) {
+    res = await getProcessInfo(props.processKey)
+  } else {
+    res = await getInstanceModel(props.businessKey)
+  }
+  if (res.code === 0) {
+    const processModel = JSON.parse(res.data.modelContent);
+    await traverseNode(processModel.nodeConfig);
+    modelContent.value = processModel;
   }
 });
+
+const traverseNode = async (node) => {
+  if (node?.childNode) {
+    await traverseNode(node.childNode);
+  }
+  if (node?.type === 5) {
+    const modelResult = await getProcessInfo(parseCallProcess(node.callProcess).id)
+    const processModel = JSON.parse(modelResult.data.modelContent);
+    await traverseNode(processModel.nodeConfig);
+    node.nodeConfig = processModel.nodeConfig;
+  }
+};
+
+// 解析callProcess值
+const parseCallProcess = (callProcess) => {
+  if (!callProcess) return null;
+  const parts = callProcess.split(':');
+  return {
+    id: parts[0],
+    name: parts[1] || '未命名子流程'
+  };
+};
 
 </script>
 

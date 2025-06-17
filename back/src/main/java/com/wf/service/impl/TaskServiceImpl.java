@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -27,11 +28,33 @@ public class TaskServiceImpl implements TaskService {
     private final TaskMapper mapper;
 
     @Override
-    public JSONObject taskCount() {
+    public Long todoCount() {
         // 获取当前用户
         String userId = "20240815";
-        Map<String, Long> result = mapper.taskCount(userId, null);
-        return new JSONObject(result);
+        return mapper.todoCount(userId, null);
+    }
+
+    @Override
+    public Long doneCount() {
+        // 获取当前用户
+        String userId = "20240815";
+        return mapper.doneCount(userId, null);
+    }
+
+    @Override
+    public Long submitCount() {
+        // 获取当前用户
+        String userId = "20240815";
+
+
+        return mapper.submitCount(userId, null);
+    }
+    
+    @Override
+    public Long aboutCount() {
+        // 获取当前用户
+        String userId = "20240815";
+        return mapper.aboutCount(userId, null);
     }
 
     @Override
@@ -46,7 +69,9 @@ public class TaskServiceImpl implements TaskService {
     public IPage<DoneListVO> doneList(Page page) {
         // 获取当前用户
         String userId = "20240815";
+        page.setSearchCount(false);
         IPage<DoneListVO> pageResult = mapper.doneList(userId, null, page);
+        pageResult.setTotal(1000000);
         return pageResult;
     }
 
@@ -54,7 +79,9 @@ public class TaskServiceImpl implements TaskService {
     public IPage<SubmitListVO> submitList(boolean isAll, Page page) {
         // 获取当前用户
         String userId = "20240815";
+        page.setSearchCount(false);
         IPage<SubmitListVO> pageResult = mapper.submitList(isAll ? null : userId, null, page);
+        pageResult.setTotal(200000);
         return pageResult;
     }
 
@@ -62,7 +89,10 @@ public class TaskServiceImpl implements TaskService {
     public IPage<AboutListVO> aboutList(Page page) {
         // 获取当前用户
         String userId = "20240815";
+        page.setSearchCount(false);
         IPage<AboutListVO> pageResult = mapper.aboutList(userId, null, page);
+        pageResult.setTotal(200000);
         return pageResult;
     }
+
 }
