@@ -24,15 +24,15 @@
           <el-form label-position="top">
 
             <el-form-item label="审批人员类型">
-              <el-select v-model="form.setType" @change="changeSetType">
-                <el-option :value="1" label="指定成员"></el-option>
-                <el-option :value="2" label="主管"></el-option>
-                <el-option :value="3" label="角色"></el-option>
-                <el-option :value="4" label="发起人自选"></el-option>
-                <el-option :value="5" label="发起人自己"></el-option>
-                <el-option :value="6" label="连续多级主管"></el-option>
-                <!-- <el-option :value="7" label="部门(暂未实现)"></el-option> -->
-              </el-select>
+              <div class="approver-type-grid">
+                <div 
+                  v-for="option in approverTypeOptions" 
+                  :key="option.value"
+                  @click="selectApproverType(option.value)"
+                >
+                  <el-radio :label="option.value" v-model="form.setType">{{ option.label }}</el-radio>
+                </div>
+              </div>
             </el-form-item>
 
             <el-form-item v-if="form.setType==1" label="选择成员">
@@ -71,6 +71,7 @@
             <el-divider></el-divider>
             <el-form-item label="">
               <el-checkbox v-model="form.termAuto" label="超时自动审批"></el-checkbox>
+              <el-checkbox v-model="form.remind" label="审批提醒"></el-checkbox>
             </el-form-item>
             <template v-if="form.termAuto">
               <el-form-item label="审批期限（为 0 则不生效）">
@@ -96,10 +97,10 @@
 
             <el-form-item label="审批人与提交人为同一人时">
               <el-radio-group v-model="form.approveSelf">
-                <el-radio :label="0">由发起人对自己审批</el-radio>
-                <el-radio :label="1">自动跳过</el-radio>
-                <el-radio :label="2">转交给直接上级审批</el-radio>
-                <el-radio :label="3">转交给部门负责人审批</el-radio>
+                <p style="width: 100%;"><el-radio :label="0">由发起人对自己审批</el-radio></p>
+                <p style="width: 100%;"><el-radio :label="1">自动跳过</el-radio></p>
+                <p style="width: 100%;"><el-radio :label="2">转交给直接上级审批</el-radio></p>
+                <p style="width: 100%;"><el-radio :label="3">转交给部门负责人审批</el-radio></p>
               </el-radio-group>
             </el-form-item>
           </el-form>
@@ -128,6 +129,16 @@ const drawer = ref(false);
 const isEditTitle = ref(false);
 const form = ref({});
 const nodeTitle = ref(null);
+
+// 审批人员类型选项
+const approverTypeOptions = ref([
+  { value: 1, label: '指定成员' },
+  { value: 2, label: '主管' },
+  { value: 3, label: '角色' },
+  { value: 4, label: '发起人自选' },
+  { value: 5, label: '发起人自己' },
+  { value: 6, label: '连续多级主管' }
+]);
 
 // 计算属性：判断是否为多人审批
 const isMultipleApprovers = computed(() => {
@@ -192,8 +203,9 @@ const selectHandle = (type, data) => {
   select(type, data);
 };
 
-const changeSetType = () => {
-  form.value.nodeAssigneeList = [];  
+const selectApproverType = (value) => {
+  form.value.setType = value;
+  form.value.nodeAssigneeList = [];
 };
 
 const toText = (nodeConfig) => {
@@ -222,6 +234,12 @@ const toText = (nodeConfig) => {
   }
 };
 </script>
-<style>
-/* 保留原有样式 */
+
+<style scoped>
+/* 审批人员类型网格布局 */
+.approver-type-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px; 
+}
 </style>

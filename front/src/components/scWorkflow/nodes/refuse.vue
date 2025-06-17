@@ -2,7 +2,7 @@
   <div class="node-wrap">
     <div class="node-wrap-box">
       <div class="title" style="background: #F56C6C;">
-        <el-icon class="icon"><el-icon-promotion /></el-icon>
+        <el-icon class="icon"><el-icon-circle-close-filled /></el-icon>
         <span>{{ nodeConfig.nodeName }}</span>
         <el-icon class="close" @click.stop="delNode"><el-icon-close /></el-icon>
       </div>
