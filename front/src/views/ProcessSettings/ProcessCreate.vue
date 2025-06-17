@@ -104,10 +104,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, provide } from 'vue'
+import { ref, computed, onMounted, provide, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import WorkFlow from '@/components/workFlow.vue'
-import { getTableList, createProcess } from '@/api/process'
+import { getTableList, createProcess, getProcessInfo } from '@/api/process'
 import { ElMessage } from 'element-plus'
 import { debounce } from 'lodash-es'
 
@@ -136,42 +136,27 @@ const formRules = {
 const processKey = computed(() => route.query?.processKey || '')
 const module = computed(() => route.query?.module || '')
 
-// 从路由参数获取编辑数据并初始化表单
-const editData = computed(() => {
-    try {
-        return route.query?.editData ? JSON.parse(route.query.editData) : null
-    } catch {
-        return null
-    }
-})
+// 表单数据
+const formData = ref({})
 
-// 初始化表单数据
-const initFormData = computed(() => {
-    if (editData.value) {
-        return {
-            processId: editData.value.id,
-            processName: editData.value.processName,
-            processKey: editData.value.processKey,
-            processType: editData.value.processType,
-            useScope: editData.value.useScope || 0,
-            remark: editData.value.remark || '',
-            modelContent: editData.value.modelContent || '',
-            module: JSON.parse(editData.value.modelContent)?.module || ''
-        }
-    }
-    return {
+watchEffect(() => { 
+    formData.value = {
+        processKey: route.query?.processKey || '',
+        module: route.query?.module || '',
         processName: '',
-        processKey: processKey.value,
-        module: module.value, 
-        useScope: 0,
         processType: '',
+        useScope: 0,
         remark: '',
         modelContent: ''
     }
 })
 
-// 表单数据
-const formData = ref(initFormData.value)
+// 从路由参数获取编辑数据并初始化表单
+watchEffect(async () => {
+    if(!route.query?.id) return
+    const { data } = await getProcessInfo(route.query?.id)
+    formData.value = {...data, module: JSON.parse(data.modelContent)?.module || ''}
+})
 
 const tableName = computed(() => formData.value.processType)
 provide('tableName', tableName)

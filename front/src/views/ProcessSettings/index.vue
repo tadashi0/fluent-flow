@@ -202,7 +202,7 @@ const handleEdit = (row) => {
   router.push({
     name: 'ProcessCreate',
     query: {
-      editData: JSON.stringify(row)
+      id: row.id
     }
   });
 };
