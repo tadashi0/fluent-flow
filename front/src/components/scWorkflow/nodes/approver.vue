@@ -137,7 +137,8 @@ const approverTypeOptions = ref([
   { value: 3, label: '角色' },
   { value: 4, label: '发起人自选' },
   { value: 5, label: '发起人自己' },
-  { value: 6, label: '连续多级主管' }
+  { value: 6, label: '连续多级主管' },
+  // { value: 7, label: '部门' },
 ]);
 
 // 计算属性：判断是否为多人审批

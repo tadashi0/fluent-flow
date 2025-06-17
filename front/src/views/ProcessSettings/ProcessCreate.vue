@@ -244,61 +244,53 @@ onMounted(async () => {
 
 <style scoped>
 .process-create-container {
-    padding: 24px;
-    width: 100%;
-    margin: 0 auto;
+  padding: 24px 32px;
+  margin: 0 auto;
+  background: #f5f7fa;
+  min-height: 100vh;
 }
 
 .step-button-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 24px;
-    margin: 0 auto;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border-radius: 8px;
+  margin-bottom: 24px;
 }
 
-.left-actions {
-    width: 120px; /* Match button width */
+.left-actions,
+.right-actions {
+  width: 120px;
 }
 
 .center-steps {
     flex: 1;
     max-width: 500px;
-    margin: 0 20px;
-}
-
-.right-actions {
-    width: 120px; /* Match button width */
-    display: flex;
-    justify-content: flex-end;
-}
-
-.form-content {
-    margin-top: 32px;
-    margin: 0 auto;
 }
 
 .form-wrapper {
-    width: 600px;
-    height: 500px;
-    margin: 0 auto;
-    padding: 24px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  background: #fff;
+  padding: 32px 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  width: 720px;
+  margin: 0 auto;
+  transition: all 0.3s ease;
 }
 
-.el-input {
-    width: 100%;
+.form-content {
+  margin-top: 20px;
 }
 
-.workflow-container {
-    width: 100%;
-    font-size: 14px;
-}
-
-.action-bar {
-    margin-top: 24px;
-    text-align: right;
+.el-input,
+.el-select,
+.el-textarea {
+  width: 100%;
 }
 </style>
