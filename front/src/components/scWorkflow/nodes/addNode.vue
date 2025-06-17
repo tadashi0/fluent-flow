@@ -8,11 +8,11 @@
 				<div class="add-node-popover-body">
 					<ul style="padding-inline-start: 0px; margin-block-start: 0px; margin-block-end: 0px">
 						<li>
-							<el-icon style="color: #ff943e;" @click="addType(1)"><el-icon-user-filled /></el-icon>
+							<el-icon style="color: #F8AD16;" @click="addType(1)"><el-icon-user-filled /></el-icon>
 							<p>审批节点</p>
 						</li>
 						<li>
-							<el-icon style="color: #3296fa;" @click="addType(2)"><el-icon-promotion /></el-icon>
+							<el-icon style="color: #2A5EFD;" @click="addType(2)"><el-icon-promotion /></el-icon>
 							<p>抄送节点</p>
 						</li>
 						<li>

@@ -304,7 +304,7 @@ onMounted(() => {
     line-height: 16px;
   }
   .auto-judge .title .node-title4 {
-    color: #15bc83;
+    color: #52C41A;
   }
   .auto-judge .title .node-title8 {
     color: #626AEF;

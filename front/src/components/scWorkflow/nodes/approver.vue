@@ -1,7 +1,7 @@
 <template>
   <div class="node-wrap">
     <div class="node-wrap-box" @click="show">
-      <div class="title" style="background: #ff943e;">
+      <div class="title" style="background: #F8AD16;">
         <el-icon class="icon"><el-icon-user-filled /></el-icon>
         <span>{{ nodeConfig.nodeName }}</span>
         <el-icon class="close" @click.stop="delNode()"><el-icon-close /></el-icon>

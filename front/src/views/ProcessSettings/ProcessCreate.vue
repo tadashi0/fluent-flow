@@ -309,6 +309,7 @@ onMounted(async () => {
 
 .workflow-container {
     width: 100%;
+    font-size: 14px;
 }
 
 .action-bar {

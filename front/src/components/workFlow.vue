@@ -177,7 +177,7 @@ body {
 }
 
 .zoom-percentage {
-  margin: 0 3px;
+  margin: 0 10px;
   font-size: 16px;
   min-width: 40px;
   text-align: center;
