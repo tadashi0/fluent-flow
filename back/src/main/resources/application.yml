@@ -54,6 +54,7 @@ mybatis-plus:
     map-underscore-to-camel-case: true
 # FlowLong Config
 flowlong:
+  banner: false
   remind:
     cron: "*/5 * * * * ?"
   eventing:

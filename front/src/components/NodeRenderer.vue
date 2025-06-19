@@ -214,14 +214,10 @@
     </div>
     <div class="workflow-line"></div>
     <div class="workflow-content">
-      <div class="workflow-title">{{ node.nodeName || '触发器' }}</div>
+      <div class="workflow-title">{{ node.nodeName || '触发器' }} <span v-if="node.taskState !== undefined" class="state-tag">{{ getNodeStateText(node) }}</span></div>
       <div class="workflow-desc">
         <div>
-          {{ node.triggerType === '1' ? '立即执行' : '延迟执行' }}
-        </div>
-        <div v-if="node.triggerType === '2' && node.delayType">
-          {{ node.delayType === '1' ? '固定时长' : '自动计算' }}:
-          {{ node.extendConfig?.time || '' }}
+          {{ node.triggerType === '1' ? '立即执行' : '延迟执行' }}，{{ displayTime(node) }}
         </div>
       </div>
     </div>

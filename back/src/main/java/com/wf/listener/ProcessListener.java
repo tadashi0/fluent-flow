@@ -12,6 +12,7 @@ import com.aizuda.bpm.engine.entity.*;
 import com.aizuda.bpm.engine.model.*;
 import com.aizuda.bpm.mybatisplus.mapper.FlwExtInstanceMapper;
 import com.aizuda.bpm.mybatisplus.mapper.FlwHisInstanceMapper;
+import com.aizuda.bpm.mybatisplus.mapper.FlwTaskMapper;
 import com.aizuda.bpm.spring.event.TaskEvent;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
@@ -53,8 +54,10 @@ public class ProcessListener {
     private final FlowLongEngine flowLongEngine;
     private final JdbcTemplate jdbcTemplate;
     private final DataSource dataSource;
+    private final FlwTaskMapper flwTaskMapper;
     private final FlwHisInstanceMapper flwHisInstanceMapper;
     private final FlwExtInstanceMapper flwExtInstanceMapper;
+
     /**
      * 事件处理器映射，根据不同事件类型执行不同的处理逻辑
      */
@@ -176,6 +179,9 @@ public class ProcessListener {
     @EventListener
     public void onTaskEvent(TaskEvent taskEvent) {
         try {
+            if(taskEvent.getEventType().eq(TaskEventType.update)){
+                return ;
+            }
             FlwTask flwTask = taskEvent.getFlwTask();
             Long instanceId = flwTask.getInstanceId();
             TaskEventType eventType = taskEvent.getEventType();
@@ -272,6 +278,12 @@ public class ProcessListener {
         if (InstanceState.active.eq(flowLongEngine.queryService()
                 .getHistInstance(event.getFlwTask().getInstanceId()).getInstanceState())) {
             updates.put("state", 1);
+        }
+
+        // 判断是否需要审批提醒
+        if(event.getNodeModel().getRemind()){
+            event.getFlwTask().setRemindTime(new Date());
+            flwTaskMapper.updateById(event.getFlwTask());
         }
     }
 
