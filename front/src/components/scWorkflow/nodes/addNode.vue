@@ -122,7 +122,7 @@ export default {
 						},
 						{
 							nodeName: "默认条件",
-							nodeKey: this.getNodeKey(),
+							nodeKey: this.getNodeKey() + '-1',
 							type: 3,
 							priorityLevel: 2,
 							conditionMode: 1,
@@ -221,6 +221,7 @@ export default {
 					routeNodes: [
 						{
 							nodeName: "路由1",
+							targetNodeName: '',
 							priorityLevel: 1,
 							conditionMode: 1,
 							conditionList: []

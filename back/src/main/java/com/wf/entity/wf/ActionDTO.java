@@ -1,15 +1,10 @@
-package com.wf.entity;
+package com.wf.entity.wf;
 
 import com.aizuda.bpm.engine.assist.ObjectUtils;
 import com.aizuda.bpm.engine.core.FlowCreator;
-import com.aizuda.bpm.engine.core.FlowLongContext;
 import com.aizuda.bpm.engine.model.NodeAssignee;
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AccessLevel;
 import lombok.Data;
-import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
 
 import java.util.HashMap;

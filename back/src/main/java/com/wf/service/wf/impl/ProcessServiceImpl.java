@@ -1,4 +1,4 @@
-package com.wf.service.impl;
+package com.wf.service.wf.impl;
 
 import com.aizuda.bpm.engine.assist.ObjectUtils;
 import com.aizuda.bpm.engine.entity.FlwProcess;
@@ -6,10 +6,10 @@ import com.aizuda.bpm.mybatisplus.mapper.FlwProcessMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.toolkit.ChainWrappers;
-import com.wf.entity.FieldInfoDTO;
-import com.wf.entity.TableInfoDTO;
-import com.wf.mapper.ProcessMapper;
-import com.wf.service.ProcessService;
+import com.wf.entity.wf.FieldInfoDTO;
+import com.wf.entity.wf.TableInfoDTO;
+import com.wf.mapper.wf.ProcessMapper;
+import com.wf.service.wf.ProcessService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

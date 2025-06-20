@@ -1,8 +1,7 @@
-package com.wf.entity;
+package com.wf.entity.wf;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;

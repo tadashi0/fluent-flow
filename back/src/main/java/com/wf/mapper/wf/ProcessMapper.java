@@ -1,14 +1,12 @@
-package com.wf.mapper;
+package com.wf.mapper.wf;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.wf.entity.*;
+import com.wf.entity.wf.FieldInfoDTO;
+import com.wf.entity.wf.TableInfoDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
-import java.util.Map;
 
 
 /**

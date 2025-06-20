@@ -65,7 +65,7 @@
         <dependency>
             <groupId>com.aizuda</groupId>
             <artifactId>flowlong-spring-boot-starter</artifactId>
-            <version>1.1.9</version>
+            <version>1.1.11</version>
         </dependency>
         <dependency>
             <groupId>com.alibaba.fastjson2</groupId>
@@ -104,6 +104,11 @@
             <groupId>com.baomidou</groupId>
             <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
             <version>3.4.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.snmp4j</groupId>
+            <artifactId>snmp4j</artifactId>
+            <version>2.8.18</version>
         </dependency>
     </dependencies>
 

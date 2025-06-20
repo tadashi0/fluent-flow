@@ -1,4 +1,4 @@
-package com.wf.service.impl;
+package com.wf.service.wf.impl;
 
 import com.aizuda.bpm.engine.assist.ObjectUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -7,10 +7,10 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.wf.common.exception.ServiceException;
-import com.wf.entity.FlowUser;
-import com.wf.mapper.FlowUserMapper;
-import com.wf.mapper.TaskMapper;
-import com.wf.service.FlowUserService;
+import com.wf.entity.wf.FlowUser;
+import com.wf.mapper.wf.FlowUserMapper;
+import com.wf.mapper.wf.TaskMapper;
+import com.wf.service.wf.FlowUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

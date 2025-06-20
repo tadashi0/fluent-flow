@@ -244,9 +244,8 @@ onMounted(async () => {
 
 <style scoped>
 .process-create-container {
-  padding: 24px 32px;
+  padding: 12px 12px;
   margin: 0 auto;
-  background: #f5f7fa;
   min-height: 100vh;
 }
 

@@ -185,6 +185,9 @@ const saveTitle = () => {
 };
 
 const save = () => {
+  if (!form.value.termAuto) {
+    form.value.term = 0;
+  }
   emit('update:modelValue', form.value);
 };
 

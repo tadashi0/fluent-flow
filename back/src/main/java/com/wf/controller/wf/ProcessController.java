@@ -1,4 +1,4 @@
-package com.wf.controller;
+package com.wf.controller.wf;
 
 import com.aizuda.bpm.engine.FlowLongEngine;
 import com.aizuda.bpm.engine.assist.Assert;
@@ -9,14 +9,12 @@ import com.aizuda.bpm.engine.model.ModelHelper;
 import com.aizuda.bpm.engine.model.NodeModel;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.wf.common.exception.ServiceException;
 import com.wf.common.pojo.CommonResult;
-import com.wf.entity.FieldInfoDTO;
-import com.wf.entity.TableInfoDTO;
-import com.wf.service.ProcessService;
+import com.wf.entity.wf.FieldInfoDTO;
+import com.wf.entity.wf.TableInfoDTO;
+import com.wf.service.wf.ProcessService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;

@@ -1,8 +1,8 @@
-package com.wf.service;
+package com.wf.service.wf;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.wf.entity.FlowUser;
+import com.wf.entity.wf.FlowUser;
 
 import java.util.List;
 import java.util.Optional;

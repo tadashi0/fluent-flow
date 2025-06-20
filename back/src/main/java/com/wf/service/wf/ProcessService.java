@@ -1,10 +1,10 @@
-package com.wf.service;
+package com.wf.service.wf;
 
 import com.aizuda.bpm.engine.entity.FlwProcess;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.wf.entity.FieldInfoDTO;
-import com.wf.entity.TableInfoDTO;
+import com.wf.entity.wf.FieldInfoDTO;
+import com.wf.entity.wf.TableInfoDTO;
 
 import java.util.List;
 

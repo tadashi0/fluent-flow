@@ -2,10 +2,8 @@ package com.wf.listener;
 
 import com.aizuda.bpm.engine.FlowLongEngine;
 import com.aizuda.bpm.engine.assist.ObjectUtils;
-import com.aizuda.bpm.engine.core.Execution;
-import com.aizuda.bpm.engine.core.FlowCreator;
-import com.aizuda.bpm.engine.core.FlowLongContext;
 import com.aizuda.bpm.engine.core.enums.InstanceState;
+import com.aizuda.bpm.engine.core.enums.NodeApproveSelf;
 import com.aizuda.bpm.engine.core.enums.TaskEventType;
 import com.aizuda.bpm.engine.core.enums.TaskType;
 import com.aizuda.bpm.engine.entity.*;
@@ -14,7 +12,6 @@ import com.aizuda.bpm.mybatisplus.mapper.FlwExtInstanceMapper;
 import com.aizuda.bpm.mybatisplus.mapper.FlwHisInstanceMapper;
 import com.aizuda.bpm.mybatisplus.mapper.FlwTaskMapper;
 import com.aizuda.bpm.spring.event.TaskEvent;
-import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.extension.toolkit.ChainWrappers;
 import lombok.RequiredArgsConstructor;
@@ -151,7 +148,7 @@ public class ProcessListener {
 
         // 各种跳转事件
         handlers.put(TaskEventType.jump, setHandlerAction);
-        handlers.put(TaskEventType.autoJump, setHandlerAction);
+        //handlers.put(TaskEventType.autoJump, setHandlerAction);
         handlers.put(TaskEventType.routeJump, setHandlerAction);
         handlers.put(TaskEventType.reApproveJump, setHandlerAction);
 
@@ -179,8 +176,8 @@ public class ProcessListener {
     @EventListener
     public void onTaskEvent(TaskEvent taskEvent) {
         try {
-            if(taskEvent.getEventType().eq(TaskEventType.update)){
-                return ;
+            if (taskEvent.getEventType().eq(TaskEventType.update)) {
+                return;
             }
             FlwTask flwTask = taskEvent.getFlwTask();
             Long instanceId = flwTask.getInstanceId();
@@ -279,11 +276,28 @@ public class ProcessListener {
                 .getHistInstance(event.getFlwTask().getInstanceId()).getInstanceState())) {
             updates.put("state", 1);
         }
+        NodeModel nodeModel = event.getNodeModel();
 
         // 判断是否需要审批提醒
-        if(event.getNodeModel().getRemind()){
+        if (nodeModel.getRemind()) {
             event.getFlwTask().setRemindTime(new Date());
             flwTaskMapper.updateById(event.getFlwTask());
+        }
+
+        if (NodeApproveSelf.initiatorThemselves.ne(nodeModel.getApproveSelf())) {
+            // 判断审批人与提交人为同一人时
+            if (event.getTaskActors().stream().anyMatch(e -> Objects.equals(e.getActorId(), event.getFlowCreator().getCreateId()))) {
+                // 判断是否自动跳过
+                if (NodeApproveSelf.AutoSkip.eq(nodeModel.getApproveSelf())) {
+                    flowLongEngine.autoJumpTask(event.getFlwTask().getId(), event.getFlowCreator());
+                    // 转交给直接上级审批
+                } else if (NodeApproveSelf.TransferDirectSuperior.eq(nodeModel.getApproveSelf())) {
+
+                    // 转交给部门负责人审批
+                } else if (NodeApproveSelf.TransferDepartmentHead.eq(nodeModel.getApproveSelf())) {
+
+                }
+            }
         }
     }
 

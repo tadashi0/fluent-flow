@@ -1,7 +1,7 @@
-package com.wf.mapper;
+package com.wf.mapper.wf;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.wf.entity.FlowUser;
+import com.wf.entity.wf.FlowUser;
 import org.apache.ibatis.annotations.Mapper;
 
 /**

@@ -1,15 +1,14 @@
-package com.wf.mapper;
+package com.wf.mapper.wf;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.wf.entity.AboutListVO;
-import com.wf.entity.DoneListVO;
-import com.wf.entity.SubmitListVO;
-import com.wf.entity.TodoListVO;
+import com.wf.entity.wf.AboutListVO;
+import com.wf.entity.wf.DoneListVO;
+import com.wf.entity.wf.SubmitListVO;
+import com.wf.entity.wf.TodoListVO;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author chonghui. tian

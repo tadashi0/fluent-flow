@@ -1,10 +1,10 @@
-package com.wf.controller;
+package com.wf.controller.wf;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.wf.common.exception.enums.GlobalErrorCodeConstants;
 import com.wf.common.pojo.CommonResult;
-import com.wf.entity.FlowUser;
-import com.wf.service.FlowUserService;
+import com.wf.entity.wf.FlowUser;
+import com.wf.service.wf.FlowUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;

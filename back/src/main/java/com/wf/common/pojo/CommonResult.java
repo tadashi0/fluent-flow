@@ -44,6 +44,14 @@ public class CommonResult<T> implements Serializable {
      * @param <T> 返回的泛型
      * @return 新的 CommonResult 对象
      */
+    public static <T> CommonResult<T> error() {
+        return error(500, "操作失败");
+    }
+
+    public static <T> CommonResult<T> error(String message) {
+        return error(500, message);
+    }
+
     public static <T> CommonResult<T> error(CommonResult<?> result) {
         return error(result.getCode(), result.getMsg());
     }
@@ -66,11 +74,25 @@ public class CommonResult<T> implements Serializable {
         return error(errorCode.getCode(), errorCode.getMsg());
     }
 
+    public static <T> CommonResult<T> success() {
+        CommonResult<T> result = new CommonResult<>();
+        result.code = GlobalErrorCodeConstants.SUCCESS.getCode();
+        result.msg = "操作成功";
+        return result;
+    }
+
     public static <T> CommonResult<T> success(T data) {
         CommonResult<T> result = new CommonResult<>();
         result.code = GlobalErrorCodeConstants.SUCCESS.getCode();
         result.data = data;
         result.msg = "";
+        return result;
+    }
+
+    public static <T> CommonResult<T> success(String message) {
+        CommonResult<T> result = new CommonResult<>();
+        result.code = GlobalErrorCodeConstants.SUCCESS.getCode();
+        result.msg = message;
         return result;
     }
 
