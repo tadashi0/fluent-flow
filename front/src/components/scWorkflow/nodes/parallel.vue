@@ -121,7 +121,7 @@ function addTerm() {
   emit('update:modelValue', nodeConfig.value)
 }
 
-function delTerm(i) {
+function delTerm(i) {  
   nodeConfig.value.parallelNodes.splice(i, 1)
   
   // 更新优先级
@@ -129,19 +129,23 @@ function delTerm(i) {
     item.priorityLevel = idx + 1
   })
   
-  // 如果删除完所有节点
-  if (nodeConfig.value.parallelNodes.length === 0) {
-    // 如果有子节点，则直接返回子节点
+  // 如果删除后只剩下默认条件，清空整个条件分支数据
+  if (nodeConfig.value.parallelNodes.length === 1) {
+    
+    // 清空默认条件的子节点
+    nodeConfig.value.parallelNodes[0].childNode = null
+    
+    // 如果条件分支后面还有节点，将其作为新的子节点返回
     if (nodeConfig.value.childNode) {
       emit('update:modelValue', nodeConfig.value.childNode)
     } else {
-      // 否则返回null，让父组件知道此节点已被完全删除
+      // 如果没有后续节点，返回null或空对象
       emit('update:modelValue', null)
     }
-    return
+  } else {
+    // 正常情况下更新数据
+    emit('update:modelValue', nodeConfig.value)
   }
-  
-  emit('update:modelValue', nodeConfig.value)
 }
 
 function arrTransfer(i, type = 1) {

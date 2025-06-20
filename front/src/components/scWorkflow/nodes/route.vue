@@ -77,6 +77,7 @@
                   placeholder="请选择流程节点"
                   style="width: 100%;"
                   clearable
+                  @change="changeSelect"
                 >
                   <el-option
                     v-for="node in availableNodes"
@@ -240,14 +241,25 @@ const editRouteTitle = (index) => {
   nextTick(() => routeTitleRefs.value[index]?.focus())
 }
 const saveRouteTitle = () => { editingRouteIndex.value = -1 }
+
 const save = () => emit('update:modelValue', form.value)
+
 const delNode = () => emit('update:modelValue', nodeConfig.value.childNode)
+
+const changeSelect = (val) => {
+  // 根据val遍历form.value.routeNodes中nodeKey等于val的数据， 这个数据可能会有多条，然后给路由添加 targetNodeName
+  const targetNodes = form.value.routeNodes.filter(route => route.nodeKey === val)
+  targetNodes.forEach(targetNode => {
+    targetNode.targetNodeName = props.availableNodes.find(node => node.nodeKey === val)?.nodeName
+  })
+}
 
 const addRouteBranch = () => {
   const newRouteIndex = form.value.routeNodes.length + 1
   const newRoute = {
     nodeName: `路由${newRouteIndex}`,
     nodeKey: '',
+    targetNodeName: '',
     priorityLevel: newRouteIndex,
     conditionMode: 1,
     conditionList: []
