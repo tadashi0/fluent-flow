@@ -276,6 +276,7 @@ watchEffect(async () => {
 });
 
 const traverseAutoNode = async (node, taskState, currentNodeKey) => { 
+  
   if (node?.childNode) {
     await traverseAutoNode(node.childNode, taskState, currentNodeKey);
   }
@@ -285,7 +286,7 @@ const traverseAutoNode = async (node, taskState, currentNodeKey) => {
       await traverseAutoNode(conditionNode.childNode, taskState, currentNodeKey);
     });
   }
-  if (node.nodeKey === currentNodeKey) {
+  if (node?.nodeKey === currentNodeKey) {
     node.taskState = taskState + 2;
   }
 }

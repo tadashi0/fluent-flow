@@ -422,16 +422,19 @@ public class TaskController implements TaskActorProvider {
     @PutMapping("/revoke/{businessKey}")
     public CommonResult<Boolean> revoke(@PathVariable Long businessKey) {
         // TODO:流程审批中的人才可以撤销
-        Optional<List<FlwHisInstance>> optional = flowLongEngine.queryService()
-                .getHisInstancesByBusinessKey(String.valueOf(businessKey));
+        Optional<List<FlwInstance>> optional = flowLongEngine.queryService()
+                .getInstancesByBusinessKey(String.valueOf(businessKey));
         AtomicReference<Boolean> result = new AtomicReference<>(false);
         optional.ifPresent(e -> {
-            e.stream()
-                    .sorted(Comparator.comparing(FlwHisInstance::getId).reversed())
-                    .findFirst()
+            e.stream().findFirst()
                     .ifPresent(instance -> {
-                        result.set(flowLongEngine.runtimeService()
-                                .revoke(instance.getId(), testCreator));
+                        flowLongEngine.queryService()
+                                .getActiveTasksByInstanceId(instance.getId())
+                                .ifPresent(tasks -> {
+                                    FlwTask flwTask = tasks.stream().findFirst().get();
+                                    result.set(flowLongEngine.runtimeService()
+                                            .revoke(instance.getId(), flwTask, testCreator));
+                                });
                     });
         });
 
@@ -488,11 +491,13 @@ public class TaskController implements TaskActorProvider {
                                                 // 如果上一个节点是发起人,那么直接执行撤销操作
                                                 ProcessModel processModel = flowLongEngine.queryService()
                                                         .getExtInstance(instance.getId()).model();
-                                                NodeModel parentNode = processModel.getNode(task.getTaskKey())
-                                                        .getParentNode();
+                                                NodeModel parentNode = processModel.getNode(task.getTaskKey()).getParentNode();
+                                                if(parentNode.conditionNode()){
+                                                    parentNode = parentNode.getParentNode();
+                                                }
                                                 flowLongEngine.executeRejectTask(
                                                         task,
-                                                        parentNode.getNodeKey(),
+                                                        null,
                                                         testCreator,
                                                         data.getVariable(),
                                                         TaskType.major.eq(parentNode.getType())).ifPresent(e1 -> {
@@ -533,11 +538,12 @@ public class TaskController implements TaskActorProvider {
                         flowLongEngine.queryService()
                                 .getActiveTasksByInstanceId(instance.getId())
                                 .ifPresent(tasks -> {
-                                    flowLongEngine.createCcTask(tasks.stream().findFirst().get(), data.getCcUsers(),
+                                    FlwTask flwTask = tasks.stream().findFirst().get();
+                                    result.set(flowLongEngine.runtimeService()
+                                            .terminate(instance.getId(), flwTask, testCreator));
+                                    flowLongEngine.createCcTask(flwTask, data.getCcUsers(),
                                             testCreator);
                                 });
-                        result.set(flowLongEngine.runtimeService()
-                                .terminate(instance.getId(), testCreator));
                     });
         });
 

@@ -315,6 +315,9 @@ public class ProcessListener {
             if (currentNode == null) return;
 
             NodeModel parentNode = currentNode.getParentNode();
+            if(parentNode.conditionNode()){
+                parentNode = parentNode.getParentNode();
+            }
             if (parentNode != null && TaskType.major.eq(parentNode.getType())) {
                 updates.put("state", 4);  // 驳回到发起节点状态
                 updates.put("handler", "");  // 清空处理人
@@ -335,8 +338,9 @@ public class ProcessListener {
             ProcessModel processModel = flowLongEngine.queryService()
                     .getExtInstance(instanceId).model();
 
-            Optional<NodeModel> nextNode = processModel.getNodeConfig()
-                    .nextNode(Arrays.asList(flwTask.getTaskKey()))
+            Optional<NodeModel> nextNode = processModel
+                    .getNode(flwTask.getTaskKey())
+                    .nextNode()
                     .filter(ObjectUtils::isNotEmpty);
             //List<NodeModel> nextChildNodes = ModelHelper.getNextChildNodes(
             //        flowLongEngine.getContext(),
@@ -351,7 +355,7 @@ public class ProcessListener {
                     .filter(ObjectUtils::isNotEmpty);
 
             // 仅在最终步骤设置状态为2
-            if ((!nextNode.isPresent() || isFinalStep(nextNode.get())) && !activeTaskList.isPresent()) {
+            if (isFinalStep(nextNode) && !activeTaskList.isPresent()) {
                 updates.put("state", 2);  // 审批通过状态
                 updates.put("handler", "");  // 清空处理人
             }
@@ -368,8 +372,11 @@ public class ProcessListener {
                 nextNodes.stream().noneMatch(ModelHelper::checkExistApprovalNode);
     }
 
-    private boolean isFinalStep(NodeModel nextNode) {
-        return ModelHelper.checkExistApprovalNode(nextNode);
+    private boolean isFinalStep(Optional<NodeModel> optional) {
+        if(optional.isPresent()){
+            return !ModelHelper.checkExistApprovalNode(optional.get());
+        }
+        return true;
     }
 
     /**
