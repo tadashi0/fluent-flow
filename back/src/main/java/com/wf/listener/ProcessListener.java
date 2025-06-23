@@ -276,29 +276,30 @@ public class ProcessListener {
                 .getHistInstance(event.getFlwTask().getInstanceId()).getInstanceState())) {
             updates.put("state", 1);
         }
-        NodeModel nodeModel = event.getNodeModel();
+        Optional.ofNullable(event.getNodeModel())
+                .ifPresent(nodeModel -> {
+                    // 判断是否需要审批提醒
+                    if (nodeModel.getRemind()) {
+                        event.getFlwTask().setRemindTime(new Date());
+                        flwTaskMapper.updateById(event.getFlwTask());
+                    }
 
-        // 判断是否需要审批提醒
-        if (nodeModel.getRemind()) {
-            event.getFlwTask().setRemindTime(new Date());
-            flwTaskMapper.updateById(event.getFlwTask());
-        }
+                    if (NodeApproveSelf.initiatorThemselves.ne(nodeModel.getApproveSelf())) {
+                        // 判断审批人与提交人为同一人时
+                        if (event.getTaskActors().stream().anyMatch(e -> Objects.equals(e.getActorId(), event.getFlowCreator().getCreateId()))) {
+                            // 判断是否自动跳过
+                            if (NodeApproveSelf.AutoSkip.eq(nodeModel.getApproveSelf())) {
+                                flowLongEngine.autoJumpTask(event.getFlwTask().getId(), event.getFlowCreator());
+                                // 转交给直接上级审批
+                            } else if (NodeApproveSelf.TransferDirectSuperior.eq(nodeModel.getApproveSelf())) {
 
-        if (NodeApproveSelf.initiatorThemselves.ne(nodeModel.getApproveSelf())) {
-            // 判断审批人与提交人为同一人时
-            if (event.getTaskActors().stream().anyMatch(e -> Objects.equals(e.getActorId(), event.getFlowCreator().getCreateId()))) {
-                // 判断是否自动跳过
-                if (NodeApproveSelf.AutoSkip.eq(nodeModel.getApproveSelf())) {
-                    flowLongEngine.autoJumpTask(event.getFlwTask().getId(), event.getFlowCreator());
-                    // 转交给直接上级审批
-                } else if (NodeApproveSelf.TransferDirectSuperior.eq(nodeModel.getApproveSelf())) {
+                                // 转交给部门负责人审批
+                            } else if (NodeApproveSelf.TransferDepartmentHead.eq(nodeModel.getApproveSelf())) {
 
-                    // 转交给部门负责人审批
-                } else if (NodeApproveSelf.TransferDepartmentHead.eq(nodeModel.getApproveSelf())) {
-
-                }
-            }
-        }
+                            }
+                        }
+                    }
+                });
     }
 
     /**
@@ -315,7 +316,7 @@ public class ProcessListener {
             if (currentNode == null) return;
 
             NodeModel parentNode = currentNode.getParentNode();
-            if(parentNode.conditionNode()){
+            if (parentNode.conditionNode()) {
                 parentNode = parentNode.getParentNode();
             }
             if (parentNode != null && TaskType.major.eq(parentNode.getType())) {
@@ -373,7 +374,7 @@ public class ProcessListener {
     }
 
     private boolean isFinalStep(Optional<NodeModel> optional) {
-        if(optional.isPresent()){
+        if (optional.isPresent()) {
             return !ModelHelper.checkExistApprovalNode(optional.get());
         }
         return true;
