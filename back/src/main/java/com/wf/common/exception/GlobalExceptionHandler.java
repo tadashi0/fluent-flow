@@ -37,7 +37,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(FlowLongException.class)
     public CommonResult handleFlowLongException(FlowLongException e, HttpServletRequest request) {
         String requestURI = request.getRequestURI();
-        log.error("请求地址'{}',发生系统异常.", requestURI, e);
+        log.error("请求地址'{}',发生流程异常.", requestURI, e);
+        return CommonResult.error(new ErrorCode(GlobalErrorCodeConstants.INTERNAL_SERVER_ERROR.getCode(), e.getMessage()));
+    }
+
+    /**
+     * 业务异常
+     */
+    @ExceptionHandler(ServerException.class)
+    public CommonResult handleBusinessException(ServerException e, HttpServletRequest request) {
+        String requestURI = request.getRequestURI();
+        log.error("请求地址'{}',发生业务异常.{}", requestURI, e.getMessage());
         return CommonResult.error(new ErrorCode(GlobalErrorCodeConstants.INTERNAL_SERVER_ERROR.getCode(), e.getMessage()));
     }
 
