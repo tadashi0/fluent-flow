@@ -431,7 +431,6 @@ public class ProcessListener {
         AtomicInteger num = new AtomicInteger(1);
         switch (category) {
             case "submit":
-            case "todo":
             case "about":
                 event.getTaskActors().forEach(actor -> {
                     redisService.incrementZSetScore(redisKey, actor.getActorId(), num.get());
