@@ -11,7 +11,7 @@
  Target Server Version : 50743 (5.7.43)
  File Encoding         : 65001
 
- Date: 12/05/2025 17:20:15
+ Date: 04/07/2025 15:42:09
 */
 
 SET NAMES utf8mb4;
@@ -29,6 +29,7 @@ CREATE TABLE `flw_ext_instance` (
   `process_type` varchar(100) DEFAULT NULL COMMENT '流程类型',
   `model_content` text COMMENT '流程模型定义JSON内容',
   PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_process_type` (`process_type`) USING HASH,
   CONSTRAINT `fk_ext_instance_id` FOREIGN KEY (`id`) REFERENCES `flw_his_instance` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='扩展流程实例表';
 
@@ -58,6 +59,9 @@ CREATE TABLE `flw_his_instance` (
   `duration` bigint(20) DEFAULT NULL COMMENT '处理耗时',
   PRIMARY KEY (`id`) USING BTREE,
   KEY `idx_his_instance_process_id` (`process_id`) USING BTREE,
+  KEY `idx_his_business_key` (`business_key`) USING HASH,
+  KEY `idx_his_create_id` (`create_id`) USING BTREE,
+  KEY `idx_his_instance_state` (`instance_state`) USING HASH,
   CONSTRAINT `fk_his_instance_process_id` FOREIGN KEY (`process_id`) REFERENCES `flw_process` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='历史流程实例表';
 
@@ -85,7 +89,7 @@ CREATE TABLE `flw_his_task` (
   `assignor` varchar(255) DEFAULT NULL COMMENT '委托人',
   `expire_time` timestamp NULL DEFAULT NULL COMMENT '任务期望完成时间',
   `remind_time` timestamp NULL DEFAULT NULL COMMENT '提醒时间',
-  `remind_repeat` tinyint(1) NOT NULL DEFAULT '0' COMMENT '提醒次数',
+  `remind_repeat` tinyint(3) NOT NULL DEFAULT '0' COMMENT '提醒次数',
   `viewed` tinyint(1) NOT NULL DEFAULT '0' COMMENT '已阅 0，否 1，是',
   `finish_time` timestamp NULL DEFAULT NULL COMMENT '任务完成时间',
   `task_state` tinyint(1) NOT NULL DEFAULT '0' COMMENT '任务状态 0，活动 1，跳转 2，完成 3，拒绝 4，撤销审批 5，超时 6，终止 7，驳回终止 8，自动完成 9，自动驳回 10，自动跳转 11，驳回跳转 12，驳回重新审批跳转 13，路由跳转',
@@ -93,6 +97,7 @@ CREATE TABLE `flw_his_task` (
   PRIMARY KEY (`id`) USING BTREE,
   KEY `idx_his_task_instance_id` (`instance_id`) USING BTREE,
   KEY `idx_his_task_parent_task_id` (`parent_task_id`) USING BTREE,
+  KEY `idx_his_task_type_id` (`task_type`,`id`),
   CONSTRAINT `fk_his_task_instance_id` FOREIGN KEY (`instance_id`) REFERENCES `flw_his_instance` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='历史任务表';
 
@@ -114,6 +119,7 @@ CREATE TABLE `flw_his_task_actor` (
   `extend` text COMMENT '扩展json',
   PRIMARY KEY (`id`) USING BTREE,
   KEY `idx_his_task_actor_task_id` (`task_id`) USING BTREE,
+  KEY `idx_actor_type_weight` (`actor_id`,`actor_type`,`weight`,`instance_id`) USING BTREE,
   CONSTRAINT `fk_his_task_actor_task_id` FOREIGN KEY (`task_id`) REFERENCES `flw_his_task` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='历史任务参与者表';
 
@@ -190,7 +196,7 @@ CREATE TABLE `flw_task` (
   `assignor` varchar(255) DEFAULT NULL COMMENT '委托人',
   `expire_time` timestamp NULL DEFAULT NULL COMMENT '任务期望完成时间',
   `remind_time` timestamp NULL DEFAULT NULL COMMENT '提醒时间',
-  `remind_repeat` tinyint(1) NOT NULL DEFAULT '0' COMMENT '提醒次数',
+  `remind_repeat` tinyint(3) NOT NULL DEFAULT '0' COMMENT '提醒次数',
   `viewed` tinyint(1) NOT NULL DEFAULT '0' COMMENT '已阅 0，否 1，是',
   PRIMARY KEY (`id`) USING BTREE,
   KEY `idx_task_instance_id` (`instance_id`) USING BTREE,
@@ -215,6 +221,7 @@ CREATE TABLE `flw_task_actor` (
   `extend` text COMMENT '扩展json',
   PRIMARY KEY (`id`) USING BTREE,
   KEY `idx_task_actor_task_id` (`task_id`) USING BTREE,
+  KEY `idx_task_actor_id` (`actor_id`,`actor_type`) USING BTREE,
   CONSTRAINT `fk_task_actor_task_id` FOREIGN KEY (`task_id`) REFERENCES `flw_task` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='任务参与者表';
 

@@ -8,8 +8,10 @@ import com.wf.entity.wf.SubmitListVO;
 import com.wf.entity.wf.TodoListVO;
 import com.wf.mapper.wf.TaskMapper;
 import com.wf.service.wf.TaskService;
+import com.wf.utils.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 /**
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class TaskServiceImpl implements TaskService {
     private final TaskMapper mapper;
+    private final RedisService redisService;
 
     @Override
     public Long todoCount() {
@@ -34,23 +37,24 @@ public class TaskServiceImpl implements TaskService {
     public Long doneCount() {
         // 获取当前用户
         String userId = "20240815";
-        return mapper.doneCount(userId, null);
+        return redisService.getZSetScore("wf:count:done", userId);
+        //return mapper.doneCount(userId, null);
     }
 
     @Override
     public Long submitCount() {
         // 获取当前用户
         String userId = "20240815";
-
-
-        return mapper.submitCount(userId, null);
+        return redisService.getZSetScore("wf:count:submit", userId);
+        //return mapper.submitCount(userId, null);
     }
     
     @Override
     public Long aboutCount() {
         // 获取当前用户
         String userId = "20240815";
-        return mapper.aboutCount(userId, null);
+        return redisService.getZSetScore("wf:count:about", userId);
+        //return mapper.aboutCount(userId, null);
     }
 
     @Override
@@ -67,7 +71,7 @@ public class TaskServiceImpl implements TaskService {
         String userId = "20240815";
         page.setSearchCount(false);
         IPage<DoneListVO> pageResult = mapper.doneList(userId, null, page);
-        pageResult.setTotal(1000000);
+        pageResult.setTotal(redisService.getZSetScore("wf:count:done", userId));
         return pageResult;
     }
 
@@ -77,7 +81,7 @@ public class TaskServiceImpl implements TaskService {
         String userId = "20240815";
         page.setSearchCount(false);
         IPage<SubmitListVO> pageResult = mapper.submitList(isAll ? null : userId, null, page);
-        pageResult.setTotal(200000);
+        pageResult.setTotal(redisService.getZSetScore("wf:count:submit", userId));
         return pageResult;
     }
 
@@ -87,7 +91,7 @@ public class TaskServiceImpl implements TaskService {
         String userId = "20240815";
         page.setSearchCount(false);
         IPage<AboutListVO> pageResult = mapper.aboutList(userId, null, page);
-        pageResult.setTotal(200000);
+        pageResult.setTotal(redisService.getZSetScore("wf:count:about", userId));
         return pageResult;
     }
 

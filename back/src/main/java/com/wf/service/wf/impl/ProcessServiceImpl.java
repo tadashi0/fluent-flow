@@ -35,7 +35,7 @@ public class ProcessServiceImpl implements ProcessService {
         Long tenantId = null;
         IPage<FlwProcess> pageResult = ChainWrappers.lambdaQueryChain(processMapper)
                 .eq(ObjectUtils.isNotEmpty(useScope), FlwProcess::getUseScope, useScope)
-                .like(ObjectUtils.isNotEmpty(processKey), FlwProcess::getProcessKey, processKey)
+                .eq(ObjectUtils.isNotEmpty(processKey), FlwProcess::getProcessKey, processKey)
                 .like(ObjectUtils.isNotEmpty(keyword), FlwProcess::getProcessName, keyword)
                 .eq(ObjectUtils.isNotEmpty(useScope), FlwProcess::getProcessState, 1)
                 .eq(Objects.nonNull(tenantId), FlwProcess::getTenantId, tenantId)

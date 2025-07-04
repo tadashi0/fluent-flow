@@ -14,10 +14,12 @@ import com.aizuda.bpm.mybatisplus.mapper.FlwTaskMapper;
 import com.aizuda.bpm.spring.event.TaskEvent;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.extension.toolkit.ChainWrappers;
+import com.wf.utils.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
@@ -26,6 +28,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -48,12 +51,46 @@ public class ProcessListener {
                 put(TaskEventType.autoReject, 3);
                 put(TaskEventType.terminate, 3);
             }});
+    private static final Map<TaskEventType, String> TASK_COUNT_CATEGORY = new EnumMap<>(TaskEventType.class);
+
+    static {
+        // 发起类 -> submit
+        TASK_COUNT_CATEGORY.put(TaskEventType.start, "submit");
+        TASK_COUNT_CATEGORY.put(TaskEventType.startAsDraft, "submit");
+        TASK_COUNT_CATEGORY.put(TaskEventType.restart, "submit");
+
+        // 已处理类 -> done
+        TASK_COUNT_CATEGORY.put(TaskEventType.complete, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.delegateResolve, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.removeTaskActor, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.reject, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.reclaim, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.withdraw, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.resume, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.revoke, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.terminate, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.timeout, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.jump, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.autoJump, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.rejectJump, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.routeJump, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.reApproveJump, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.autoComplete, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.autoReject, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.end, "done");
+
+        // 抄送类 -> about
+        TASK_COUNT_CATEGORY.put(TaskEventType.cc, "about");
+        TASK_COUNT_CATEGORY.put(TaskEventType.createCc, "about");
+    }
+
     private final FlowLongEngine flowLongEngine;
     private final JdbcTemplate jdbcTemplate;
     private final DataSource dataSource;
     private final FlwTaskMapper flwTaskMapper;
     private final FlwHisInstanceMapper flwHisInstanceMapper;
     private final FlwExtInstanceMapper flwExtInstanceMapper;
+    private final RedisService redisService;
 
     /**
      * 事件处理器映射，根据不同事件类型执行不同的处理逻辑
@@ -226,6 +263,9 @@ public class ProcessListener {
             if (!updates.isEmpty()) {
                 updateTable(tableName, businessKey, updates);
             }
+
+            updateUserTaskCount(taskEvent);
+
             if (TaskEventType.create.eq(eventType)) {
                 Optional<NodeModel> optional = Optional.ofNullable(flowLongEngine.queryService()
                         .getExtInstance(instanceId)
@@ -378,6 +418,30 @@ public class ProcessListener {
             return !ModelHelper.checkExistApprovalNode(optional.get());
         }
         return true;
+    }
+
+    private void updateUserTaskCount(TaskEvent event) {
+        TaskEventType eventType = event.getEventType();
+        String category = TASK_COUNT_CATEGORY.get(eventType);
+        if (category == null) {
+            return; // 非统计类事件跳过
+        }
+
+        String redisKey = "wf:count:" + category;
+        AtomicInteger num = new AtomicInteger(1);
+        switch (category) {
+            case "submit":
+            case "todo":
+            case "about":
+                event.getTaskActors().forEach(actor -> {
+                    redisService.incrementZSetScore(redisKey, actor.getActorId(), num.get());
+                    num.getAndIncrement();
+                });
+                break;
+            case "done":
+                redisService.incrementZSetScore(redisKey, event.getFlowCreator().getCreateId(), num.get());
+                break;
+        }
     }
 
     /**

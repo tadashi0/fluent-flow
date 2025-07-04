@@ -113,7 +113,7 @@ public interface TaskMapper {
          * WHERE
          * 	hta.actor_id = '20240815'
          * 	AND hta.actor_type = 0
-         * 	-- AND ht.task_type NOT IN (-1, 2, 25)
+         * 	-- AND ht.task_type NOT IN (-1, 0, 2, 25)
          * ORDER BY
          * 	hta.id DESC
          * 	LIMIT 10
@@ -135,6 +135,7 @@ public interface TaskMapper {
                 "WHERE hta.actor_id = #{userId} " +
                 "  AND hta.actor_type = 0 " +
                 //"  AND (hta.weight != 6 OR hta.weight IS NULL) " +
+                "  AND ht.task_type NOT IN (-1, 0, 2, 25) " +
                 "  <if test='tenantId != null'> AND hi.tenant_id = #{tenantId} </if> " +
                 "ORDER BY hta.id DESC " +
                 "</script>")

@@ -3,6 +3,10 @@ server:
 spring:
   application:
     name: workflow-center
+  redis:
+    host: 172.16.1.64
+    port: 16379
+    password: amxk2022
   datasource:
     dynamic:
       datasource:

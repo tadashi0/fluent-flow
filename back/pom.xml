@@ -63,6 +63,11 @@
             <scope>runtime</scope>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+            <version>2.7.18</version>
+        </dependency>
+        <dependency>
             <groupId>com.aizuda</groupId>
             <artifactId>flowlong-spring-boot-starter</artifactId>
             <version>1.1.12</version>
