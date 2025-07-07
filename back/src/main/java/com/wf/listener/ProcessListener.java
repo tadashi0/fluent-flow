@@ -85,6 +85,186 @@ public class ProcessListener {
         TASK_COUNT_CATEGORY.put(TaskEventType.createCc, "about");
     }
 
+    private static final Map<TaskEventType, String[]> MESSAGE_TEMPLATES = new EnumMap<>(TaskEventType.class);
+
+    static {
+        // 发起流程
+        MESSAGE_TEMPLATES.put(TaskEventType.start, new String[]{
+                "流程发起成功", "您成功发起了【{process}】流程"
+        });
+
+        // 暂存草稿
+        MESSAGE_TEMPLATES.put(TaskEventType.startAsDraft, new String[]{
+                "流程草稿已保存", "您暂存了【{process}】流程草稿"
+        });
+
+        // 重新发起
+        MESSAGE_TEMPLATES.put(TaskEventType.restart, new String[]{
+                "流程重新发起成功", "您重新提交了【{process}】流程"
+        });
+
+        // 创建任务
+        MESSAGE_TEMPLATES.put(TaskEventType.create, new String[]{
+                "您有新的审批任务", "用户【{user}】提交的【{process}】需要您审批，请及时处理"
+        });
+
+        // 流程回退后重新创建任务
+        MESSAGE_TEMPLATES.put(TaskEventType.recreate, new String[]{
+                "审批任务重新创建", "【{process}】流程任务已重新生成，请处理"
+        });
+
+        // 抄送
+        MESSAGE_TEMPLATES.put(TaskEventType.cc, new String[]{
+                "审批抄送送达通知", "您收到【{process}】的审批抄送，请知晓"
+        });
+
+        // 手动抄送
+        MESSAGE_TEMPLATES.put(TaskEventType.createCc, new String[]{
+                "审批抄送送达通知", "您收到【{process}】的审批抄送，请知晓"
+        });
+
+        // 任务转交
+        MESSAGE_TEMPLATES.put(TaskEventType.assignment, new String[]{
+                "待处理的转交任务", "用户【{user}】转交了一项【{process}】任务给您处理"
+        });
+
+        // 委派处理完成
+        MESSAGE_TEMPLATES.put(TaskEventType.delegateResolve, new String[]{
+                "任务委派处理完成", "您被委派的【{process}】任务已处理完成"
+        });
+
+        // 会签加签（消息略）
+        MESSAGE_TEMPLATES.put(TaskEventType.addCountersign, new String[]{
+                "加签任务通知", "【{process}】流程中新增了您的审批任务"
+        });
+
+        // 任务加签
+        MESSAGE_TEMPLATES.put(TaskEventType.addTaskActor, new String[]{
+                "任务加签通知", "您被加签参与【{process}】审批，请及时处理"
+        });
+
+        // 任务减签
+        MESSAGE_TEMPLATES.put(TaskEventType.removeTaskActor, new String[]{
+                "任务减签通知", "您已被移出【{process}】流程审批任务"
+        });
+
+        // 驳回
+        MESSAGE_TEMPLATES.put(TaskEventType.reject, new String[]{
+                "您的审批被驳回", "您提交的【{process}】已被驳回"
+        });
+
+        // 角色认领
+        MESSAGE_TEMPLATES.put(TaskEventType.claimRole, new String[]{
+                "待认领任务提醒", "您有一条【{process}】流程任务等待认领"
+        });
+
+        // 部门认领
+        MESSAGE_TEMPLATES.put(TaskEventType.claimDepartment, new String[]{
+                "部门待认领任务提醒", "【{process}】流程任务已分配到您部门，请及时认领"
+        });
+
+        // 拿回未执行任务
+        MESSAGE_TEMPLATES.put(TaskEventType.reclaim, new String[]{
+                "任务被回收", "您参与的【{process}】流程任务已被回收"
+        });
+
+        // 撤回任务
+        MESSAGE_TEMPLATES.put(TaskEventType.withdraw, new String[]{
+                "任务被撤回", "【{process}】流程任务已被撤回"
+        });
+
+        // 唤醒历史任务
+        MESSAGE_TEMPLATES.put(TaskEventType.resume, new String[]{
+                "任务已唤醒", "【{process}】流程已恢复处理"
+        });
+
+        // 审批通过
+        MESSAGE_TEMPLATES.put(TaskEventType.complete, new String[]{
+                "您的审批已通过", "您提交的审批【{process}】已经通过"
+        });
+
+        // 撤销流程
+        MESSAGE_TEMPLATES.put(TaskEventType.revoke, new String[]{
+                "流程已撤销", "您提交的【{process}】流程已被撤销"
+        });
+
+        // 流程终止
+        MESSAGE_TEMPLATES.put(TaskEventType.terminate, new String[]{
+                "流程被终止", "【{process}】流程已被终止，请知悉"
+        });
+
+        // 更新任务（忽略提示）
+        MESSAGE_TEMPLATES.put(TaskEventType.update, new String[]{
+                "任务已更新", "【{process}】流程任务内容有更新"
+        });
+
+        // 删除任务
+        MESSAGE_TEMPLATES.put(TaskEventType.delete, new String[]{
+                "流程任务已删除", "【{process}】流程任务被删除"
+        });
+
+        // 发起子流程
+        MESSAGE_TEMPLATES.put(TaskEventType.callProcess, new String[]{
+                "子流程启动提醒", "【{process}】子流程已启动"
+        });
+
+        // 超时提醒
+        MESSAGE_TEMPLATES.put(TaskEventType.timeout, new String[]{
+                "审批超时提醒", "您有一项【{process}】审批任务已超时，请及时处理"
+        });
+
+        // 跳转
+        MESSAGE_TEMPLATES.put(TaskEventType.jump, new String[]{
+                "流程节点跳转", "【{process}】流程节点已跳转，请注意查看"
+        });
+
+        // 自动跳转
+        MESSAGE_TEMPLATES.put(TaskEventType.autoJump, new String[]{
+                "流程自动跳转", "【{process}】流程自动跳过当前环节"
+        });
+
+        // 驳回跳转
+        MESSAGE_TEMPLATES.put(TaskEventType.rejectJump, new String[]{
+                "流程驳回跳转", "【{process}】流程发生驳回跳转"
+        });
+
+        // 路由跳转
+        MESSAGE_TEMPLATES.put(TaskEventType.routeJump, new String[]{
+                "流程路由跳转", "【{process}】流程根据路由条件跳转"
+        });
+
+        // 重新审批跳转
+        MESSAGE_TEMPLATES.put(TaskEventType.reApproveJump, new String[]{
+                "审批重新进行", "【{process}】流程已退回等待重新审批"
+        });
+
+        // 重新审批创建
+        MESSAGE_TEMPLATES.put(TaskEventType.reApproveCreate, new String[]{
+                "审批任务重新生成", "【{process}】流程审批任务已重新生成"
+        });
+
+        // 自动审批通过
+        MESSAGE_TEMPLATES.put(TaskEventType.autoComplete, new String[]{
+                "系统自动通过审批", "【{process}】流程已被系统自动通过"
+        });
+
+        // 自动拒绝
+        MESSAGE_TEMPLATES.put(TaskEventType.autoReject, new String[]{
+                "系统自动驳回", "您提交的【{process}】被系统自动驳回"
+        });
+
+        // 触发器任务（系统任务，不发送消息）
+        MESSAGE_TEMPLATES.put(TaskEventType.trigger, new String[]{
+                "系统任务触发", "【{process}】流程触发器已执行"
+        });
+
+        // 流程结束
+        MESSAGE_TEMPLATES.put(TaskEventType.end, new String[]{
+                "流程结束通知", "【{process}】流程已完成"
+        });
+    }
+
+
     private final FlowLongEngine flowLongEngine;
     private final JdbcTemplate jdbcTemplate;
     private final DataSource dataSource;
@@ -265,7 +445,11 @@ public class ProcessListener {
                 updateTable(tableName, businessKey, updates);
             }
 
+            // 统计total
             updateUserTaskCount(taskEvent);
+
+            // 发消息
+            printMessage(taskEvent, process);
 
             if (TaskEventType.create.eq(eventType)) {
                 Optional<NodeModel> optional = Optional.ofNullable(flowLongEngine.queryService()
@@ -303,6 +487,29 @@ public class ProcessListener {
             log.error("流程事件处理失败", e);
         }
     }
+
+    private void printMessage(TaskEvent event, FlwProcess process) {
+        TaskEventType eventType = event.getEventType();
+        String[] templates = MESSAGE_TEMPLATES.get(eventType);
+        if (templates == null) {
+            return; // 无消息模板的事件跳过
+        }
+
+        String title = templates[0];
+        String content = templates[1];
+
+        // 获取变量
+        String user = event.getFlowCreator() != null ? event.getFlowCreator().getCreateBy() : "未知用户";
+        String processName = process != null ? process.getProcessName() : "未知流程";
+
+        // 替换占位符
+        content = content.replace("{user}", user).replace("{process}", processName);
+
+        // 打印消息（可替换为实际消息发送接口）
+        log.info(">>> [消息标题] {}", title);
+        log.info(">>> [消息内容] {}", content);
+    }
+
 
     /**
      * 设置处理人
@@ -487,7 +694,7 @@ public class ProcessListener {
     /**
      * 查询表数据
      */
-    public Map<String, Object> queryTable(String tableName, String businessKey, Map<String, Object> fields) {
+    public Map<String, Object>  queryTable(String tableName, String businessKey, Map<String, Object> fields) {
         try (Connection conn = dataSource.getConnection()) {
             DatabaseMetaData metaData = conn.getMetaData();
             String pkColumn = getPrimaryKeyColumn(metaData, tableName);
