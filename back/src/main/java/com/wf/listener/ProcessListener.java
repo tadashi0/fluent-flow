@@ -62,6 +62,7 @@ public class ProcessListener {
         // 已处理类 -> done
         TASK_COUNT_CATEGORY.put(TaskEventType.complete, "done");
         TASK_COUNT_CATEGORY.put(TaskEventType.delegateResolve, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.addTaskActor, "done");
         TASK_COUNT_CATEGORY.put(TaskEventType.removeTaskActor, "done");
         TASK_COUNT_CATEGORY.put(TaskEventType.reject, "done");
         TASK_COUNT_CATEGORY.put(TaskEventType.reclaim, "done");

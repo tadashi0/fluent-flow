@@ -576,7 +576,7 @@ public class TaskController implements TaskActorProvider {
                                                                     .set(FlwHisTask::getTaskState,
                                                                             TaskState.jump.getValue())
                                                                     .eq(FlwHisTask::getId, task.getId())
-                                                                    .update();
+                                                                    .update(new FlwHisTask());
                                                             flowLongEngine.createCcTask(task, data.getCcUsers(),
                                                                     testCreator);
                                                             result.set(true);
@@ -651,6 +651,8 @@ public class TaskController implements TaskActorProvider {
                                                 nodeModel.setType(1);
                                                 nodeModel.setSetType(1);
                                                 nodeModel.setExamineMode(1);
+                                                nodeModel.setRemind(true);
+                                                nodeModel.setApproveSelf(0);
                                                 nodeModel.setNodeAssigneeList(data.getCounterSignUsers());
                                                 boolean addResult = flowLongEngine.executeAppendNodeModel(
                                                         task.getId(),
