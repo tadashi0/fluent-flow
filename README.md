@@ -139,6 +139,8 @@ _以下展示了本系统的部分界面，用于直观了解流程能力：_
 |------|------|
 | 🐉 FlowLong 工作流引擎 | https://aizuda.com |
 | 💡 MyBatis Plus | https://baomidou.com |
+| 🖼️ Vue 3 | https://vuejs.org |
+| ⚡ Vite | https://vitejs.dev |
 | 🧩 Element Plus | https://element-plus.org |
 
 ---
