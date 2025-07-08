@@ -98,6 +98,8 @@ npm run dev
                                     +----------------------------+
 ```
 
+--- 
+
 ## 📄 License
 
 > 🚀 本系统基于 FlowLong（[https://aizuda.com](https://aizuda.com)）开源工作流引擎进行集成与增强，遵循其 Apache-2.0 协议及附加授权条款。
