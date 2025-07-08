@@ -118,6 +118,14 @@ npm run dev
 
 ---
 
+## 🧰 组件使用说明文档
+
+📘 如需了解 `WorkFlowPro` 组件的使用方法，可点击下方链接查看或下载：
+
+👉 [📥 下载 WorkFlowPro 组件使用说明（Markdown）](./back/docs/WorkFlowPro_Usage.md)
+
+---
+
 ## 📎 附录：系统界面截图
 
 _以下展示了本系统的部分界面，用于直观了解流程能力：_
