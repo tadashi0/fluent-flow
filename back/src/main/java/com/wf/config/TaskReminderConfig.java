@@ -33,16 +33,16 @@ import java.util.Objects;
 @Slf4j
 public class TaskReminderConfig implements TaskReminder {
 
-    @Bean
-    @ConditionalOnBean(TaskReminder.class)
-    @ConditionalOnMissingBean
-    public FlowLongScheduler springBootScheduler(FlowLongEngine flowLongEngine, FlowLongProperties properties, JobLock jobLock) {
-        FlowLongScheduler scheduler = new FlowLongSchedulerConfig();
-        scheduler.setFlowLongEngine(flowLongEngine);
-        scheduler.setRemindParam(properties.getRemind());
-        scheduler.setJobLock(jobLock);
-        return scheduler;
-    }
+    // @Bean
+    // @ConditionalOnBean(TaskReminder.class)
+    // @ConditionalOnMissingBean
+    // public FlowLongScheduler springBootScheduler(FlowLongEngine flowLongEngine, FlowLongProperties properties, JobLock jobLock) {
+    //     FlowLongScheduler scheduler = new FlowLongSchedulerConfig();
+    //     scheduler.setFlowLongEngine(flowLongEngine);
+    //     scheduler.setRemindParam(properties.getRemind());
+    //     scheduler.setJobLock(jobLock);
+    //     return scheduler;
+    // }
 
     @Override
     public Date remind(FlowLongContext context, Long instanceId, FlwTask flwTask) {
