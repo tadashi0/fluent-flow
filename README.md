@@ -40,37 +40,19 @@
 
 ## 📌 后端核心接口概览
 
-### 📁 流程API
-
-| 接口功能       | 方法 | 路径                                 |
-|----------------|------|--------------------------------------|
-| 获取流程列表   | GET  | `/process/list`                      |
-| 获取流程信息   | GET  | `/process/info`                      |
-| 创建流程       | POST | `/process/create`                    |
-| 删除流程       | DELETE | `/process/delete`                  |
-| 获取数据库表名 | GET  | `/process/table/list`               |
-| 获取表字段     | GET  | `/process/table/columns`            |
-
-### 📁 任务API
+### 📁 任务相关API
 
 | 接口功能           | 方法 | 路径                                 |
 |--------------------|------|--------------------------------------|
 | 保存流程实例       | POST | `/task/save`                         |
 | 发起流程           | POST | `/task/start`                        |
-| 获取当前节点列表   | GET  | `/task/instance/nodes`              |
 | 获取流程实例状态   | GET  | `/task/status`                      |
-| 获取任务列表       | GET  | `/task/list`                        |
 | 同意流程           | PUT  | `/task/agree`                       |
 | 驳回流程           | PUT  | `/task/reject`                      |
 | 终止流程           | PUT  | `/task/terminate`                   |
 | 回退任务           | PUT  | `/task/rollback`                    |
 | 转交任务           | PUT  | `/task/transfer`                    |
 | 加签任务           | PUT  | `/task/countersign`                 |
-| 流程任务统计       | GET  | `/task/statistics`                  |
-| 待处理任务数量     | GET  | `/task/count/todo`                  |
-| 已处理任务数量     | GET  | `/task/count/done`                  |
-| 我发起的任务数量   | GET  | `/task/count/submit`                |
-| 抄送我的任务数量   | GET  | `/task/count/cc`                    |
 
 ---
 
