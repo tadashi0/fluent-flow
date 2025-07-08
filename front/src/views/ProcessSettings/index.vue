@@ -2,7 +2,22 @@
   <div class="process-container">
     <!-- 左侧树形结构 -->
     <div class="left-tree">
-      <el-tree :data="treeData" node-key="id" default-expand-all :props="treeProps" @node-click="handleNodeClick" />
+      <el-tree 
+        :data="treeData" 
+        node-key="menudId" 
+        default-expand-all 
+        :props="treeProps"
+        :expand-on-click-node="false"
+        @node-click="handleNodeClick"
+      >
+        <template #default="{ node, data }">
+          <span 
+            :class="{ 'disabled-node': !data.path }" 
+          >
+            {{ node.label }}
+          </span>
+        </template>
+      </el-tree>
     </div>
 
     <!-- 右侧内容区域 -->
@@ -17,7 +32,7 @@
         <div class="right-actions">
           <el-input v-model="searchKeyword" placeholder="搜索流程名称" style="width: 200px; margin-right: 16px"
             @keyup.enter="handleSearch" />
-          <el-button type="primary" @click="handleCreate" :disabled="!selectedCategory">新增流程</el-button>
+          <el-button type="primary" @click="handleCreate" :disabled="!selectedCategory?.path">新增流程</el-button>
         </div>
       </div>
 
@@ -30,6 +45,7 @@
             </template>
           </el-table-column>
           <el-table-column prop="processName" label="流程名称" min-width="120" align="center" />
+          
           <!-- <el-table-column prop="processKey" label="流程标识" width="120" align="center" /> -->
           <el-table-column prop="processType" label="关联业务表" min-width="120" align="center" />
           <el-table-column prop="useScope" label="流程类型" min-width="120" align="center">
@@ -117,9 +133,12 @@ const treeProps = { id: 'menudId', label: 'menudName' };
 
 // 树形数据 - 实际项目中可能从API获取
 const treeData = ref([
-  { menudId: 2, menudName: '用户管理', path: '/user' },
-  { menudId: 3, menudName: '采购管理', path: '/caigou' },
-  { menudId: 4, menudName: '财务流程', path: '/caiwu' },
+  {
+    menudId: 1, menudName: '业务管理', children: [
+      { menudId: 2, menudName: '用户管理', path: '/user' },
+      { menudId: 3, menudName: '采购管理', path: '/caigou' },
+      { menudId: 4, menudName: '财务流程', path: '/caiwu' },
+  ]}
 ]);
 
 // 状态映射
@@ -138,7 +157,16 @@ const formatDate = (date) => dayjs(date).format('YYYY-MM-DD HH:mm:ss');
 const initFromRoute = async () => {
   const { processKey } = route.query;
   if (processKey) {
-    const category = treeData.value.find(item => item.path === processKey);
+    // 使用扁平化方法找到匹配节点
+    const category = treeData.value.reduce((result, node) => {
+      const stack = [node];
+      while (stack.length) {
+        const current = stack.pop();
+        if (current.path === processKey) return current;
+        if (current.children) stack.push(...current.children);
+      }
+      return result;
+    }, null);
     if (category) {
       await handleNodeClick(category);
     }
@@ -147,7 +175,7 @@ const initFromRoute = async () => {
 
 // 获取流程列表数据
 const fetchProcessList = async () => {
-  if (!selectedCategory.value) return;
+  if (!selectedCategory.value.path) return;
 
   try {
     loading.value = true;
@@ -318,5 +346,10 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.disabled-node {
+  color: #C0C4CC;
+  cursor: not-allowed;
 }
 </style>

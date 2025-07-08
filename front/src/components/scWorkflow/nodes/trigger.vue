@@ -191,7 +191,7 @@ const saveTitle = () => {
 const save = () => {
   form.value.triggerType = triggerType.value
   if (!form.value.extendConfig) form.value.extendConfig = {}
-
+  
   if (triggerType.value === '2') {
     form.value.delayType = delayType.value
     if (delayType.value === '1') {
@@ -199,8 +199,9 @@ const save = () => {
     } else if (delayType.value === '2') {
       form.value.extendConfig.time = autoTime.value
     }
+  } else {
+    form.value.extendConfig.time = ''
   }
-
   form.value.extendConfig.args = args.value
   form.value.extendConfig.trigger = trigger.value
 

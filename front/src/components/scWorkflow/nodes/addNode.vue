@@ -87,6 +87,7 @@ export default {
 					examineLevel: 1,	//指定主管层级
 					directorLevel: 1,	//自定义连续主管审批层级
 					selectMode: 1,		//发起人自选类型
+					remind: true,		//审批提醒
 					termAuto: false,	//审批期限超时自动审批
 					term: 0,			//审批期限
 					termMode: 1,		//审批期限超时后执行类型
@@ -121,7 +122,7 @@ export default {
 						},
 						{
 							nodeName: "默认条件",
-							nodeKey: this.getNodeKey(),
+							nodeKey: this.getNodeKey() + '-1',
 							type: 3,
 							priorityLevel: 2,
 							conditionMode: 1,
@@ -220,6 +221,7 @@ export default {
 					routeNodes: [
 						{
 							nodeName: "路由1",
+							targetNodeName: '',
 							priorityLevel: 1,
 							conditionMode: 1,
 							conditionList: []

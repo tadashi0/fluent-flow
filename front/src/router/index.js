@@ -8,7 +8,7 @@ import Dashboard from '@/views/ProcessCenter/Dashboard.vue'
 
 const router = createRouter({
   history: createWebHistory(),
-    routes: [
+  routes: [
     {
       path: '/',
       redirect: '/user'

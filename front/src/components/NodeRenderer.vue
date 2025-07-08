@@ -64,11 +64,9 @@
         <div v-if="node.examineMode === 4 && node.passWeight">
           通过权重: {{ node.passWeight }}%
         </div>
-        <div v-if="node.term">
+        <div v-if="node.termAuto">
           审批期限: {{ node.term }}小时
-          <span v-if="node.termAuto">
-            (超时{{ node.termMode === 0 ? '自动通过' : '自动拒绝' }})
-          </span>
+          (超时{{ node.termMode === 0 ? '自动通过' : '自动拒绝' }})
         </div>
       </div>
       
@@ -156,7 +154,7 @@
               </div>
             </div>
           </div>
-          <node-renderer :node="cn.childNode" :mode="mode"/>
+          <node-renderer v-if="cn.childNode" :node="cn.childNode" :mode="mode"/>
         </div>
       </div>
     </div>
@@ -214,14 +212,10 @@
     </div>
     <div class="workflow-line"></div>
     <div class="workflow-content">
-      <div class="workflow-title">{{ node.nodeName || '触发器' }}</div>
+      <div class="workflow-title">{{ node.nodeName || '触发器' }} <span v-if="node.taskState !== undefined" class="state-tag">{{ getNodeStateText(node) }}</span></div>
       <div class="workflow-desc">
         <div>
-          {{ node.triggerType === '1' ? '立即执行' : '延迟执行' }}
-        </div>
-        <div v-if="node.triggerType === '2' && node.delayType">
-          {{ node.delayType === '1' ? '固定时长' : '自动计算' }}:
-          {{ node.extendConfig?.time || '' }}
+          {{ node.triggerType === '1' ? '立即执行' : '延迟执行，' }}{{ displayTime(node) }}
         </div>
       </div>
     </div>
@@ -234,10 +228,10 @@
     </div>
     <div class="workflow-line"></div>
     <div class="workflow-content">
-      <div class="workflow-title">并行分支</div>
+      <div class="workflow-title">{{ node.nodeName || '并行分支' }}</div>
       <div class="parallel-groups">
         <div v-for="(pn, index) in node.parallelNodes" :key="index" class="parallel-group">
-          <node-renderer :node="pn" :mode="mode"/>
+          <node-renderer v-if="pn.childNode" :node="pn.childNode" :mode="mode"/>
         </div>
       </div>
     </div>
@@ -250,7 +244,7 @@
     </div>
     <div class="workflow-line"></div>
     <div class="workflow-content">
-      <div class="workflow-title">包容分支</div>
+      <div class="workflow-title">{{ node.nodeName || '包容分支' }}</div>
       <div class="inclusive-groups">
         <div v-for="(in_node, index) in node.inclusiveNodes" :key="index" class="inclusive-group">
           <div class="inclusive-title">{{ in_node.nodeName || '条件' + (index + 1) }}</div>
@@ -267,7 +261,7 @@
               </div>
             </div>
           </div>
-          <node-renderer :node="in_node.childNode" :mode="mode"/>
+          <node-renderer v-if="in_node.childNode" :node="in_node.childNode" :mode="mode"/>
         </div>
       </div>
     </div>
@@ -280,12 +274,12 @@
     </div>
     <div class="workflow-line"></div>
     <div class="workflow-content">
-      <div class="workflow-title">路由分支</div>
+      <div class="workflow-title">{{ node.nodeName || '路由跳转' }}</div>
       <div class="route-groups">
         <div v-for="(rn, index) in node.routeNodes" :key="index" class="route-group">
           <div class="route-title">{{ rn.nodeName || '路由' + (index + 1) }}</div>
           <div class="route-info" v-if="rn.nodeKey">
-            目标节点: {{ getRouteTarget(rn.nodeKey) }}
+            目标节点: {{ rn.targetNodeName }}
           </div>
           <div class="route-expressions">
             <div v-for="(group, groupIndex) in rn.conditionList" :key="groupIndex" class="expression-group">
@@ -300,7 +294,6 @@
               </div>
             </div>
           </div>
-          <node-renderer :node="rn.childNode" :mode="mode"/>
         </div>
       </div>
     </div>
@@ -352,11 +345,8 @@
     </div>
   </div>
 
-  <!-- 子节点 (对于非分支类型的节点) -->
-  <node-renderer v-if="node.childNode && ![4, 8, 9, 23].includes(node.type)" :node="node.childNode" :mode="mode" />
+  <node-renderer v-if="node.childNode && ![3].includes(node.type)" :node="node.childNode" :mode="mode" />
 
-  <!-- 处理分支节点的子节点 -->
-  <node-renderer v-if="node.childNode && [4, 8, 9, 23].includes(node.type)" :node="node.childNode" :mode="mode" />
   <!-- 添加用户/角色选择模态框 -->
   <user-role-selector
     v-model="selectorVisible"
@@ -374,11 +364,7 @@ const props = defineProps({
   node: {
     type: Object,
     required: true,
-    default: () => ({
-      type: -1,
-      nodeName: '未知节点',
-      childNode: null
-    })
+    default: () => ({})
   },
   mode: {
     type: String,
@@ -413,13 +399,11 @@ const getProcessStateText = (state) => {
 
 watchEffect(() => {
   // 如果节点已有审批人列表，则不需要处理
-  if (props.node?.nodeAssigneeList?.length > 0) return;
-  
+  if (props.node.nodeAssigneeList?.length > 0) return;
   // 确保nodeAssigneeList存在
   if (!props.node.nodeAssigneeList) {
     props.node.nodeAssigneeList = [];
   }
-  
   // 根据节点类型处理审批人
   if (props.node.type === 0) {
     // 发起人节点
@@ -763,13 +747,6 @@ const getOperatorText = (operator) => {
   return operators[operator] || operator;
 };
 
-const getRouteTarget = (nodeKey) => {
-  if (!nodeKey) return '';
-  if (nodeKey.startsWith('route:')) {
-    return nodeKey.split(':')[1];
-  }
-  return nodeKey;
-};
 </script>
 
 <style scoped>

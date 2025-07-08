@@ -69,9 +69,11 @@ const defaultData = computed(() => ({
       directorLevel: 1,
       directorMode: 0,
       selectMode: 1,
+      remind: true,
       termAuto: false,
       term: 0,
       termMode: 1,
+			approveSelf: 0,		
       childNode: {
         nodeName: "审批人2",
         nodeKey: "flk003",
@@ -82,9 +84,11 @@ const defaultData = computed(() => ({
         directorLevel: 1,
         directorMode: 0,
         selectMode: 1,
+        remind: true,
         termAuto: false,
         term: 0,
         termMode: 1,
+        approveSelf: 0,		
         childNode: {
           nodeName: '结束',
           nodeKey: "flk004",

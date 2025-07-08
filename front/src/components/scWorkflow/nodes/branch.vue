@@ -265,21 +265,23 @@ function delTerm(i) {
     item.priorityLevel = idx + 1
   })
   
-  if (nodeConfig.value.conditionNodes.length === 1 && nodeConfig.value.childNode) {
-    if (nodeConfig.value.conditionNodes[0].childNode) {
-      reData(nodeConfig.value.conditionNodes[0].childNode, nodeConfig.value.childNode)
+  // 如果删除后只剩下默认条件，清空整个条件分支数据
+  if (nodeConfig.value.conditionNodes.length === 1 && 
+      isDefaultCondition(0)) {
+    
+    // 清空默认条件的子节点
+    nodeConfig.value.conditionNodes[0].childNode = null
+    
+    // 如果条件分支后面还有节点，将其作为新的子节点返回
+    if (nodeConfig.value.childNode) {
+      emit('update:modelValue', nodeConfig.value.childNode)
     } else {
-      nodeConfig.value.conditionNodes[0].childNode = nodeConfig.value.childNode
+      // 如果没有后续节点，返回null或空对象
+      emit('update:modelValue', null)
     }
-    emit('update:modelValue', nodeConfig.value.conditionNodes[0].childNode)
-  }
-}
-
-function reData(data, addData) {
-  if (!data.childNode) {
-    data.childNode = addData
   } else {
-    reData(data.childNode, addData)
+    // 正常情况下更新数据
+    emit('update:modelValue', nodeConfig.value)
   }
 }
 

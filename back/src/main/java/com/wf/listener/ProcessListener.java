@@ -2,24 +2,24 @@ package com.wf.listener;
 
 import com.aizuda.bpm.engine.FlowLongEngine;
 import com.aizuda.bpm.engine.assist.ObjectUtils;
-import com.aizuda.bpm.engine.core.Execution;
-import com.aizuda.bpm.engine.core.FlowCreator;
-import com.aizuda.bpm.engine.core.FlowLongContext;
 import com.aizuda.bpm.engine.core.enums.InstanceState;
+import com.aizuda.bpm.engine.core.enums.NodeApproveSelf;
 import com.aizuda.bpm.engine.core.enums.TaskEventType;
 import com.aizuda.bpm.engine.core.enums.TaskType;
 import com.aizuda.bpm.engine.entity.*;
 import com.aizuda.bpm.engine.model.*;
 import com.aizuda.bpm.mybatisplus.mapper.FlwExtInstanceMapper;
 import com.aizuda.bpm.mybatisplus.mapper.FlwHisInstanceMapper;
+import com.aizuda.bpm.mybatisplus.mapper.FlwTaskMapper;
 import com.aizuda.bpm.spring.event.TaskEvent;
-import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.extension.toolkit.ChainWrappers;
+import com.wf.utils.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
@@ -28,6 +28,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -50,11 +51,228 @@ public class ProcessListener {
                 put(TaskEventType.autoReject, 3);
                 put(TaskEventType.terminate, 3);
             }});
+    private static final Map<TaskEventType, String> TASK_COUNT_CATEGORY = new EnumMap<>(TaskEventType.class);
+
+    static {
+        // 发起类 -> submit
+        TASK_COUNT_CATEGORY.put(TaskEventType.start, "submit");
+        TASK_COUNT_CATEGORY.put(TaskEventType.startAsDraft, "submit");
+        TASK_COUNT_CATEGORY.put(TaskEventType.restart, "submit");
+
+        // 已处理类 -> done
+        TASK_COUNT_CATEGORY.put(TaskEventType.complete, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.delegateResolve, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.addTaskActor, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.removeTaskActor, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.reject, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.reclaim, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.withdraw, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.resume, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.revoke, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.terminate, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.timeout, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.jump, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.autoJump, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.rejectJump, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.routeJump, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.reApproveJump, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.autoComplete, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.autoReject, "done");
+        TASK_COUNT_CATEGORY.put(TaskEventType.end, "done");
+
+        // 抄送类 -> about
+        TASK_COUNT_CATEGORY.put(TaskEventType.cc, "about");
+        TASK_COUNT_CATEGORY.put(TaskEventType.createCc, "about");
+    }
+
+    private static final Map<TaskEventType, String[]> MESSAGE_TEMPLATES = new EnumMap<>(TaskEventType.class);
+
+    static {
+        // 发起流程
+        MESSAGE_TEMPLATES.put(TaskEventType.start, new String[]{
+                "流程发起成功", "您成功发起了【{process}】流程"
+        });
+
+        // 暂存草稿
+        MESSAGE_TEMPLATES.put(TaskEventType.startAsDraft, new String[]{
+                "流程草稿已保存", "您暂存了【{process}】流程草稿"
+        });
+
+        // 重新发起
+        MESSAGE_TEMPLATES.put(TaskEventType.restart, new String[]{
+                "流程重新发起成功", "您重新提交了【{process}】流程"
+        });
+
+        // 创建任务
+        MESSAGE_TEMPLATES.put(TaskEventType.create, new String[]{
+                "您有新的审批任务", "用户【{user}】提交的【{process}】需要您审批，请及时处理"
+        });
+
+        // 流程回退后重新创建任务
+        MESSAGE_TEMPLATES.put(TaskEventType.recreate, new String[]{
+                "审批任务重新创建", "【{process}】流程任务已重新生成，请处理"
+        });
+
+        // 抄送
+        MESSAGE_TEMPLATES.put(TaskEventType.cc, new String[]{
+                "审批抄送送达通知", "您收到【{process}】的审批抄送，请知晓"
+        });
+
+        // 手动抄送
+        MESSAGE_TEMPLATES.put(TaskEventType.createCc, new String[]{
+                "审批抄送送达通知", "您收到【{process}】的审批抄送，请知晓"
+        });
+
+        // 任务转交
+        MESSAGE_TEMPLATES.put(TaskEventType.assignment, new String[]{
+                "待处理的转交任务", "用户【{user}】转交了一项【{process}】任务给您处理"
+        });
+
+        // 委派处理完成
+        MESSAGE_TEMPLATES.put(TaskEventType.delegateResolve, new String[]{
+                "任务委派处理完成", "您被委派的【{process}】任务已处理完成"
+        });
+
+        // 会签加签（消息略）
+        MESSAGE_TEMPLATES.put(TaskEventType.addCountersign, new String[]{
+                "加签任务通知", "【{process}】流程中新增了您的审批任务"
+        });
+
+        // 任务加签
+        MESSAGE_TEMPLATES.put(TaskEventType.addTaskActor, new String[]{
+                "任务加签通知", "您被加签参与【{process}】审批，请及时处理"
+        });
+
+        // 任务减签
+        MESSAGE_TEMPLATES.put(TaskEventType.removeTaskActor, new String[]{
+                "任务减签通知", "您已被移出【{process}】流程审批任务"
+        });
+
+        // 驳回
+        MESSAGE_TEMPLATES.put(TaskEventType.reject, new String[]{
+                "您的审批被驳回", "您提交的【{process}】已被驳回"
+        });
+
+        // 角色认领
+        MESSAGE_TEMPLATES.put(TaskEventType.claimRole, new String[]{
+                "待认领任务提醒", "您有一条【{process}】流程任务等待认领"
+        });
+
+        // 部门认领
+        MESSAGE_TEMPLATES.put(TaskEventType.claimDepartment, new String[]{
+                "部门待认领任务提醒", "【{process}】流程任务已分配到您部门，请及时认领"
+        });
+
+        // 拿回未执行任务
+        MESSAGE_TEMPLATES.put(TaskEventType.reclaim, new String[]{
+                "任务被回收", "您参与的【{process}】流程任务已被回收"
+        });
+
+        // 撤回任务
+        MESSAGE_TEMPLATES.put(TaskEventType.withdraw, new String[]{
+                "任务被撤回", "【{process}】流程任务已被撤回"
+        });
+
+        // 唤醒历史任务
+        MESSAGE_TEMPLATES.put(TaskEventType.resume, new String[]{
+                "任务已唤醒", "【{process}】流程已恢复处理"
+        });
+
+        // 审批通过
+        MESSAGE_TEMPLATES.put(TaskEventType.complete, new String[]{
+                "您的审批已通过", "您提交的审批【{process}】已经通过"
+        });
+
+        // 撤销流程
+        MESSAGE_TEMPLATES.put(TaskEventType.revoke, new String[]{
+                "流程已撤销", "您提交的【{process}】流程已被撤销"
+        });
+
+        // 流程终止
+        MESSAGE_TEMPLATES.put(TaskEventType.terminate, new String[]{
+                "流程被终止", "【{process}】流程已被终止，请知悉"
+        });
+
+        // 更新任务（忽略提示）
+        MESSAGE_TEMPLATES.put(TaskEventType.update, new String[]{
+                "任务已更新", "【{process}】流程任务内容有更新"
+        });
+
+        // 删除任务
+        MESSAGE_TEMPLATES.put(TaskEventType.delete, new String[]{
+                "流程任务已删除", "【{process}】流程任务被删除"
+        });
+
+        // 发起子流程
+        MESSAGE_TEMPLATES.put(TaskEventType.callProcess, new String[]{
+                "子流程启动提醒", "【{process}】子流程已启动"
+        });
+
+        // 超时提醒
+        MESSAGE_TEMPLATES.put(TaskEventType.timeout, new String[]{
+                "审批超时提醒", "您有一项【{process}】审批任务已超时，请及时处理"
+        });
+
+        // 跳转
+        MESSAGE_TEMPLATES.put(TaskEventType.jump, new String[]{
+                "流程节点跳转", "【{process}】流程节点已跳转，请注意查看"
+        });
+
+        // 自动跳转
+        MESSAGE_TEMPLATES.put(TaskEventType.autoJump, new String[]{
+                "流程自动跳转", "【{process}】流程自动跳过当前环节"
+        });
+
+        // 驳回跳转
+        MESSAGE_TEMPLATES.put(TaskEventType.rejectJump, new String[]{
+                "流程驳回跳转", "【{process}】流程发生驳回跳转"
+        });
+
+        // 路由跳转
+        MESSAGE_TEMPLATES.put(TaskEventType.routeJump, new String[]{
+                "流程路由跳转", "【{process}】流程根据路由条件跳转"
+        });
+
+        // 重新审批跳转
+        MESSAGE_TEMPLATES.put(TaskEventType.reApproveJump, new String[]{
+                "审批重新进行", "【{process}】流程已退回等待重新审批"
+        });
+
+        // 重新审批创建
+        MESSAGE_TEMPLATES.put(TaskEventType.reApproveCreate, new String[]{
+                "审批任务重新生成", "【{process}】流程审批任务已重新生成"
+        });
+
+        // 自动审批通过
+        MESSAGE_TEMPLATES.put(TaskEventType.autoComplete, new String[]{
+                "系统自动通过审批", "【{process}】流程已被系统自动通过"
+        });
+
+        // 自动拒绝
+        MESSAGE_TEMPLATES.put(TaskEventType.autoReject, new String[]{
+                "系统自动驳回", "您提交的【{process}】被系统自动驳回"
+        });
+
+        // 触发器任务（系统任务，不发送消息）
+        MESSAGE_TEMPLATES.put(TaskEventType.trigger, new String[]{
+                "系统任务触发", "【{process}】流程触发器已执行"
+        });
+
+        // 流程结束
+        MESSAGE_TEMPLATES.put(TaskEventType.end, new String[]{
+                "流程结束通知", "【{process}】流程已完成"
+        });
+    }
+
+
     private final FlowLongEngine flowLongEngine;
     private final JdbcTemplate jdbcTemplate;
     private final DataSource dataSource;
+    private final FlwTaskMapper flwTaskMapper;
     private final FlwHisInstanceMapper flwHisInstanceMapper;
     private final FlwExtInstanceMapper flwExtInstanceMapper;
+    private final RedisService redisService;
+
     /**
      * 事件处理器映射，根据不同事件类型执行不同的处理逻辑
      */
@@ -148,7 +366,7 @@ public class ProcessListener {
 
         // 各种跳转事件
         handlers.put(TaskEventType.jump, setHandlerAction);
-        handlers.put(TaskEventType.autoJump, setHandlerAction);
+        //handlers.put(TaskEventType.autoJump, setHandlerAction);
         handlers.put(TaskEventType.routeJump, setHandlerAction);
         handlers.put(TaskEventType.reApproveJump, setHandlerAction);
 
@@ -176,6 +394,9 @@ public class ProcessListener {
     @EventListener
     public void onTaskEvent(TaskEvent taskEvent) {
         try {
+            if (taskEvent.getEventType().eq(TaskEventType.update)) {
+                return;
+            }
             FlwTask flwTask = taskEvent.getFlwTask();
             Long instanceId = flwTask.getInstanceId();
             TaskEventType eventType = taskEvent.getEventType();
@@ -223,6 +444,13 @@ public class ProcessListener {
             if (!updates.isEmpty()) {
                 updateTable(tableName, businessKey, updates);
             }
+
+            // 统计total
+            updateUserTaskCount(taskEvent);
+
+            // 发消息
+            printMessage(taskEvent, process);
+
             if (TaskEventType.create.eq(eventType)) {
                 Optional<NodeModel> optional = Optional.ofNullable(flowLongEngine.queryService()
                         .getExtInstance(instanceId)
@@ -260,6 +488,29 @@ public class ProcessListener {
         }
     }
 
+    private void printMessage(TaskEvent event, FlwProcess process) {
+        TaskEventType eventType = event.getEventType();
+        String[] templates = MESSAGE_TEMPLATES.get(eventType);
+        if (templates == null) {
+            return; // 无消息模板的事件跳过
+        }
+
+        String title = templates[0];
+        String content = templates[1];
+
+        // 获取变量
+        String user = event.getFlowCreator() != null ? event.getFlowCreator().getCreateBy() : "未知用户";
+        String processName = process != null ? process.getProcessName() : "未知流程";
+
+        // 替换占位符
+        content = content.replace("{user}", user).replace("{process}", processName);
+
+        // 打印消息（可替换为实际消息发送接口）
+        log.info(">>> [消息标题] {}", title);
+        log.info(">>> [消息内容] {}", content);
+    }
+
+
     /**
      * 设置处理人
      */
@@ -273,6 +524,30 @@ public class ProcessListener {
                 .getHistInstance(event.getFlwTask().getInstanceId()).getInstanceState())) {
             updates.put("state", 1);
         }
+        Optional.ofNullable(event.getNodeModel())
+                .ifPresent(nodeModel -> {
+                    // 判断是否需要审批提醒
+                    if (nodeModel.getRemind()) {
+                        event.getFlwTask().setRemindTime(new Date());
+                        flwTaskMapper.updateById(event.getFlwTask());
+                    }
+
+                    if (NodeApproveSelf.initiatorThemselves.ne(nodeModel.getApproveSelf())) {
+                        // 判断审批人与提交人为同一人时
+                        if (event.getTaskActors().stream().anyMatch(e -> Objects.equals(e.getActorId(), event.getFlowCreator().getCreateId()))) {
+                            // 判断是否自动跳过
+                            if (NodeApproveSelf.AutoSkip.eq(nodeModel.getApproveSelf())) {
+                                flowLongEngine.autoJumpTask(event.getFlwTask().getId(), event.getFlowCreator());
+                                // 转交给直接上级审批
+                            } else if (NodeApproveSelf.TransferDirectSuperior.eq(nodeModel.getApproveSelf())) {
+
+                                // 转交给部门负责人审批
+                            } else if (NodeApproveSelf.TransferDepartmentHead.eq(nodeModel.getApproveSelf())) {
+
+                            }
+                        }
+                    }
+                });
     }
 
     /**
@@ -289,6 +564,9 @@ public class ProcessListener {
             if (currentNode == null) return;
 
             NodeModel parentNode = currentNode.getParentNode();
+            if (parentNode.conditionNode()) {
+                parentNode = parentNode.getParentNode();
+            }
             if (parentNode != null && TaskType.major.eq(parentNode.getType())) {
                 updates.put("state", 4);  // 驳回到发起节点状态
                 updates.put("handler", "");  // 清空处理人
@@ -309,8 +587,9 @@ public class ProcessListener {
             ProcessModel processModel = flowLongEngine.queryService()
                     .getExtInstance(instanceId).model();
 
-            Optional<NodeModel> nextNode = processModel.getNodeConfig()
-                    .nextNode(Arrays.asList(flwTask.getTaskKey()))
+            Optional<NodeModel> nextNode = processModel
+                    .getNode(flwTask.getTaskKey())
+                    .nextNode()
                     .filter(ObjectUtils::isNotEmpty);
             //List<NodeModel> nextChildNodes = ModelHelper.getNextChildNodes(
             //        flowLongEngine.getContext(),
@@ -325,7 +604,7 @@ public class ProcessListener {
                     .filter(ObjectUtils::isNotEmpty);
 
             // 仅在最终步骤设置状态为2
-            if ((!nextNode.isPresent() || isFinalStep(nextNode.get())) && !activeTaskList.isPresent()) {
+            if (isFinalStep(nextNode) && !activeTaskList.isPresent()) {
                 updates.put("state", 2);  // 审批通过状态
                 updates.put("handler", "");  // 清空处理人
             }
@@ -342,8 +621,34 @@ public class ProcessListener {
                 nextNodes.stream().noneMatch(ModelHelper::checkExistApprovalNode);
     }
 
-    private boolean isFinalStep(NodeModel nextNode) {
-        return ModelHelper.checkExistApprovalNode(nextNode);
+    private boolean isFinalStep(Optional<NodeModel> optional) {
+        if (optional.isPresent()) {
+            return !ModelHelper.checkExistApprovalNode(optional.get());
+        }
+        return true;
+    }
+
+    private void updateUserTaskCount(TaskEvent event) {
+        TaskEventType eventType = event.getEventType();
+        String category = TASK_COUNT_CATEGORY.get(eventType);
+        if (category == null) {
+            return; // 非统计类事件跳过
+        }
+
+        String redisKey = "wf:count:" + category;
+        AtomicInteger num = new AtomicInteger(1);
+        switch (category) {
+            case "submit":
+            case "about":
+                event.getTaskActors().forEach(actor -> {
+                    redisService.incrementZSetScore(redisKey, actor.getActorId(), num.get());
+                    num.getAndIncrement();
+                });
+                break;
+            case "done":
+                redisService.incrementZSetScore(redisKey, event.getFlowCreator().getCreateId(), num.get());
+                break;
+        }
     }
 
     /**
@@ -389,7 +694,7 @@ public class ProcessListener {
     /**
      * 查询表数据
      */
-    public Map<String, Object> queryTable(String tableName, String businessKey, Map<String, Object> fields) {
+    public Map<String, Object>  queryTable(String tableName, String businessKey, Map<String, Object> fields) {
         try (Connection conn = dataSource.getConnection()) {
             DatabaseMetaData metaData = conn.getMetaData();
             String pkColumn = getPrimaryKeyColumn(metaData, tableName);
