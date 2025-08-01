@@ -1,0 +1,6 @@
+cn.tdx.framework.apilog.config.tdxApiLogAutoConfiguration
+cn.tdx.framework.jackson.config.tdxJacksonAutoConfiguration
+cn.tdx.framework.swagger.config.tdxSwaggerAutoConfiguration
+cn.tdx.framework.web.config.tdxWebAutoConfiguration
+cn.tdx.framework.xss.config.tdxXssAutoConfiguration
+cn.tdx.framework.banner.config.tdxBannerAutoConfiguration

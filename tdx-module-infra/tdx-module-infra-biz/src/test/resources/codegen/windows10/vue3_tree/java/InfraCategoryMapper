@@ -1,0 +1,34 @@
+package cn.tdx.module.infra.dal.mysql.demo;
+
+import java.util.*;
+
+import cn.tdx.framework.common.pojo.PageResult;
+import cn.tdx.framework.mybatis.core.query.LambdaQueryWrapperX;
+import cn.tdx.framework.mybatis.core.mapper.BaseMapperX;
+import cn.tdx.module.infra.dal.dataobject.demo.InfraCategoryDO;
+import org.apache.ibatis.annotations.Mapper;
+import cn.tdx.module.infra.controller.admin.demo.vo.*;
+
+/**
+ * 分类 Mapper
+ *
+ * @author 安迈源码
+ */
+@Mapper
+public interface InfraCategoryMapper extends BaseMapperX<InfraCategoryDO> {
+
+    default List<InfraCategoryDO> selectList(InfraCategoryListReqVO reqVO) {
+        return selectList(new LambdaQueryWrapperX<InfraCategoryDO>()
+                .likeIfPresent(InfraCategoryDO::getName, reqVO.getName())
+                .orderByDesc(InfraCategoryDO::getId));
+    }
+
+	default InfraCategoryDO selectByParentIdAndName(Long parentId, String name) {
+	    return selectOne(InfraCategoryDO::getParentId, parentId, InfraCategoryDO::getName, name);
+	}
+
+    default Long selectCountByParentId(Long parentId) {
+        return selectCount(InfraCategoryDO::getParentId, parentId);
+    }
+
+}

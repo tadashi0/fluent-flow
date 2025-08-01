@@ -1,0 +1,186 @@
+.el-table th.el-table__cell {
+  background: var(--el-table-head) !important;
+  color: var(--theme-color-title) !important;
+  font-weight: 550 !important;
+}
+
+.el-button--text {
+  font-size: 0.875rem !important;
+  font-family: Microsoft YaHei !important;
+}
+.el-range-editor {
+  border-radius: 0.5rem !important;
+}
+
+.sys-side {
+  width: 100%;
+  padding: 1rem;
+  background: var(--card);
+  border-radius: 0.5rem;
+}
+
+//时间线
+.el-timeline-item__node {
+  background-color: var(--choose-color) !important;
+}
+
+//tabs
+.el-tabs {
+  .el-tabs__active-bar {
+    background-color: var(--choose-color);
+  }
+
+  .el-tabs__header {
+    margin: 0;
+  }
+
+  .el-tabs__item {
+    color: var(--common-word);
+  }
+
+  .el-tabs__item.is-active {
+    color: var(--choose-color);
+  }
+
+  .el-tabs__nav-wrap.is-scrollable {
+    padding: 0 2.125rem;
+    box-sizing: border-box;
+  }
+
+  .el-tabs__nav-next,
+  .el-tabs__nav-prev {
+    position: absolute;
+    cursor: pointer;
+    line-height: 3rem;
+    font-size: 0.75rem;
+    color: var(--choose-color);
+    width: 2rem;
+    text-align: center;
+    opacity: 1;
+    transition: 0.3s;
+    background: var(--card-child);
+
+    &:hover {
+      background: var(--choose-color);
+
+      .el-icon-arrow-left,
+      .el-icon-arrow-right {
+        &::before {
+          font-style: normal;
+          font-weight: 600;
+          font-variant: normal;
+          text-transform: none;
+          line-height: 1;
+          vertical-align: baseline;
+          display: inline-block;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+          color: #ffffff;
+        }
+      }
+    }
+  }
+
+  .el-icon-arrow-left,
+  .el-icon-arrow-right {
+    &::before {
+      font-style: normal;
+      font-weight: 600;
+      font-variant: normal;
+      text-transform: none;
+      line-height: 1;
+      vertical-align: baseline;
+      display: inline-block;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      color: var(--choose-color);
+      font-size: 1.0625rem;
+    }
+  }
+
+  .el-tabs__nav-next {
+    border-left: 2px solid var(--base-menu-background);
+  }
+
+  .el-tabs__nav-prev {
+    border-right: 2px solid var(--base-menu-background);
+  }
+}
+
+//侧拉
+.el-drawer {
+  .el-drawer__header {
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    color: var(--theme-color-title) !important;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    margin-bottom: 0;
+    padding: 0;
+    padding-bottom: 0;
+    height: 2.5rem;
+    padding: 0 1.2rem;
+    border-bottom: 1px solid var(--btn1-bg);
+  }
+
+  .el-drawer__body {
+    padding: 1rem;
+    padding-bottom: 0;
+  }
+}
+
+.dark .el-radio-button__orig-radio:checked + .el-radio-button__inner {
+  background-color: var(--choose-color) !important;
+  border-color: var(--choose-color) !important;
+  -webkit-box-shadow: -0.0625rem 0 0 0 var(--choose-color) !important;
+  box-shadow: -0.0625rem 0 0 0 var(--choose-color) !important;
+}
+.el-radio-group {
+  display: flex;
+  align-items: center;
+}
+.el-radio-button,
+.el-radio-button .el-radio-button__inner {
+  height: 2rem;
+}
+
+.el-select {
+  width: 100%;
+}
+
+.el-date-editor--datetimerange.el-input,
+.el-date-editor--datetimerange.el-input__inner {
+  width: 100%;
+}
+
+.w-e-bar-item button {
+  font-size: 0.875rem !important;
+}
+
+.el-dropdown-link {
+  color: var(--choose-color) !important;
+}
+
+.is-checked .el-radio__input.is-disabled + span.el-radio__label {
+  color: var(--choose-color) !important;
+  cursor: not-allowed;
+}
+.el-radio__input.is-disabled.is-checked .el-radio__inner {
+  border-color: var(--choose-color) !important;
+}
+
+.el-radio__input.is-disabled.is-checked .el-radio__inner::after {
+  background-color: var(--choose-color) !important;
+}
+
+.el-input.is-disabled .el-input__inner {
+  color: var(--theme-color-title) !important;
+  cursor: not-allowed;
+}
+
+.el-radio-button__orig-radio:disabled:checked + .el-radio-button__inner {
+  background-color: var(--choose-color) !important;
+  color: #fff !important;
+}

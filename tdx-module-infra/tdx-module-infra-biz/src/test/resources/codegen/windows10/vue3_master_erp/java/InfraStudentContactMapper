@@ -1,0 +1,30 @@
+package cn.tdx.module.infra.dal.mysql.demo;
+
+import java.util.*;
+
+import cn.tdx.framework.common.pojo.PageResult;
+import cn.tdx.framework.common.pojo.PageParam;
+import cn.tdx.framework.mybatis.core.query.LambdaQueryWrapperX;
+import cn.tdx.framework.mybatis.core.mapper.BaseMapperX;
+import cn.tdx.module.infra.dal.dataobject.demo.InfraStudentContactDO;
+import org.apache.ibatis.annotations.Mapper;
+
+/**
+ * 学生联系人 Mapper
+ *
+ * @author 安迈源码
+ */
+@Mapper
+public interface InfraStudentContactMapper extends BaseMapperX<InfraStudentContactDO> {
+
+    default PageResult<InfraStudentContactDO> selectPage(PageParam reqVO, Long studentId) {
+        return selectPage(reqVO, new LambdaQueryWrapperX<InfraStudentContactDO>()
+            .eq(InfraStudentContactDO::getStudentId, studentId)
+            .orderByDesc(InfraStudentContactDO::getId));
+    }
+
+    default int deleteByStudentId(Long studentId) {
+        return delete(InfraStudentContactDO::getStudentId, studentId);
+    }
+
+}

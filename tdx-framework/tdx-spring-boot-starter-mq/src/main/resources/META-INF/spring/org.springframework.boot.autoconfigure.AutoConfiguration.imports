@@ -1,0 +1,3 @@
+cn.tdx.framework.mq.redis.config.tdxRedisMQProducerAutoConfiguration
+cn.tdx.framework.mq.redis.config.tdxRedisMQConsumerAutoConfiguration
+cn.tdx.framework.mq.rabbitmq.config.tdxRabbitMQAutoConfiguration

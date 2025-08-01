@@ -1,0 +1,3 @@
+安迈源码 http://www.securitymind.com.cn/
+Application Version: ${tdx.info.version}
+Spring Boot Version: ${spring-boot.version}

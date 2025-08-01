@@ -1,0 +1,2 @@
+cn.tdx.framework.redis.config.tdxRedisAutoConfiguration
+cn.tdx.framework.redis.config.tdxCacheAutoConfiguration

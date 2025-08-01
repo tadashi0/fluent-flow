@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>cn.tdx.boot</groupId>
+        <artifactId>fluent-flow</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <groupId>cn.tdx.boot</groupId>
+    <artifactId>tdx-module-mcp</artifactId>
+    <packaging>jar</packaging>
+    <dependencies>
+        <!-- 业务组件 -->
+
+        <dependency>
+            <groupId>cn.tdx.boot</groupId>
+            <artifactId>tdx-spring-boot-starter-biz-tenant</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cn.tdx.boot</groupId>
+            <artifactId>tdx-spring-boot-starter-biz-ip</artifactId>
+        </dependency>
+
+        <!-- Web 相关 -->
+
+
+        <!-- AI 相关 -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-mcp-server-spring-boot-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.tdx.boot</groupId>
+            <artifactId>tdx-spring-boot-starter-redis</artifactId>
+        </dependency>
+
+        <!-- Test 测试相关 -->
+        <dependency>
+            <groupId>cn.tdx.boot</groupId>
+            <artifactId>tdx-spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- 工具类相关 -->
+        <dependency>
+            <groupId>cn.tdx.boot</groupId>
+            <artifactId>tdx-spring-boot-starter-excel</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+    </dependencies>
+
+
+</project>

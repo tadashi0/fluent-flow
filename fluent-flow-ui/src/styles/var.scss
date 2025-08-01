@@ -1,0 +1,266 @@
+:root {
+  --login-bg-color: #293146;
+
+  --left-menu-max-width: 250px;
+
+  --left-menu-min-width: 64px;
+
+  --left-menu-bg-color: #001529;
+
+  --left-menu-bg-light-color: #0f2438;
+
+  --left-menu-bg-active-color: var(--el-color-primary);
+
+  --left-menu-text-color: #bfcbd9;
+
+  --left-menu-text-active-color: #fff;
+
+  --left-menu-collapse-bg-active-color: var(--el-color-primary);
+  /* left menu end */
+
+  /* logo start */
+  --logo-height: 50px;
+
+  --logo-title-text-color: #fff;
+  /* logo end */
+
+  /* header start */
+  --top-header-bg-color: '#fff';
+
+  --top-header-text-color: 'inherit';
+
+  --top-header-hover-color: #f6f6f6;
+
+  --top-tool-height: var(--logo-height);
+
+  --top-tool-p-x: 0;
+
+  --tags-view-height: 35px;
+  /* header start */
+
+  /* tab menu start */
+  --tab-menu-max-width: 80px;
+
+  --tab-menu-min-width: 30px;
+
+  --tab-menu-collapse-height: 36px;
+  /* tab menu end */
+
+  --app-content-padding: 20px; //外边框padding
+
+  --app-content-bg-color: #f5f7f9;
+
+  --app-footer-height: 50px;
+
+  --transition-time-02: 0.2s;
+
+  --hefeng-bg: red; //颜色案例
+  --xuan-examRead-top: rgb(245, 245, 220);
+  --el-table-head: #eef1f6;
+
+  //CTG迁移
+  //顶部tag1背景颜色
+  --base-tag-background: #ffffff;
+  //顶部tag2背景颜色
+  --base-tag2-background: #ffffff;
+
+  //菜单字体颜色
+  --base-menu-color: #636e85;
+  //菜单字体选中颜色
+  --base-menu-color-active: #ffffff;
+  //菜单滑过颜色
+  --base-menu-hover: rgba(24, 109, 255, 0.3);
+  //菜单背景颜色
+  --base-menu-background: #ffffff;
+  //菜单选中颜色
+  --base-menu-active: #186dff;
+  //系统字颜色
+  --theme-color: #186dff;
+  //logo字颜色
+  --logo-color: #186dff;
+  // sidebar左边菜单栏宽度
+  --base-sidebar-width: 13rem;
+  //选中的颜色
+  --choose-color: #186dff;
+  --choose-color-bg: rgba(24, 109, 255, 0.1);
+
+  //tag橘色--进行中
+  --tag-orange: #f99f6f;
+  --tag-orange-bg: rgba(249, 159, 111, 0.1);
+  --tag-orange-border: rgba(249, 159, 111, 0.5);
+  //tag蓝色--通过
+  --tag-blue-bg: rgba(24, 109, 255, 0.1);
+  --tag-blue: #186dff;
+  --tag-blue-border: rgba(24, 109, 255, 0.5);
+  //tag红色--驳回
+  --tag-red-bg: rgba(246, 75, 75, 0.1);
+  --tag-red: #f64b4b;
+  --tag-red-border: rgba(246, 75, 75, 0.5);
+  //tag灰色--草稿
+  --tag-info-bg: rgba(170, 170, 170, 0.1);
+  --tag-info: #aaaaaa;
+  --tag-info-border: rgba(170, 170, 170, 0.5);
+  //tag绿色--补色
+  --tag-green-bg: rgba(60, 208, 193, 0.1);
+  --tag-green: #3cd0c1;
+  --tag-green-border: rgba(60, 208, 193, 0.5);
+  //tag黄色--中危
+  --tag-yellow-bg: rgba(246, 198, 56, 0.1);
+  --tag-yellow: #f6c638; //按钮背景色
+  --tag-yellow-border: rgba(246, 198, 56, 0.5);
+
+  --btn1-bg: rgba(24, 109, 255, 0.1);
+
+  //系统底色
+  --app-bg: #f4f6fa;
+  //系统标题字
+  --theme-color-title: #1c2747;
+  //系统字颜色
+  --theme-color-normal: #636e85;
+  //次级字颜色
+  --theme-color-after: #aaaaaa;
+  //次级
+  --theme-color-second: #727272;
+
+  //通用灰色字
+  --common-word: #aaaaaa;
+
+  //一级卡片颜色
+  --card: #ffffff;
+  //二级卡片颜色
+  --card-child: rgba(244, 246, 250, 0.5);
+  //三级卡片颜色
+  --card-child2: #e6f1fc;
+  //详情边框
+  --content-border: #f2f2f2;
+  //详情背景色0.0625rem solid #DCDFE6
+  --content-bg: #f4f6fa;
+
+  //表格头部
+  --el-table-head: #eef1f6;
+  //echarts图背景色
+  --chart-bg: rgba(244, 246, 250, 0.5);
+  //默认边框
+  --border-normal: #dedede;
+  //滚动条块
+  --scroll-kuai: rgb(213, 218, 228);
+  //------------------------蓝色独有的------------------------
+  //兼容的padding
+  --online-padding: 0rem;
+  //透明度兼容
+  --th-opacity: 1;
+}
+
+.dark {
+  --app-content-bg-color: var(--el-bg-color);
+  --hefeng-bg: blue; //颜色案例
+  --xuan-examRead-top: rgb(245, 245, 220);
+
+  //顶部tag1背景颜色
+  --base-tag-background: #1a2e3e;
+  //顶部tag2背景颜色
+  --base-tag2-background: #1a2e3e;
+
+  //菜单字体选中颜色
+  --base-menu-color-active: #ffffff;
+  //菜单滑过颜色
+  --base-menu-hover: rgba(255, 255, 255, 0.2);
+  //菜单背景颜色
+  --base-menu-background: #1a2e3e;
+  //菜单选中颜色
+  --base-menu-active: #1890ff;
+  //系统字颜色
+  --theme-color: #ffffff;
+  //logo字颜色
+  --logo-color: #1890ff;
+  // sidebar左边菜单栏宽度
+  --base-sidebar-width: 13rem;
+
+  //选中的颜色
+  --choose-color: #1890ff;
+  --choose-color-bg: rgba(24, 109, 255, 0.2);
+
+  //tag橘色--进行中
+  --tag-orange: #f99f6f;
+  --tag-orange-bg: rgba(249, 159, 111, 0.3);
+  --tag-orange-border: rgba(249, 159, 111, 0.7);
+  //tag蓝色--通过
+  --tag-blue-bg: rgba(24, 109, 255, 0.3);
+  --tag-blue: #1890ff;
+  --tag-blue-border: rgba(24, 109, 255, 0.7);
+  //tag红色--驳回
+  --tag-red-bg: rgba(246, 75, 75, 0.3);
+  --tag-red: #f64b4b;
+  --tag-red-border: rgba(246, 75, 75, 0.7);
+  //tag灰色--草稿
+  --tag-info-bg: rgba(170, 170, 170, 0.3);
+  --tag-info: #aaaaaa;
+  --tag-info-border: rgba(170, 170, 170, 0.7);
+  //tag绿色--补色
+  --tag-green-bg: rgba(60, 208, 193, 0.3);
+  --tag-green: #3cd0c1;
+  --tag-green-border: rgba(60, 208, 193, 0.7);
+  //tag黄色--中危
+  --tag-yellow-bg: rgba(246, 198, 56, 0.3);
+  --tag-yellow: #f6c638; //按钮背景色
+  --tag-yellow-border: rgba(246, 198, 56, 0.7);
+  //按钮背景色
+  --btn1-bg: rgba(255, 255, 255, 0.2);
+
+  //系统底色
+  --app-bg: #3b485f;
+  //系统标题字
+  --theme-color-title: #ffffff;
+  //系统字颜色
+  --theme-color-normal: #ffffff;
+  //次级字颜色
+  --theme-color-after: #dedede;
+
+  //次级
+  --theme-color-second: #ffffff;
+  //（字段、表格信息、未选中的tab页等）
+  --common-word: #aaaaaa;
+  //全局默认边框色
+  --border-normal: rgba(255, 255, 255, 0.2);
+  //一级卡片
+  --card: #1a2e3e;
+  //二级卡片颜色
+  --card-child: rgba(255, 255, 255, 0.1);
+  //三级卡片颜色
+  --card-child2: rgba(255, 255, 255, 0.2);
+  //el-详情的边框色
+  --content-border: rgba(244, 246, 250, 0.1);
+  //el-详情的背景色
+  --content-bg: rgba(244, 246, 250, 0.2);
+  //el-table
+  --el-table-head: #515a69;
+  //echarts图表柱子饼图等默认底色
+  --chart-bg: rgba(255, 255, 255, 0.2);
+  //滚动条
+  --scroll-kuai: rgba(255, 255, 255, 0.2);
+  //-------------------------暗色独有的-------------------------
+  //暗色table斑马线
+  --table-ban-line: #263948;
+  //暗色loading
+  --page-loading: rgba(0, 0, 0, 0.7);
+  //第三方组件el-tree选中颜色
+  --el-tree-select: #4c4d4f;
+  //暗色透明度
+  --th-opacity: 0.4;
+  //暗色类型的padding
+  --online-padding: 1rem;
+}
+
+html,
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+:after,
+:before {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
