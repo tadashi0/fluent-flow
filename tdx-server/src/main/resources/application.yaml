@@ -1,0 +1,386 @@
+spring:
+  application:
+    name: tdx-server
+
+  profiles:
+    active: local
+
+  main:
+    allow-circular-references: true # 允许循环依赖，因为项目是三层架构，无法避免这个情况。
+
+  # Servlet 配置
+  servlet:
+    # 文件上传相关配置项
+    multipart:
+      max-file-size: 16MB # 单个文件大小
+      max-request-size: 32MB # 设置总上传的文件大小
+
+  # Jackson 配置项
+  jackson:
+    serialization:
+      write-dates-as-timestamps: true # 设置 Date 的格式，使用时间戳
+      write-date-timestamps-as-nanoseconds: false # 设置不使用 nanoseconds 的格式。例如说 1611460870.401，而是直接 1611460870401
+      write-durations-as-timestamps: true # 设置 Duration 的格式，使用时间戳
+      fail-on-empty-beans: false # 允许序列化无属性的 Bean
+
+  # Cache 配置项
+  cache:
+    type: REDIS
+    redis:
+      time-to-live: 1h # 设置过期时间为 1 小时
+
+  flyway:
+    enabled: true
+    # 非空数据库初始化Flyway时需要打开此开关进行Baseline操作
+    baseline-on-migrate: true
+    # 是否可以无序执行。开发环境最好开启 outOfOrder, 生产环境关闭 outOfOrder
+    out-of-order: true
+    # 迁移前校验 SQL 文件是否存在问题
+    validate-on-migrate: true
+    locations: classpath:db/migration
+
+server:
+  servlet:
+    encoding:
+      enabled: true
+      charset: UTF-8 # 必须设置 UTF-8，避免 WebFlux 流式返回（AI 场景）会乱码问题
+      force: true
+
+--- #################### 接口文档配置 ####################
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui
+  default-flat-param-object: true # 参见 https://doc.xiaominfo.com/docs/faq/v4/knife4j-parameterobject-flat-param 文档
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+# FlowLong Config
+flowlong:
+  banner: false
+  remind:
+    cron: "*/5 * * * * ?"
+  eventing:
+    task: true
+# 工作流 Flowable 配置
+flowable:
+  # 1. false: 默认值，Flowable 启动时，对比数据库表中保存的版本，如果不匹配。将抛出异常
+  # 2. true: 启动时会对数据库中所有表进行更新操作，如果表存在，不做处理，反之，自动创建表
+  # 3. create_drop: 启动时自动创建表，关闭时自动删除表
+  # 4. drop_create: 启动时，删除旧表，再创建新表
+  database-schema-update: true # 设置为 false，可通过 https://github.com/flowable/flowable-sql 初始化
+  db-history-used: true # flowable6 默认 true 生成信息表，无需手动设置
+  check-process-definitions: false # 设置为 false，禁用 /resources/processes 自动部署 BPMN XML 流程
+  history-level: audit # full：保存历史数据的最高级别，可保存全部流程相关细节，包括流程流转各节点参数
+
+# MyBatis Plus 的配置项
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 设置 MyBatis Plus 的日志实现类
+    map-underscore-to-camel-case: true # 虽然默认为 true ，但是还是显示去指定下。
+  global-config:
+    db-config:
+#      id-type: NONE # “智能”模式，基于 IdTypeEnvironmentPostProcessor + 数据源的类型，自动适配成 AUTO、INPUT 模式。
+#      id-type: AUTO # 自增 ID，适合 MySQL 等直接自增的数据库
+#      id-type: INPUT # 用户输入 ID，适合 Oracle、PostgreSQL、Kingbase、DB2、H2 数据库
+#      id-type: ASSIGN_ID # 分配 ID，默认使用雪花算法。注意，Oracle、PostgreSQL、Kingbase、DB2、H2 数据库时，需要去除实体类上的 @KeySequence 注解
+      logic-delete-value: 1 # 逻辑已删除值(默认为 1)
+      logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
+    banner: false # 关闭控制台的 Banner 打印
+  type-aliases-package: ${tdx.info.base-package}.module.*.dal.dataobject
+  encryptor:
+    password: XDV71a+xqStEA3WH # 加解密的秘钥，可使用 https://www.imaegoo.com/2020/aes-key-generator/ 网站生成
+
+mybatis-plus-join:
+  banner: false # 是否打印 mybatis plus join banner，默认true
+  sub-table-logic: true # 全局启用副表逻辑删除，默认true。关闭后关联查询不会加副表逻辑删除
+  ms-cache: true # 拦截器MappedStatement缓存，默认 true
+  table-alias: t # 表别名(默认 t)
+  logic-del-type: on # 副表逻辑删除条件的位置，支持 WHERE、ON，默认 ON
+
+# Spring Data Redis 配置
+spring:
+  data:
+    redis:
+      repositories:
+        enabled: false # 项目未使用到 Spring Data Redis 的 Repository，所以直接禁用，保证启动速度
+
+# VO 转换（数据翻译）相关
+easy-trans:
+  is-enable-global: true # 启用全局翻译（拦截所有 SpringMVC ResponseBody 进行自动翻译 )。如果对于性能要求很高可关闭此配置，或通过 @IgnoreTrans 忽略某个接口
+
+--- #################### 验证码相关配置 ####################
+aj:
+  captcha:
+    jigsaw: classpath:images/jigsaw # 滑动验证，底图路径，不配置将使用默认图片；以 classpath: 开头，取 resource 目录下路径
+    pic-click: classpath:images/pic-click # 滑动验证，底图路径，不配置将使用默认图片；以 classpath: 开头，取 resource 目录下路径
+    cache-type: redis # 缓存 local/redis...
+    cache-number: 1000 # local 缓存的阈值,达到这个值，清除缓存
+    timing-clear: 180 # local定时清除过期缓存(单位秒),设置为0代表不执行
+    type: blockPuzzle # 验证码类型 default两种都实例化。 blockPuzzle 滑块拼图 clickWord 文字点选
+    water-mark: 安迈源码 # 右下角水印文字(我的水印)，可使用 https://tool.chinaz.com/tools/unicode.aspx 中文转 Unicode，Linux 可能需要转 unicode
+    interference-options: 0 # 滑动干扰项(0/1/2)
+    req-frequency-limit-enable: false # 接口请求次数一分钟限制是否开启 true|false
+    req-get-lock-limit: 5 # 验证失败 5 次，get接口锁定
+    req-get-lock-seconds: 10 # 验证失败后，锁定时间间隔
+    req-get-minute-limit: 30 # get 接口一分钟内请求数限制
+    req-check-minute-limit: 60 # check 接口一分钟内请求数限制
+    req-verify-minute-limit: 60 # verify 接口一分钟内请求数限制
+
+--- #################### 消息队列相关 ####################
+
+# rocketmq 配置项，对应 RocketMQProperties 配置类
+rocketmq:
+  # Producer 配置项
+  producer:
+    group: ${spring.application.name}_PRODUCER # 生产者分组
+
+spring:
+  # Kafka 配置项，对应 KafkaProperties 配置类
+  kafka:
+    # Kafka Producer 配置项
+    producer:
+      acks: 1 # 0-不应答。1-leader 应答。all-所有 leader 和 follower 应答。
+      retries: 3 # 发送失败时，重试发送的次数
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer # 消息的 value 的序列化
+    # Kafka Consumer 配置项
+    consumer:
+      auto-offset-reset: earliest # 设置消费者分组最初的消费进度为 earliest 。可参考博客 https://blog.csdn.net/lishuangzhe7047/article/details/74530417 理解
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+      properties:
+        max.poll.interval.ms: 600000
+        request.timeout.ms: 600000
+        socket.connection.setup.timeout.ms: 600000
+        spring.json.trusted.packages: '*'
+    # Kafka Consumer Listener 监听器配置
+    listener:
+      missing-topics-fatal: false # 消费监听接口监听的主题不存在时，默认会报错。所以通过设置为 false ，解决报错
+      ack-mode: manual_immediate
+
+--- #################### AI 相关配置 ####################
+
+spring:
+  ai:
+    vectorstore: # 向量存储
+      redis:
+        index: default-index
+        prefix: "default:"
+    embedding:
+      transformer:
+        onnx:
+          model-uri: https://raw.gitcode.com/tdxcode/tdx-demo/raw/master/tdx-static/ai/model.onnx
+        tokenizer:
+          uri: https://raw.gitcode.com/tdxcode/tdx-demo/raw/master/tdx-static/ai/tokenizer.json
+    qianfan: # 文心一言
+      api-key: x0cuLZ7XsaTCU08vuJWO87Lg
+      secret-key: R9mYF9dl9KASgi5RUq0FQt3wRisSnOcK
+    zhipuai: # 智谱 AI
+      api-key: 32f84543e54eee31f8d56b2bd6020573.3vh9idLJZ2ZhxDEs
+    openai: # OpenAI 官方
+      api-key: sk-yzKea6d8e8212c3bdd99f9f44ced1cae37c097e5aa3BTS7z
+      base-url: https://api.gptsapi.net
+    azure: # OpenAI 微软
+      openai:
+        endpoint: https://eastusprejade.openai.azure.com
+        api-key: xxx
+    ollama:
+      base-url: http://172.16.1.245:11434
+      chat:
+        model: deepseek-r1:14b
+    stabilityai:
+      api-key: sk-e53UqbboF8QJCscYvzJscJxJXoFcFg4iJjl1oqgE7baJETmx
+  cloud:
+    ai:
+      tongyi: # 通义千问
+        tongyi:
+          api-key: sk-Zsd81gZYg7
+
+tdx:
+  ai:
+    deep-seek: # DeepSeek
+      enable: true
+      api-key: sk-e94db327cc7d457d99a8de8810fc6b12
+      model: deepseek-reasoner
+    xinghuo: # 讯飞星火
+      enable: true
+      appId: 13c8cca6
+      appKey: cb6415c19d6162cda07b47316fcb0416
+      secretKey: Y2JiYTIxZjA3MDMxMjNjZjQzYzVmNzdh
+      model: generalv3.5
+    midjourney:
+      enable: true
+      #    base-url: https://api.holdai.top/mj-relax/mj
+      base-url: https://api.holdai.top/mj
+      api-key: sk-dZEPiVaNcT3FHhef51996bAa0bC74806BeAb620dA5Da10Bf
+      notify-url: http://java.nat300.top/admin-api/ai/image/midjourney/notify
+    suno:
+      enable: true
+      #    base-url: https://suno-55ishh05u-status2xxs-projects.vercel.app
+      base-url: http://127.0.0.1:3001
+
+--- #################### 安迈相关配置 ####################
+
+tdx:
+  info:
+    version: 1.0.0
+    base-package: cn.tdx
+  web:
+    admin-ui:
+      url: http://127.0.0.1 # Admin 管理后台 UI 的地址
+  license:
+    name: license.lic
+    licensePath: E:\amxk\product\amxk_product\license.lic
+    isAbs: true
+    subject: cross-border
+    publicAlias: crb
+    storePass: Amxk@2024
+    publicKeysStoreFile: /home/crb/server/publicStore.keystore
+  xss:
+    enable: true
+    exclude-urls:
+  security:
+    permit-all_urls:
+      - /admin-api/mp/open/** # 微信公众号开放平台，微信回调接口，不需要登录
+  websocket:
+    enable: true # websocket的开关
+    path: /infra/ws # 路径
+    sender-type: local # 消息发送的类型，可选值为 local、redis、rocketmq、kafka、rabbitmq
+    sender-rocketmq:
+      topic: ${spring.application.name}-websocket # 消息发送的 RocketMQ Topic
+      consumer-group: ${spring.application.name}-websocket-consumer # 消息发送的 RocketMQ Consumer Group
+    sender-rabbitmq:
+      exchange: ${spring.application.name}-websocket-exchange # 消息发送的 RabbitMQ Exchange
+      queue: ${spring.application.name}-websocket-queue # 消息发送的 RabbitMQ Queue
+    sender-kafka:
+      topic: ${spring.application.name}-websocket # 消息发送的 Kafka Topic
+      consumer-group: ${spring.application.name}-websocket-consumer # 消息发送的 Kafka Consumer Group
+  swagger:
+    title: 安迈快速开发平台
+    description: 提供管理后台、用户 App 的所有功能
+    version: ${amxk.info.version}
+    url: ${amxk.web.admin-ui.url}
+    email: xingyu4j@vip.qq.com
+    license: MIT
+    license-url: https://gitee.com/zhijiantianya/ruoyi-vue-pro/blob/master/LICENSE
+  codegen:
+    base-package: ${tdx.info.base-package}
+    db-schemas: ${spring.datasource.dynamic.datasource.master.name}
+    front-type: 20 # 前端模版的类型，参见 CodegenFrontTypeEnum 枚举类
+    unit-test-enable: false # 是否生成单元测试
+  tenant: # 多租户相关配置项
+    enable: true
+    ignore-urls:
+      - /admin-api/system/tenant/get-id-by-name # 基于名字获取租户，不许带租户编号
+      - /admin-api/system/tenant/get-by-website # 基于域名获取租户，不许带租户编号
+      - /admin-api/system/captcha/get # 获取图片验证码，和租户无关
+      - /admin-api/system/captcha/check # 校验图片验证码，和租户无关
+      - /admin-api/infra/file/*/get/** # 获取图片，和租户无关
+      - /admin-api/system/sms/callback/* # 短信回调接口，无法带上租户编号
+      - /admin-api/pay/notify/** # 支付回调通知，不携带租户编号
+      - /jmreport/* # 积木报表，无法携带租户编号
+      - /admin-api/mp/open/** # 微信公众号开放平台，微信回调接口，无法携带租户编号
+    ignore-tables:
+      - flow_user #这个需要删除掉,测试用的
+      - tables
+      - columns
+      - system_tenant
+      - system_tenant_package
+      - system_dict_data
+      - system_dict_type
+      - system_error_code
+      - system_menu
+      - system_sms_channel
+      - system_sms_template
+      - system_sms_log
+      - system_sensitive_word
+      - system_oauth2_client
+      - system_mail_account
+      - system_mail_template
+      - system_mail_log
+      - system_notify_template
+      - infra_codegen_column
+      - infra_codegen_table
+      - infra_config
+      - infra_file_config
+      - infra_file
+      - infra_file_content
+      - infra_job
+      - infra_job_log
+      - infra_job_log
+      - infra_data_source_config
+      - jimu_dict
+      - jimu_dict_item
+      - jimu_report
+      - jimu_report_data_source
+      - jimu_report_db
+      - jimu_report_db_field
+      - jimu_report_db_param
+      - jimu_report_link
+      - jimu_report_map
+      - jimu_report_share
+      - rep_demo_dxtj
+      - rep_demo_employee
+      - rep_demo_gongsi
+      - rep_demo_jianpiao
+      - tmp_report_data_1
+      - tmp_report_data_income
+    ignore-caches:
+      - user_role_ids
+      - permission_menu_ids
+      - oauth_client
+      - notify_template
+      - mail_account
+      - mail_template
+      - sms_template
+  sms-code: # 短信验证码相关的配置项
+    expire-times: 10m
+    send-frequency: 1m
+    send-maximum-quantity-per-day: 10
+    begin-code: 9999 # 这里配置 9999 的原因是，测试方便。
+    end-code: 9999 # 这里配置 9999 的原因是，测试方便。
+  trade:
+    order:
+      pay-expire-time: 2h # 支付的过期时间
+      receive-expire-time: 14d # 收货的过期时间
+      comment-expire-time: 7d # 评论的过期时间
+    express:
+      client: kd_niao
+      kd-niao:
+        api-key: cb022f1e-48f1-4c4a-a723-9001ac9676b8
+        business-id: 1809751
+      kd100:
+        key: pLXUGAwK5305
+        customer: E77DF18BE109F454A5CD319E44BF5177
+
+debug: false
+
+easy-es:
+  enable: true # 是否开启EE自动配置 默认开启,可缺省
+  schema: http # 默认值为http 可缺省 也支持https免ssl方式 配置此值为 https 即可
+  banner: true # 默认为true 打印banner 若您不期望打印banner,可配置为false
+  global-config:
+    i-kun-mode: false # 是否开启小黑子模式,默认关闭, 开启后日志将更有趣,提升编码乐趣,仅供娱乐,切勿用于其它任何用途
+    process-index-mode: manual #索引处理模式,smoothly:平滑模式, not_smoothly:非平滑模式, manual:手动模式,,默认开启此模式
+    print-dsl: true # 开启控制台打印通过本框架生成的DSL语句,默认为开启,测试稳定后的生产环境建议关闭,以提升少量性能
+    distributed: false # 当前项目是否分布式项目,默认为true,在非手动托管索引模式下,若为分布式项目则会获取分布式锁,非分布式项目只需synchronized锁.
+    reindexTimeOutHours: 72 # 重建索引超时时间 单位小时,默认72H 可根据ES中存储的数据量调整
+    async-process-index-blocking: true # 异步处理索引是否阻塞主线程 默认阻塞 数据量过大时调整为非阻塞异步进行 项目启动更快
+    active-release-index-max-retry: 4320 # 分布式环境下,平滑模式,当前客户端激活最新索引最大重试次数,若数据量过大,重建索引数据迁移时间超过4320/60=72H,可调大此参数值,此参数值决定最大重试次数,超出此次数后仍未成功,则终止重试并记录异常日志
+    active-release-index-fixed-delay: 60 # 分布式环境下,平滑模式,当前客户端激活最新索引最大重试次数 分布式环境下,平滑模式,当前客户端激活最新索引重试时间间隔 若您期望最终一致性的时效性更高,可调小此值,但会牺牲一些性能
+
+    db-config:
+      map-underscore-to-camel-case: false # 是否开启下划线转驼峰 默认为false
+      index-prefix: daily_ # 索引前缀,可用于区分环境  默认为空 用法和MP的tablePrefix一样的作用和用法
+      id-type: customize # id生成策略 customize为自定义,id值由用户生成,比如取MySQL中的数据id,如缺省此项配置,则id默认策略为es自动生成
+      field-strategy: not_empty # 字段更新策略 默认为not_null
+      enable-track-total-hits: true # 默认开启,开启后查询所有匹配数据,若不开启,会导致无法获取数据总条数,其它功能不受影响,若查询数量突破1W条时,需要同步调整@IndexName注解中的maxResultWindow也大于1w,并重建索引后方可在后续查询中生效(不推荐,建议分页查询).
+      refresh-policy: immediate # 数据刷新策略,默认为不刷新,若对数据时效性要求比较高,可以调整为immediate,但性能损耗高,也可以调整为折中的wait_until
+      batch-update-threshold: 10000 # 批量更新接口的阈值 默认值为1万,突破此值需要同步调整enable-track-total-hits=true,@IndexName.maxResultWindow > 1w,并重建索引.
+      smartAddKeywordSuffix: true # 是否智能为字段添加.keyword后缀 默认开启,开启后会根据当前字段的索引类型及当前查询类型自动推断本次查询是否需要拼接.keyword后缀

@@ -1,0 +1,3 @@
+cn.tdx.framework.datasource.config.tdxDataSourceAutoConfiguration
+cn.tdx.framework.mybatis.config.tdxMybatisAutoConfiguration
+cn.tdx.framework.translate.config.tdxTranslateAutoConfiguration

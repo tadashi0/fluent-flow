@@ -1,0 +1,49 @@
+[ {
+  "contentPath" : "java/InfraCategoryListReqVO",
+  "filePath" : "tdx-module-infra/tdx-module-infra-biz/src/main/java/cn.tdx/module/infra/controller/admin/demo/vo/InfraCategoryListReqVO.java"
+}, {
+  "contentPath" : "java/InfraCategoryRespVO",
+  "filePath" : "tdx-module-infra/tdx-module-infra-biz/src/main/java/cn.tdx/module/infra/controller/admin/demo/vo/InfraCategoryRespVO.java"
+}, {
+  "contentPath" : "java/InfraCategorySaveReqVO",
+  "filePath" : "tdx-module-infra/tdx-module-infra-biz/src/main/java/cn.tdx/module/infra/controller/admin/demo/vo/InfraCategorySaveReqVO.java"
+}, {
+  "contentPath" : "java/InfraCategoryController",
+  "filePath" : "tdx-module-infra/tdx-module-infra-biz/src/main/java/cn.tdx/module/infra/controller/admin/demo/InfraCategoryController.java"
+}, {
+  "contentPath" : "java/InfraCategoryDO",
+  "filePath" : "tdx-module-infra/tdx-module-infra-biz/src/main/java/cn.tdx/module/infra/dal/dataobject/demo/InfraCategoryDO.java"
+}, {
+  "contentPath" : "java/InfraCategoryMapper",
+  "filePath" : "tdx-module-infra/tdx-module-infra-biz/src/main/java/cn.tdx/module/infra/dal/mysql/demo/InfraCategoryMapper.java"
+}, {
+  "contentPath" : "xml/InfraCategoryMapper",
+  "filePath" : "tdx-module-infra/tdx-module-infra-biz/src/main/resources/mapper/demo/InfraCategoryMapper.xml"
+}, {
+  "contentPath" : "java/InfraCategoryServiceImpl",
+  "filePath" : "tdx-module-infra/tdx-module-infra-biz/src/main/java/cn.tdx/module/infra/service/demo/InfraCategoryServiceImpl.java"
+}, {
+  "contentPath" : "java/InfraCategoryService",
+  "filePath" : "tdx-module-infra/tdx-module-infra-biz/src/main/java/cn.tdx/module/infra/service/demo/InfraCategoryService.java"
+}, {
+  "contentPath" : "java/InfraCategoryServiceImplTest",
+  "filePath" : "tdx-module-infra/tdx-module-infra-biz/src/test/java/cn.tdx/module/infra/service/demo/InfraCategoryServiceImplTest.java"
+}, {
+  "contentPath" : "java/ErrorCodeConstants_手动操作",
+  "filePath" : "tdx-module-infra/tdx-module-infra-api/src/main/java/cn.tdx/module/infra/enums/ErrorCodeConstants_手动操作.java"
+}, {
+  "contentPath" : "sql/sql",
+  "filePath" : "sql/sql.sql"
+}, {
+  "contentPath" : "sql/h2",
+  "filePath" : "sql/h2.sql"
+}, {
+  "contentPath" : "vue/index",
+  "filePath" : "tdx-ui-admin-vue2/src/views/infra/demo/index.vue"
+}, {
+  "contentPath": "js/index",
+  "filePath": "tdx-ui-admin-vue2/src/api/infra/demo/index.js"
+}, {
+  "contentPath" : "vue/CategoryForm",
+  "filePath" : "tdx-ui-admin-vue2/src/views/infra/demo/CategoryForm.vue"
+} ]

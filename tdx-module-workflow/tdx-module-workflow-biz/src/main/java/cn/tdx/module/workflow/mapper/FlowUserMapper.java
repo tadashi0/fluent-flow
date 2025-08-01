@@ -1,0 +1,16 @@
+package cn.tdx.module.workflow.mapper;
+
+import cn.tdx.module.workflow.dal.FlowUser;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
+
+/**
+ * The MyBatis mapper of table 'flow_user'
+ *
+ * @author chonghui.tian
+ * @since 2025-04-22
+ */
+@Mapper
+public interface FlowUserMapper extends BaseMapper<FlowUser> {
+
+}
