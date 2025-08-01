@@ -267,7 +267,7 @@ watchEffect(async () => {
       const { taskState, currentNodeKey } = instanceInfoResult;
       state.value = taskState;
       const processModel = JSON.parse(modelResult.modelContent);
-      await traverseAutoNode(processModel.nodeConfig, taskState, currentNodeKey);
+      // await traverseAutoNode(processModel.nodeConfig, taskState, currentNodeKey);
       await traverseNode(processModel.nodeConfig, taskResult);
       modelContent.value = processModel;
     } catch (error) {
