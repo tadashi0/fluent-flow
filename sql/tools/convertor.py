@@ -1,5 +1,5 @@
 # encoding=utf8
-"""安迈系统数据库迁移工具
+"""嗒哒西系统数据库迁移工具
 
 Author: dhb52 (https://gitee.com/dhb52)
 
@@ -811,7 +811,7 @@ class OpengaussConvertor(KingbaseConvertor):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="安迈系统数据库转换工具")
+    parser = argparse.ArgumentParser(description="嗒哒西系统数据库转换工具")
     parser.add_argument(
         "type",
         type=str,

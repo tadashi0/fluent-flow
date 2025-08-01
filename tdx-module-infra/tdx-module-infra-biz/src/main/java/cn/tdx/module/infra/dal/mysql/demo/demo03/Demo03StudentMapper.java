@@ -10,7 +10,7 @@ import cn.tdx.module.infra.controller.admin.demo.demo03.vo.*;
 /**
  * 学生 Mapper
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Mapper
 public interface Demo03StudentMapper extends BaseMapperX<Demo03StudentDO> {

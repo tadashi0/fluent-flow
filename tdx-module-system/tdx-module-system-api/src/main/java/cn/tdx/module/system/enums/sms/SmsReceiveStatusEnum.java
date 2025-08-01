@@ -6,7 +6,7 @@ import lombok.Getter;
 /**
  * 短信的接收状态枚举
  *
- * @author 安迈源码
+ * @author 嗒哒西
  * @date 2021/2/1 13:39
  */
 @Getter

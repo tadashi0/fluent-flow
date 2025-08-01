@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 /**
  * 数据源配置 Mapper
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Mapper
 public interface DataSourceConfigMapper extends BaseMapperX<DataSourceConfigDO> {

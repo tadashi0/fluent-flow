@@ -6,7 +6,7 @@ import lombok.Getter;
 /**
  * 代码生成的前端类型枚举
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @AllArgsConstructor
 @Getter

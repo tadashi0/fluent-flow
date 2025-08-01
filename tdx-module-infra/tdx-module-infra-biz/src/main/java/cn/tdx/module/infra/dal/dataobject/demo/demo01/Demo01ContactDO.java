@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 /**
  * 示例联系人 DO
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @TableName("tdx_demo01_contact")
 @KeySequence("tdx_demo01_contact_seq") // 用于 Oracle、PostgreSQL、Kingbase、DB2、H2 数据库的主键自增。如果是 MySQL 等数据库，可不写。

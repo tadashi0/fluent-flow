@@ -5,7 +5,7 @@ import lombok.Data;
 /**
  * 短信发送 Response DTO
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Data
 public class SmsSendRespDTO {

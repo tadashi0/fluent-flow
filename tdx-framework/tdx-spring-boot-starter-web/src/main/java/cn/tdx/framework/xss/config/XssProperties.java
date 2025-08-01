@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Xss 配置属性
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @ConfigurationProperties(prefix = "tdx.xss")
 @Validated

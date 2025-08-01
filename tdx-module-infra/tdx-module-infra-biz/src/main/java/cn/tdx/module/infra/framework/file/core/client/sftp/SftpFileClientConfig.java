@@ -10,7 +10,7 @@ import jakarta.validation.constraints.NotNull;
 /**
  * Sftp 文件客户端的配置类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Data
 public class SftpFileClientConfig implements FileClientConfig {

@@ -10,7 +10,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 /**
  * 基于 RabbitMQ 的 {@link WebSocketMessageSender} 实现类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Slf4j
 public class RabbitMQWebSocketMessageSender extends AbstractWebSocketMessageSender {

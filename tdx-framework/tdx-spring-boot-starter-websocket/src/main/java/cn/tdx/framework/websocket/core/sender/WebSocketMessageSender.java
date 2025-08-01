@@ -5,7 +5,7 @@ import cn.tdx.framework.common.util.json.JsonUtils;
 /**
  * WebSocket 消息的发送器接口
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public interface WebSocketMessageSender {
 

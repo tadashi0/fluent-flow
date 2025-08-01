@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * 幂等 Redis DAO
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @AllArgsConstructor
 public class IdempotentRedisDAO {

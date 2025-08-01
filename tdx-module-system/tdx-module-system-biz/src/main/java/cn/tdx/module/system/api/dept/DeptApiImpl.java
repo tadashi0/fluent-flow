@@ -15,7 +15,7 @@ import jakarta.annotation.Resource;
 /**
  * 部门 API 实现类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Service
 public class DeptApiImpl implements DeptApi {

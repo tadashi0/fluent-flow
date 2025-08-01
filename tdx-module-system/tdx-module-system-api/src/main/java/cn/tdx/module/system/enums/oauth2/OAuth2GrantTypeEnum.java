@@ -7,7 +7,7 @@ import lombok.Getter;
 /**
  * OAuth2 授权类型（模式）的枚举
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @AllArgsConstructor
 @Getter

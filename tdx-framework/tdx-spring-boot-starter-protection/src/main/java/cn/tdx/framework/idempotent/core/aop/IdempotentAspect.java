@@ -18,7 +18,7 @@ import java.util.Map;
 /**
  * 拦截声明了 {@link Idempotent} 注解的方法，实现幂等操作
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Aspect
 @Slf4j

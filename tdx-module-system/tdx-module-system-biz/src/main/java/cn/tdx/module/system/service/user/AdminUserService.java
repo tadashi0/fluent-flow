@@ -22,7 +22,7 @@ import java.util.Map;
 /**
  * 后台用户 Service 接口
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public interface AdminUserService {
 

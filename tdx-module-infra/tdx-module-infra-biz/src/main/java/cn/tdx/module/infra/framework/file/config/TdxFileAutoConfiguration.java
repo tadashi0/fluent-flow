@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * 文件配置类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Configuration(proxyBeanMethods = false)
 public class TdxFileAutoConfiguration {

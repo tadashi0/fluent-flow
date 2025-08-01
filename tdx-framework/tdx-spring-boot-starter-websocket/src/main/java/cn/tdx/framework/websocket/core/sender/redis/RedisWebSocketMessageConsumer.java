@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 /**
  * {@link RedisWebSocketMessage} 广播消息的消费者，真正把消息发送出去
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @RequiredArgsConstructor
 public class RedisWebSocketMessageConsumer extends AbstractRedisChannelMessageListener<RedisWebSocketMessage> {

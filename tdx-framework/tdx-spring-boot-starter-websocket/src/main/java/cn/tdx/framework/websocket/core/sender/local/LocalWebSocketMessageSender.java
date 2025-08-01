@@ -9,7 +9,7 @@ import cn.tdx.framework.websocket.core.session.WebSocketSessionManager;
  *
  * 注意：仅仅适合单机场景！！！
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public class LocalWebSocketMessageSender extends AbstractWebSocketMessageSender {
 

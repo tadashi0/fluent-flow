@@ -12,7 +12,7 @@ import org.aspectj.lang.JoinPoint;
  *
  * 为了避免 Key 过长，使用 MD5 进行“压缩”
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public class UserRateLimiterKeyResolver implements RateLimiterKeyResolver {
 

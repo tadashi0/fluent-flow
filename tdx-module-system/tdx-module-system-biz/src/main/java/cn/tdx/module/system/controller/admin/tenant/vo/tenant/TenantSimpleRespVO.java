@@ -10,7 +10,7 @@ public class TenantSimpleRespVO {
     @Schema(description = "租户编号", requiredMode = Schema.RequiredMode.REQUIRED, example = "1024")
     private Long id;
 
-    @Schema(description = "租户名", requiredMode = Schema.RequiredMode.REQUIRED, example = "安迈")
+    @Schema(description = "租户名", requiredMode = Schema.RequiredMode.REQUIRED, example = "嗒哒西")
     private String name;
 
 }

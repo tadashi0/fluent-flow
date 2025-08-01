@@ -10,7 +10,7 @@ import jakarta.validation.Valid;
 /**
  * 参数配置 Service 接口
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public interface ConfigService {
 

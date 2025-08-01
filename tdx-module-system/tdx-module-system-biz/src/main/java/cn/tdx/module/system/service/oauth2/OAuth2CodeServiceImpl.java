@@ -18,7 +18,7 @@ import static cn.tdx.module.system.enums.ErrorCodeConstants.OAUTH2_CODE_NOT_EXIS
 /**
  * OAuth2.0 授权码 Service 实现类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Service
 @Validated

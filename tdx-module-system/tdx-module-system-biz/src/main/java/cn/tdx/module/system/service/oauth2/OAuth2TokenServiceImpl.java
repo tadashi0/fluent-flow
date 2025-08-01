@@ -38,7 +38,7 @@ import static cn.tdx.framework.common.util.collection.CollectionUtils.convertSet
 /**
  * OAuth2.0 Token Service 实现类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Service
 public class OAuth2TokenServiceImpl implements OAuth2TokenService {

@@ -15,7 +15,7 @@ import static cn.tdx.framework.common.exception.enums.GlobalErrorCodeConstants.D
 /**
  * 演示 Filter，禁止用户发起写操作，避免影响测试数据
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public class DemoFilter extends OncePerRequestFilter {
 

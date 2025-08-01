@@ -8,7 +8,7 @@ import cn.tdx.module.infra.dal.dataobject.logger.ApiAccessLogDO;
 /**
  * API 访问日志 Service 接口
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public interface ApiAccessLogService {
 

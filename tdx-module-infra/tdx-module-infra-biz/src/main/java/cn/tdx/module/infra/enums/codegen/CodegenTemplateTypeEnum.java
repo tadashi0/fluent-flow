@@ -9,7 +9,7 @@ import java.util.Objects;
 /**
  * 代码生成模板类型
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @AllArgsConstructor
 @Getter

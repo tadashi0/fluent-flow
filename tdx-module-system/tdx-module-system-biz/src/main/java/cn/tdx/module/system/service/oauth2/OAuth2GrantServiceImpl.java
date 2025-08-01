@@ -19,7 +19,7 @@ import static cn.tdx.framework.common.exception.util.ServiceExceptionUtil.except
 /**
  * OAuth2 授予 Service 实现类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Service
 public class OAuth2GrantServiceImpl implements OAuth2GrantService {

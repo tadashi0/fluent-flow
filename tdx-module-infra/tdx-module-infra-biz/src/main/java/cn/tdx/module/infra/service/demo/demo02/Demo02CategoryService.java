@@ -10,7 +10,7 @@ import cn.tdx.module.infra.dal.dataobject.demo.demo02.Demo02CategoryDO;
 /**
  * 示例分类 Service 接口
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public interface Demo02CategoryService {
 

@@ -25,7 +25,7 @@ package cn.tdx.framework.common.exception.enums;
  *       不限制规则。
  *       一般建议，每个模块自增。
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public class ServiceErrorCodeRange {
 

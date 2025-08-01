@@ -9,7 +9,7 @@ import java.util.Set;
 /**
  * 多租户配置
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @ConfigurationProperties(prefix = "tdx.tenant")
 @Data

@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 /**
  * 字符串工具类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public class StrUtils {
 

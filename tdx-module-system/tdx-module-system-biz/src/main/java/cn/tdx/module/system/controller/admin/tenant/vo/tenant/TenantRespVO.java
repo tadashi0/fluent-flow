@@ -19,7 +19,7 @@ public class TenantRespVO {
     @ExcelProperty("租户编号")
     private Long id;
 
-    @Schema(description = "租户名", requiredMode = Schema.RequiredMode.REQUIRED, example = "安迈")
+    @Schema(description = "租户名", requiredMode = Schema.RequiredMode.REQUIRED, example = "嗒哒西")
     @ExcelProperty("租户名")
     private String name;
 

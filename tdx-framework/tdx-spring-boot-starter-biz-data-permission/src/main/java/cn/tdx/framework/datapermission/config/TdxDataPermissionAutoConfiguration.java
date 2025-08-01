@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * 数据权限的自动配置类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @AutoConfiguration
 public class TdxDataPermissionAutoConfiguration {

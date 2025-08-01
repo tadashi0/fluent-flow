@@ -6,7 +6,7 @@ import lombok.Getter;
 /**
  * 短信的模板类型枚举
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Getter
 @AllArgsConstructor

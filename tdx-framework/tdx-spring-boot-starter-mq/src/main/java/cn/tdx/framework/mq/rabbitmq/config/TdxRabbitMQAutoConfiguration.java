@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Bean;
 /**
  * RabbitMQ 消息队列配置类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @AutoConfiguration
 @Slf4j

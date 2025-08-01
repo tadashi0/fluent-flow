@@ -6,7 +6,7 @@ import com.alibaba.ttl.TransmittableThreadLocal;
 /**
  * 多租户上下文 Holder
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public class TenantContextHolder {
 

@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * 多租户的 API 实现类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Service
 public class TenantApiImpl implements TenantApi {

@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 /**
  * API 访问日志 Mapper
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Mapper
 public interface ApiAccessLogMapper extends BaseMapperX<ApiAccessLogDO> {

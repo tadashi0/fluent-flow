@@ -10,7 +10,7 @@ import static cn.tdx.framework.web.core.util.WebFrameworkUtils.HEADER_TENANT_ID;
 /**
  * 多租户 Util
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public class TenantUtils {
 

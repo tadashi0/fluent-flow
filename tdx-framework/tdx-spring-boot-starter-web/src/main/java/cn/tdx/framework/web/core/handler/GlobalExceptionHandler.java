@@ -48,7 +48,7 @@ import static cn.tdx.framework.common.exception.enums.GlobalErrorCodeConstants.*
 /**
  * 全局异常处理器，将 Exception 翻译成 CommonResult + 对应的异常编号
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @RestControllerAdvice
 @AllArgsConstructor

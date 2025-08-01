@@ -5,7 +5,7 @@ import cn.tdx.module.system.dal.dataobject.oauth2.OAuth2AccessTokenDO;
 /**
  * System Redis Key 枚举类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public interface RedisKeyConstants {
 

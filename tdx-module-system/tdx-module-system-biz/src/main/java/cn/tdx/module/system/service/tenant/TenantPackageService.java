@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * 租户套餐 Service 接口
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public interface TenantPackageService {
 

@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Mapper;
 /**
  * 学生班级 Mapper
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Mapper
 public interface Demo03GradeMapper extends BaseMapperX<Demo03GradeDO> {

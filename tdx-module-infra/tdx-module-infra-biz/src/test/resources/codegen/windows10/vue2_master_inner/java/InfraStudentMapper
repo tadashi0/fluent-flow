@@ -12,7 +12,7 @@ import cn.tdx.module.infra.controller.admin.demo.vo.*;
 /**
  * 学生 Mapper
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Mapper
 public interface InfraStudentMapper extends BaseMapperX<InfraStudentDO> {

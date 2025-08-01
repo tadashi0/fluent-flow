@@ -25,7 +25,7 @@ import static cn.tdx.module.infra.enums.ErrorCodeConstants.API_ERROR_LOG_PROCESS
 /**
  * API 错误日志 Service 实现类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Service
 @Validated

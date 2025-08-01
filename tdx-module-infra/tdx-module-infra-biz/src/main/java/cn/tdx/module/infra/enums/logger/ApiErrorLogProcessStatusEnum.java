@@ -6,7 +6,7 @@ import lombok.Getter;
 /**
  * API 异常数据的处理状态
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @AllArgsConstructor
 @Getter

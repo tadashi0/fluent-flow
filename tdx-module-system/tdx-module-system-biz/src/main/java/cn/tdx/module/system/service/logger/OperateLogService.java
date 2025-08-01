@@ -9,7 +9,7 @@ import cn.tdx.module.system.dal.dataobject.logger.OperateLogDO;
 /**
  * 操作日志 Service 接口
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public interface OperateLogService {
 

@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * system 模块的数据权限 Configuration
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Configuration(proxyBeanMethods = false)
 public class DataPermissionConfiguration {

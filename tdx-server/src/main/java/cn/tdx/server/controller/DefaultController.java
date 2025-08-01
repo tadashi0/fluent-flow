@@ -10,7 +10,7 @@ import static cn.tdx.framework.common.exception.enums.GlobalErrorCodeConstants.N
  * 默认 Controller，解决部分 module 未开启时的 404 提示。
  * 例如说，/bpm/** 路径，工作流
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @RestController
 public class DefaultController {

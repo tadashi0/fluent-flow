@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Bean;
 /**
  * Metrics 配置类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @AutoConfiguration
 @ConditionalOnClass({MeterRegistryCustomizer.class})

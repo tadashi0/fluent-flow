@@ -7,7 +7,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 /**
  * {@link KafkaWebSocketMessage} 广播消息的消费者，真正把消息发送出去
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @RequiredArgsConstructor
 public class KafkaWebSocketMessageConsumer {

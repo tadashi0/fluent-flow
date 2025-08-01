@@ -10,7 +10,7 @@ import jakarta.annotation.Resource;
 /**
  * 登录日志的 API 实现类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Service
 @Validated

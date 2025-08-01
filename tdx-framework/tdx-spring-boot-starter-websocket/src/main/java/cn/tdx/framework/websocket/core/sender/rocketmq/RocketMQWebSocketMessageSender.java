@@ -9,7 +9,7 @@ import org.apache.rocketmq.spring.core.RocketMQTemplate;
 /**
  * 基于 RocketMQ 的 {@link WebSocketMessageSender} 实现类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Slf4j
 public class RocketMQWebSocketMessageSender extends AbstractWebSocketMessageSender {

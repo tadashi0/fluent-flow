@@ -19,7 +19,7 @@ import static cn.tdx.module.system.dal.redis.RedisKeyConstants.OAUTH2_ACCESS_TOK
 /**
  * {@link OAuth2AccessTokenDO} 的 RedisDAO
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Repository
 public class OAuth2AccessTokenRedisDAO {

@@ -9,7 +9,7 @@ import org.springframework.security.config.annotation.web.configurers.AuthorizeH
 /**
  * WebSocket 的权限自定义
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @RequiredArgsConstructor
 public class WebSocketAuthorizeRequestsCustomizer extends AuthorizeRequestsCustomizer {

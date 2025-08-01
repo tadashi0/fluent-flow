@@ -6,7 +6,7 @@ import lombok.Getter;
 /**
  * 任务日志的状态枚举
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Getter
 @AllArgsConstructor

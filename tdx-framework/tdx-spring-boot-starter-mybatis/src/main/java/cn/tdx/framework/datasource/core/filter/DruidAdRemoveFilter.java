@@ -12,7 +12,7 @@ import java.io.IOException;
 /**
  * Druid 底部广告过滤器
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public class DruidAdRemoveFilter extends OncePerRequestFilter {
 

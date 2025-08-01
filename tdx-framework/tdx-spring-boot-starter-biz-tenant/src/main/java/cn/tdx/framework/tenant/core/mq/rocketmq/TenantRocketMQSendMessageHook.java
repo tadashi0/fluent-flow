@@ -11,7 +11,7 @@ import static cn.tdx.framework.web.core.util.WebFrameworkUtils.HEADER_TENANT_ID;
  *
  * Producer 发送消息时，将 {@link TenantContextHolder} 租户编号，添加到消息的 Header 中
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public class TenantRocketMQSendMessageHook implements SendMessageHook {
 

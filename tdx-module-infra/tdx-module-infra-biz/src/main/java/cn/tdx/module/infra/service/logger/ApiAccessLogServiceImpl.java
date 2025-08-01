@@ -22,7 +22,7 @@ import static cn.tdx.module.infra.dal.dataobject.logger.ApiAccessLogDO.RESULT_MS
 /**
  * API 访问日志 Service 实现类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Slf4j
 @Service

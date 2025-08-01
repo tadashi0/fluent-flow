@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * 项目启动成功后，提供文档相关的地址
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Slf4j
 public class BannerApplicationRunner implements ApplicationRunner {

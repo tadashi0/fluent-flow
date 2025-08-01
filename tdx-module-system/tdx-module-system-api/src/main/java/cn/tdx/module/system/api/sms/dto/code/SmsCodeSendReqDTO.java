@@ -11,7 +11,7 @@ import jakarta.validation.constraints.NotNull;
 /**
  * 短信验证码的发送 Request DTO
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Data
 public class SmsCodeSendReqDTO {

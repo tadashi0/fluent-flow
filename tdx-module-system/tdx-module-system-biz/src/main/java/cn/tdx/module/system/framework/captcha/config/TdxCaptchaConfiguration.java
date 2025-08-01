@@ -11,7 +11,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 /**
  * 验证码的配置类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Configuration(proxyBeanMethods = false)
 public class TdxCaptchaConfiguration {

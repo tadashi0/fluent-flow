@@ -3,7 +3,7 @@ package cn.tdx.framework.quartz.core.handler;
 /**
  * 任务处理器
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public interface JobHandler {
 

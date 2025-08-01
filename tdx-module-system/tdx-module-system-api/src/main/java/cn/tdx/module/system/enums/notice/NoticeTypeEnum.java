@@ -6,7 +6,7 @@ import lombok.Getter;
 /**
  * 通知类型
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Getter
 @AllArgsConstructor

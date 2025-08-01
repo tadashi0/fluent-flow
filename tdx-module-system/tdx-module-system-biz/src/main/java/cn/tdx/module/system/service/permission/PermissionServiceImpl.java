@@ -39,7 +39,7 @@ import static cn.tdx.framework.common.util.json.JsonUtils.toJsonString;
 /**
  * 权限 Service 实现类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Service
 @Slf4j

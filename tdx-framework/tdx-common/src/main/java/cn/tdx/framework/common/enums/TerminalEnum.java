@@ -9,7 +9,7 @@ import java.util.Arrays;
 /**
  * 终端的枚举
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @RequiredArgsConstructor
 @Getter

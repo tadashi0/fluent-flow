@@ -10,7 +10,7 @@ import java.util.Arrays;
 /**
  * 社交平台的类型枚举
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Getter
 @AllArgsConstructor

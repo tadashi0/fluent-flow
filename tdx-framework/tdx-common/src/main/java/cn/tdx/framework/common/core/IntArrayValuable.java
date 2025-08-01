@@ -3,7 +3,7 @@ package cn.tdx.framework.common.core;
 /**
  * 可生成 Int 数组的接口
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public interface IntArrayValuable {
 

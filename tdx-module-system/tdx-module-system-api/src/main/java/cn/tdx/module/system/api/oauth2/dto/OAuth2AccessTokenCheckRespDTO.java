@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * OAuth2.0 访问令牌的校验 Response DTO
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Data
 public class OAuth2AccessTokenCheckRespDTO implements Serializable {

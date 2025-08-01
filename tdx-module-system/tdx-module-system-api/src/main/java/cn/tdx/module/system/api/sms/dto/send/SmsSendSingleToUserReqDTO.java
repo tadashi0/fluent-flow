@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * 短信发送给 Admin 或者 Member 用户
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Data
 public class SmsSendSingleToUserReqDTO {

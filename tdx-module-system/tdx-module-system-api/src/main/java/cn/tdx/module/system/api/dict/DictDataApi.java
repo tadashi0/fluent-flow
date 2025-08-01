@@ -12,7 +12,7 @@ import static cn.tdx.framework.common.util.collection.CollectionUtils.convertLis
 /**
  * 字典数据 API 接口
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public interface DictDataApi {
 

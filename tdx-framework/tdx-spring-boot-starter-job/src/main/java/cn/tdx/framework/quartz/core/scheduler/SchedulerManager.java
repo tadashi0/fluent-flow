@@ -16,7 +16,7 @@ import static cn.tdx.framework.common.exception.util.ServiceExceptionUtil.except
  * <p>
  * 另外，jobHandlerName 对应到 Spring Bean 的名字，直接调用
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public class SchedulerManager {
 

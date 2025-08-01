@@ -5,7 +5,7 @@ import cn.tdx.module.infra.framework.file.core.client.s3.FilePresignedUrlRespDTO
 /**
  * 文件客户端
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public interface FileClient {
 

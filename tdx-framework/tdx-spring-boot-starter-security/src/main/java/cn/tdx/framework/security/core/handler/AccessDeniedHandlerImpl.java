@@ -22,7 +22,7 @@ import static cn.tdx.framework.common.exception.enums.GlobalErrorCodeConstants.F
  *
  * 补充：Spring Security 通过 {@link ExceptionTranslationFilter#handleAccessDeniedException(HttpServletRequest, HttpServletResponse, FilterChain, AccessDeniedException)} 方法，调用当前类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Slf4j
 @SuppressWarnings("JavadocReference")

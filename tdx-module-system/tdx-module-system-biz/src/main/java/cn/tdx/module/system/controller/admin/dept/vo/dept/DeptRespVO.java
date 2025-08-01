@@ -12,7 +12,7 @@ public class DeptRespVO {
     @Schema(description = "部门编号", example = "1024")
     private Long id;
 
-    @Schema(description = "部门名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "安迈")
+    @Schema(description = "部门名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "嗒哒西")
     private String name;
 
     @Schema(description = "父部门 ID", example = "1024")

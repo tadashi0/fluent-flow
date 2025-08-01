@@ -191,9 +191,9 @@ wx: # 参见 https://github.com/Wechat-Group/WxJava/blob/develop/spring-boot-sta
       key-prefix: wa # Redis Key 的前缀
       http-client-type: HttpClient # 采用 HttpClient 请求微信公众号平台
 
---- #################### 安迈相关配置 ####################
+--- #################### 嗒哒西相关配置 ####################
 
-# 安迈配置项，设置当前项目所有自定义的配置
+# 嗒哒西配置项，设置当前项目所有自定义的配置
 amxk:
   captcha:
     enable: false # 本地环境，暂时关闭图片验证码，方便登录等接口的测试；

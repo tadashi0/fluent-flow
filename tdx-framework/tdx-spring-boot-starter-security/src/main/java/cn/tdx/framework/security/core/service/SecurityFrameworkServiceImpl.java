@@ -13,7 +13,7 @@ import static cn.tdx.framework.security.core.util.SecurityFrameworkUtils.getLogi
 /**
  * 默认的 {@link SecurityFrameworkService} 实现类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @AllArgsConstructor
 public class SecurityFrameworkServiceImpl implements SecurityFrameworkService {

@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * 多租户的 API 接口
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public interface TenantApi {
 

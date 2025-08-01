@@ -10,7 +10,7 @@ import java.util.Arrays;
 /**
  * 用户短信验证码发送场景的枚举
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Getter
 @AllArgsConstructor

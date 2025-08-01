@@ -40,7 +40,7 @@ import static cn.tdx.framework.common.util.collection.CollectionUtils.convertLis
 /**
  * 自定义的 Spring Security 配置适配器实现
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @AutoConfiguration
 @AutoConfigureOrder(-1) // 目的：先于 Spring Security 自动配置，避免一键改包后，org.* 基础包无法生效

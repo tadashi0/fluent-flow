@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotEmpty;
 /**
  * 本地文件客户端的配置类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Data
 public class LocalFileClientConfig implements FileClientConfig {

@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * 登录用户信息
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @Data
 public class LoginUser {

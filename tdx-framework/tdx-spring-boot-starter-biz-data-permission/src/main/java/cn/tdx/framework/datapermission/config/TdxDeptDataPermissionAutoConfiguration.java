@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * 基于部门的数据权限 AutoConfiguration
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @AutoConfiguration
 @ConditionalOnClass(LoginUser.class)

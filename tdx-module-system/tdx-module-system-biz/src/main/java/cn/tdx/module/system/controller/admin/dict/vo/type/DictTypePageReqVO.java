@@ -16,7 +16,7 @@ import static cn.tdx.framework.common.util.date.DateUtils.FORMAT_YEAR_MONTH_DAY_
 @EqualsAndHashCode(callSuper = true)
 public class DictTypePageReqVO extends PageParam {
 
-    @Schema(description = "字典类型名称，模糊匹配", example = "安迈")
+    @Schema(description = "字典类型名称，模糊匹配", example = "嗒哒西")
     private String name;
 
     @Schema(description = "字典类型，模糊匹配", example = "sys_common_sex")

@@ -9,7 +9,7 @@ import jakarta.validation.Valid;
 /**
  * OAuth2.0 Token API 接口
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public interface OAuth2TokenApi {
 

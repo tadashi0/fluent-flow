@@ -15,7 +15,7 @@ import static cn.tdx.framework.common.util.date.DateUtils.FORMAT_YEAR_MONTH_DAY_
 @EqualsAndHashCode(callSuper = true)
 public class RolePageReqVO extends PageParam {
 
-    @Schema(description = "角色名称，模糊匹配", example = "安迈")
+    @Schema(description = "角色名称，模糊匹配", example = "嗒哒西")
     private String name;
 
     @Schema(description = "角色标识，模糊匹配", example = "tdx")

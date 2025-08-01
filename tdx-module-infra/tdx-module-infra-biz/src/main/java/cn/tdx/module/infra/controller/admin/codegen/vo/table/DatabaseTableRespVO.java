@@ -10,7 +10,7 @@ public class DatabaseTableRespVO {
     @Schema(description = "表名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "yuanma")
     private String name;
 
-    @Schema(description = "表描述", requiredMode = Schema.RequiredMode.REQUIRED, example = "安迈源码")
+    @Schema(description = "表描述", requiredMode = Schema.RequiredMode.REQUIRED, example = "嗒哒西")
     private String comment;
 
 }

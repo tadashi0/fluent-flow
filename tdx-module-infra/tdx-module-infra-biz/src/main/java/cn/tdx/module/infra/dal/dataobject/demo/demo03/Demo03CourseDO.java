@@ -9,7 +9,7 @@ import lombok.*;
 /**
  * 学生课程 DO
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @TableName("tdx_demo03_course")
 @KeySequence("tdx_demo03_course_seq") // 用于 Oracle、PostgreSQL、Kingbase、DB2、H2 数据库的主键自增。如果是 MySQL 等数据库，可不写。

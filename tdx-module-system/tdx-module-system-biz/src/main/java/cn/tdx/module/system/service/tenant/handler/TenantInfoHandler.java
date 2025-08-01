@@ -6,7 +6,7 @@ import cn.tdx.module.system.dal.dataobject.tenant.TenantDO;
  * 租户信息处理
  * 目的：尽量减少租户逻辑耦合到系统中
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public interface TenantInfoHandler {
 

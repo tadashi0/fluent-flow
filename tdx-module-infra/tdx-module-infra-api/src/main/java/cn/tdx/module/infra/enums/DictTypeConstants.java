@@ -3,7 +3,7 @@ package cn.tdx.module.infra.enums;
 /**
  * Infra 字典类型的枚举类
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public interface DictTypeConstants {
 

@@ -8,7 +8,7 @@ import static cn.hutool.core.util.ArrayUtil.*;
 /**
  * 代码生成的场景枚举
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 @AllArgsConstructor
 @Getter

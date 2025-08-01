@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * 社交应用的 API 接口
  *
- * @author 安迈源码
+ * @author 嗒哒西
  */
 public interface SocialClientApi {
 
