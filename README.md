@@ -130,15 +130,13 @@ npm run dev
 
 _以下展示了本系统的部分界面，用于直观了解流程能力：_
 
-- ![输入图片说明](./back/docs/screenshots/image.png)
-- ![输入图片说明](./back/docs/screenshots/image1.png)
-- ![输入图片说明](./back/docs/screenshots/image2.png)
-- ![输入图片说明](./back/docs/screenshots/image3.png)
-- ![输入图片说明](./back/docs/screenshots/image4.png)
-- ![输入图片说明](./back/docs/screenshots/image5.png)
-- ![输入图片说明](./back/docs/screenshots/image6.png)
-- ![输入图片说明](./back/docs/screenshots/image7.png)
-
+![输入图片说明](.image/common/wechat_2025-08-01_165115_683.png)
+![输入图片说明](.image/common/wechat_2025-08-01_164723_364.png)
+![输入图片说明](.image/common/wechat_2025-08-01_164847_351.png)
+![输入图片说明](.image/common/wechat_2025-08-01_164911_584.png)
+![输入图片说明](.image/common/wechat_2025-08-01_164942_281.png)
+![输入图片说明](.image/common/wechat_2025-08-01_165022_832.png)
+![输入图片说明](.image/common/wechat_2025-08-01_165057_634.png)
 ---
 
 ## 🙌 特别鸣谢
