@@ -1,10 +1,14 @@
 package cn.tdx.module.workflow.listener;
 
-import cn.tdx.framework.security.core.util.SecurityFrameworkUtils;
-import cn.tdx.module.system.api.dept.DeptApi;
-import cn.tdx.module.system.api.user.AdminUserApi;
-import cn.tdx.module.system.api.user.dto.AdminUserRespDTO;
-import cn.tdx.module.workflow.service.impl.RedisService;
+import cn.qhdl.framework.security.core.util.SecurityFrameworkUtils;
+import cn.qhdl.module.system.api.dept.DeptApi;
+import cn.qhdl.module.system.api.notify.NotifyMessageSendApi;
+import cn.qhdl.module.system.api.notify.dto.NotifySendSingleToUserReqDTO;
+import cn.qhdl.module.system.api.user.AdminUserApi;
+import cn.qhdl.module.system.api.user.dto.AdminUserRespDTO;
+import cn.qhdl.module.workflow.dal.NotificationInfo;
+import cn.qhdl.module.workflow.dal.ProcessContext;
+import cn.qhdl.module.workflow.service.impl.RedisService;
 import com.aizuda.bpm.engine.FlowLongEngine;
 import com.aizuda.bpm.engine.assist.ObjectUtils;
 import com.aizuda.bpm.engine.core.FlowCreator;
@@ -13,22 +17,16 @@ import com.aizuda.bpm.engine.core.enums.NodeApproveSelf;
 import com.aizuda.bpm.engine.core.enums.TaskEventType;
 import com.aizuda.bpm.engine.core.enums.TaskType;
 import com.aizuda.bpm.engine.entity.*;
-import com.aizuda.bpm.engine.model.ModelHelper;
-import com.aizuda.bpm.engine.model.NodeExpression;
-import com.aizuda.bpm.engine.model.NodeModel;
-import com.aizuda.bpm.engine.model.ProcessModel;
+import com.aizuda.bpm.engine.model.*;
 import com.aizuda.bpm.mybatisplus.mapper.FlwExtInstanceMapper;
 import com.aizuda.bpm.mybatisplus.mapper.FlwHisInstanceMapper;
 import com.aizuda.bpm.mybatisplus.mapper.FlwTaskMapper;
-import com.aizuda.bpm.spring.event.InstanceEvent;
 import com.aizuda.bpm.spring.event.TaskEvent;
-import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.extension.toolkit.ChainWrappers;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
-import org.springframework.data.redis.cache.RedisCache;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -43,7 +41,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
-
 @EnableAsync
 @Configuration
 @RequiredArgsConstructor
@@ -53,228 +50,9 @@ public class ProcessListener {
     /**
      * 状态值映射
      */
-    private static final Map<TaskEventType, Integer> STATE_VALUES =
-            Collections.unmodifiableMap(new HashMap<TaskEventType, Integer>() {{
-                put(TaskEventType.start, 1);
-                put(TaskEventType.restart, 1);
-                put(TaskEventType.revoke, 0);
-                put(TaskEventType.autoComplete, 2);
-                put(TaskEventType.reject, 3);
-                put(TaskEventType.autoReject, 3);
-                put(TaskEventType.terminate, 3);
-            }});
-    private static final Map<TaskEventType, String> TASK_COUNT_CATEGORY = new EnumMap<>(TaskEventType.class);
-    private static final Map<TaskEventType, String[]> MESSAGE_TEMPLATES = new EnumMap<>(TaskEventType.class);
-
-    static {
-        // 发起类 -> submit
-        TASK_COUNT_CATEGORY.put(TaskEventType.start, "submit");
-        TASK_COUNT_CATEGORY.put(TaskEventType.startAsDraft, "submit");
-        TASK_COUNT_CATEGORY.put(TaskEventType.restart, "submit");
-
-        // 已处理类 -> done
-        TASK_COUNT_CATEGORY.put(TaskEventType.complete, "done");
-        TASK_COUNT_CATEGORY.put(TaskEventType.delegateResolve, "done");
-        TASK_COUNT_CATEGORY.put(TaskEventType.addTaskActor, "done");
-        TASK_COUNT_CATEGORY.put(TaskEventType.removeTaskActor, "done");
-        TASK_COUNT_CATEGORY.put(TaskEventType.reject, "done");
-        TASK_COUNT_CATEGORY.put(TaskEventType.reclaim, "done");
-        TASK_COUNT_CATEGORY.put(TaskEventType.withdraw, "done");
-        TASK_COUNT_CATEGORY.put(TaskEventType.resume, "done");
-        TASK_COUNT_CATEGORY.put(TaskEventType.revoke, "done");
-        TASK_COUNT_CATEGORY.put(TaskEventType.terminate, "done");
-        TASK_COUNT_CATEGORY.put(TaskEventType.timeout, "done");
-        TASK_COUNT_CATEGORY.put(TaskEventType.jump, "done");
-        TASK_COUNT_CATEGORY.put(TaskEventType.autoJump, "done");
-        TASK_COUNT_CATEGORY.put(TaskEventType.rejectJump, "done");
-        TASK_COUNT_CATEGORY.put(TaskEventType.routeJump, "done");
-        TASK_COUNT_CATEGORY.put(TaskEventType.reApproveJump, "done");
-        TASK_COUNT_CATEGORY.put(TaskEventType.autoComplete, "done");
-        TASK_COUNT_CATEGORY.put(TaskEventType.autoReject, "done");
-        TASK_COUNT_CATEGORY.put(TaskEventType.end, "done");
-
-        // 抄送类 -> about
-        TASK_COUNT_CATEGORY.put(TaskEventType.cc, "about");
-        TASK_COUNT_CATEGORY.put(TaskEventType.createCc, "about");
-    }
-
-    static {
-        // 发起流程
-        MESSAGE_TEMPLATES.put(TaskEventType.start, new String[]{
-                "流程发起成功", "您成功发起了【{process}】流程"
-        });
-
-        // 暂存草稿
-        MESSAGE_TEMPLATES.put(TaskEventType.startAsDraft, new String[]{
-                "流程草稿已保存", "您暂存了【{process}】流程草稿"
-        });
-
-        // 重新发起
-        MESSAGE_TEMPLATES.put(TaskEventType.restart, new String[]{
-                "流程重新发起成功", "您重新提交了【{process}】流程"
-        });
-
-        // 创建任务
-        MESSAGE_TEMPLATES.put(TaskEventType.create, new String[]{
-                "您有新的审批任务", "用户【{user}】提交的【{process}】需要您审批，请及时处理"
-        });
-
-        // 流程回退后重新创建任务
-        MESSAGE_TEMPLATES.put(TaskEventType.recreate, new String[]{
-                "审批任务重新创建", "【{process}】流程任务已重新生成，请处理"
-        });
-
-        // 抄送
-        MESSAGE_TEMPLATES.put(TaskEventType.cc, new String[]{
-                "审批抄送送达通知", "您收到【{process}】的审批抄送，请知晓"
-        });
-
-        // 手动抄送
-        MESSAGE_TEMPLATES.put(TaskEventType.createCc, new String[]{
-                "审批抄送送达通知", "您收到【{process}】的审批抄送，请知晓"
-        });
-
-        // 任务转交
-        MESSAGE_TEMPLATES.put(TaskEventType.assignment, new String[]{
-                "待处理的转交任务", "用户【{user}】转交了一项【{process}】任务给您处理"
-        });
-
-        // 委派处理完成
-        MESSAGE_TEMPLATES.put(TaskEventType.delegateResolve, new String[]{
-                "任务委派处理完成", "您被委派的【{process}】任务已处理完成"
-        });
-
-        // 会签加签（消息略）
-        MESSAGE_TEMPLATES.put(TaskEventType.addCountersign, new String[]{
-                "加签任务通知", "【{process}】流程中新增了您的审批任务"
-        });
-
-        // 任务加签
-        MESSAGE_TEMPLATES.put(TaskEventType.addTaskActor, new String[]{
-                "任务加签通知", "您被加签参与【{process}】审批，请及时处理"
-        });
-
-        // 任务减签
-        MESSAGE_TEMPLATES.put(TaskEventType.removeTaskActor, new String[]{
-                "任务减签通知", "您已被移出【{process}】流程审批任务"
-        });
-
-        // 驳回
-        MESSAGE_TEMPLATES.put(TaskEventType.reject, new String[]{
-                "您的审批被驳回", "您提交的【{process}】已被驳回"
-        });
-
-        // 角色认领
-        MESSAGE_TEMPLATES.put(TaskEventType.claimRole, new String[]{
-                "待认领任务提醒", "您有一条【{process}】流程任务等待认领"
-        });
-
-        // 部门认领
-        MESSAGE_TEMPLATES.put(TaskEventType.claimDepartment, new String[]{
-                "部门待认领任务提醒", "【{process}】流程任务已分配到您部门，请及时认领"
-        });
-
-        // 拿回未执行任务
-        MESSAGE_TEMPLATES.put(TaskEventType.reclaim, new String[]{
-                "任务被回收", "您参与的【{process}】流程任务已被回收"
-        });
-
-        // 撤回任务
-        MESSAGE_TEMPLATES.put(TaskEventType.withdraw, new String[]{
-                "任务被撤回", "【{process}】流程任务已被撤回"
-        });
-
-        // 唤醒历史任务
-        MESSAGE_TEMPLATES.put(TaskEventType.resume, new String[]{
-                "任务已唤醒", "【{process}】流程已恢复处理"
-        });
-
-        // 审批通过
-        MESSAGE_TEMPLATES.put(TaskEventType.complete, new String[]{
-                "您的审批已通过", "您提交的审批【{process}】已经通过"
-        });
-
-        // 撤销流程
-        MESSAGE_TEMPLATES.put(TaskEventType.revoke, new String[]{
-                "流程已撤销", "您提交的【{process}】流程已被撤销"
-        });
-
-        // 流程终止
-        MESSAGE_TEMPLATES.put(TaskEventType.terminate, new String[]{
-                "流程被终止", "【{process}】流程已被终止，请知悉"
-        });
-
-        // 更新任务（忽略提示）
-        MESSAGE_TEMPLATES.put(TaskEventType.update, new String[]{
-                "任务已更新", "【{process}】流程任务内容有更新"
-        });
-
-        // 删除任务
-        MESSAGE_TEMPLATES.put(TaskEventType.delete, new String[]{
-                "流程任务已删除", "【{process}】流程任务被删除"
-        });
-
-        // 发起子流程
-        MESSAGE_TEMPLATES.put(TaskEventType.callProcess, new String[]{
-                "子流程启动提醒", "【{process}】子流程已启动"
-        });
-
-        // 超时提醒
-        MESSAGE_TEMPLATES.put(TaskEventType.timeout, new String[]{
-                "审批超时提醒", "您有一项【{process}】审批任务已超时，请及时处理"
-        });
-
-        // 跳转
-        MESSAGE_TEMPLATES.put(TaskEventType.jump, new String[]{
-                "流程节点跳转", "【{process}】流程节点已跳转，请注意查看"
-        });
-
-        // 自动跳转
-        MESSAGE_TEMPLATES.put(TaskEventType.autoJump, new String[]{
-                "流程自动跳转", "【{process}】流程自动跳过当前环节"
-        });
-
-        // 驳回跳转
-        MESSAGE_TEMPLATES.put(TaskEventType.rejectJump, new String[]{
-                "流程驳回跳转", "【{process}】流程发生驳回跳转"
-        });
-
-        // 路由跳转
-        MESSAGE_TEMPLATES.put(TaskEventType.routeJump, new String[]{
-                "流程路由跳转", "【{process}】流程根据路由条件跳转"
-        });
-
-        // 重新审批跳转
-        MESSAGE_TEMPLATES.put(TaskEventType.reApproveJump, new String[]{
-                "审批重新进行", "【{process}】流程已退回等待重新审批"
-        });
-
-        // 重新审批创建
-        MESSAGE_TEMPLATES.put(TaskEventType.reApproveCreate, new String[]{
-                "审批任务重新生成", "【{process}】流程审批任务已重新生成"
-        });
-
-        // 自动审批通过
-        MESSAGE_TEMPLATES.put(TaskEventType.autoComplete, new String[]{
-                "系统自动通过审批", "【{process}】流程已被系统自动通过"
-        });
-
-        // 自动拒绝
-        MESSAGE_TEMPLATES.put(TaskEventType.autoReject, new String[]{
-                "系统自动驳回", "您提交的【{process}】被系统自动驳回"
-        });
-
-        // 触发器任务（系统任务，不发送消息）
-        MESSAGE_TEMPLATES.put(TaskEventType.trigger, new String[]{
-                "系统任务触发", "【{process}】流程触发器已执行"
-        });
-
-        // 流程结束
-        MESSAGE_TEMPLATES.put(TaskEventType.end, new String[]{
-                "流程结束通知", "【{process}】流程已完成"
-        });
-    }
-
+    private static final Map<TaskEventType, Integer> STATE_VALUES = initStateValues();
+    private static final Map<TaskEventType, String> TASK_COUNT_CATEGORY = initTaskCountCategory();
+    private static final Map<TaskEventType, String> NOTIFY_TEMPLATE_MAPPING = initNotifyTemplateMapping();
     private final FlowLongEngine flowLongEngine;
     private final JdbcTemplate jdbcTemplate;
     private final DataSource dataSource;
@@ -284,38 +62,393 @@ public class ProcessListener {
     private final RedisService redisService;
     private final AdminUserApi adminUserApi;
     private final DeptApi deptApi;
-
+    private final NotifyMessageSendApi notifySendApi;
     /**
-     * 事件处理器映射，根据不同事件类型执行不同的处理逻辑
+     * 事件处理器映射
      */
     private final Map<TaskEventType, BiConsumer<TaskEvent, Map<String, Object>>> eventHandlers = initEventHandlers();
 
-    public static JSONObject findNodeConfig(JSONObject root, String processId) {
-        JSONObject result = new JSONObject();
-        findNodeConfigRecursive(root, processId, result);
-        return result;
+    private static Map<TaskEventType, Integer> initStateValues() {
+        Map<TaskEventType, Integer> stateValues = new EnumMap<>(TaskEventType.class);
+        stateValues.put(TaskEventType.start, 1);
+        stateValues.put(TaskEventType.restart, 1);
+        stateValues.put(TaskEventType.revoke, 0);
+        stateValues.put(TaskEventType.autoComplete, 2);
+        stateValues.put(TaskEventType.reject, 3);
+        stateValues.put(TaskEventType.autoReject, 3);
+        stateValues.put(TaskEventType.terminate, 3);
+        return Collections.unmodifiableMap(stateValues);
     }
 
-    private static void findNodeConfigRecursive(JSONObject node, String processId, JSONObject result) {
-        if (node == null) return;
+    private static Map<TaskEventType, String> initTaskCountCategory() {
+        Map<TaskEventType, String> category = new EnumMap<>(TaskEventType.class);
 
-        // 检查当前节点是否符合条件
-        if (node.getIntValue("type") == 5) {
-            String callProcess = node.getString("callProcess");
-            if (callProcess != null && callProcess.startsWith(processId + ":")) {
-                JSONObject config = node.getJSONObject("nodeConfig");
-                if (config != null) {
-                    result.putAll(config);
-                    return; // 找到后直接返回，如果需找多个可以改为收集到List
+        // 发起类 -> submit
+        category.put(TaskEventType.start, "submit");
+        category.put(TaskEventType.startAsDraft, "submit");
+        category.put(TaskEventType.restart, "submit");
+
+        // 已处理类 -> done
+        category.put(TaskEventType.complete, "done");
+        category.put(TaskEventType.delegateResolve, "done");
+        category.put(TaskEventType.addTaskActor, "done");
+        category.put(TaskEventType.removeTaskActor, "done");
+        category.put(TaskEventType.reject, "done");
+        category.put(TaskEventType.reclaim, "done");
+        category.put(TaskEventType.withdraw, "done");
+        category.put(TaskEventType.resume, "done");
+        category.put(TaskEventType.revoke, "done");
+        category.put(TaskEventType.terminate, "done");
+        category.put(TaskEventType.timeout, "done");
+        category.put(TaskEventType.jump, "done");
+        category.put(TaskEventType.autoJump, "done");
+        category.put(TaskEventType.rejectJump, "done");
+        category.put(TaskEventType.routeJump, "done");
+        category.put(TaskEventType.reApproveJump, "done");
+        category.put(TaskEventType.autoComplete, "done");
+        category.put(TaskEventType.autoReject, "done");
+        category.put(TaskEventType.end, "done");
+
+        // 抄送类 -> about
+        category.put(TaskEventType.cc, "about");
+        category.put(TaskEventType.createCc, "about");
+
+        return Collections.unmodifiableMap(category);
+    }
+
+    private static Map<TaskEventType, String> initNotifyTemplateMapping() {
+        Map<TaskEventType, String> mapping = new EnumMap<>(TaskEventType.class);
+
+        // 新的审批任务
+        mapping.put(TaskEventType.create, "flow-task");
+        mapping.put(TaskEventType.recreate, "flow-task");
+        mapping.put(TaskEventType.reApproveCreate, "flow-task");
+        mapping.put(TaskEventType.assignment, "flow-task");
+
+        // 审批通过
+        mapping.put(TaskEventType.complete, "flow-complete");
+        mapping.put(TaskEventType.autoComplete, "flow-complete");
+
+        // 驳回
+        mapping.put(TaskEventType.reject, "flow-reject");
+        mapping.put(TaskEventType.autoReject, "flow-reject");
+
+        // 转交
+        mapping.put(TaskEventType.delegateResolve, "flow-transfer");
+
+        // 超时
+        mapping.put(TaskEventType.timeout, "flow-timeout");
+
+        // 抄送
+        mapping.put(TaskEventType.cc, "flow-cc");
+        mapping.put(TaskEventType.createCc, "flow-cc");
+
+        return Collections.unmodifiableMap(mapping);
+    }
+
+    @Async
+    @EventListener
+    public void onTaskEvent(TaskEvent taskEvent) {
+        try {
+            if (TaskEventType.update.eq(taskEvent.getEventType())) {
+                return;
+            }
+
+            FlwTask flwTask = taskEvent.getFlwTask();
+            TaskEventType eventType = taskEvent.getEventType();
+
+            ProcessContext context = buildProcessContext(flwTask);
+
+            log.info("任务处理流程[{}]处理事件[{}]表[{}]业务ID[{}]",
+                    context.getProcessKey(), eventType.name(), context.getTableName(), context.getBusinessKey());
+
+            // 处理业务逻辑
+            handleBusinessLogic(taskEvent, context);
+
+            // 处理变量设置
+            handleVariableSettings(taskEvent, context);
+
+            // 统计任务数量
+            updateUserTaskCount(taskEvent);
+
+            // 发送通知消息
+            sendNotificationMessage(taskEvent, context);
+
+        } catch (Exception e) {
+            log.error("流程事件处理失败", e);
+        }
+    }
+
+    /**
+     * 构建流程上下文
+     */
+    private ProcessContext buildProcessContext(FlwTask flwTask) {
+        Long instanceId = flwTask.getInstanceId();
+        FlwInstance instance = flowLongEngine.queryService().getInstance(instanceId);
+        FlwProcess process = flowLongEngine.processService().getProcessById(instance.getProcessId());
+
+        String businessKey = instance.getBusinessKey();
+        if (ObjectUtils.isEmpty(businessKey)) {
+            FlwHisInstance hisInstance = ChainWrappers.lambdaQueryChain(flwHisInstanceMapper)
+                    .select(FlwHisInstance::getBusinessKey)
+                    .eq(FlwHisInstance::getId, instance.getParentInstanceId())
+                    .last("limit 1")
+                    .one();
+            businessKey = hisInstance != null ? hisInstance.getBusinessKey() : null;
+        }
+
+        return ProcessContext.builder()
+                .instanceId(instanceId)
+                .businessKey(businessKey)
+                .tableName(process.getProcessType())
+                .processKey(process.getProcessKey())
+                .processName(process.getProcessName())
+                .build();
+    }
+
+    /**
+     * 处理业务逻辑
+     */
+    private void handleBusinessLogic(TaskEvent taskEvent, ProcessContext context) {
+        TaskEventType eventType = taskEvent.getEventType();
+        Map<String, Object> updates = new HashMap<>();
+
+        BiConsumer<TaskEvent, Map<String, Object>> handler = eventHandlers.get(eventType);
+        if (handler != null) {
+            handler.accept(taskEvent, updates);
+        }
+
+        if (!updates.isEmpty()) {
+            updateTable(context.getTableName(), context.getBusinessKey(), updates);
+        }
+
+        if (updates.containsKey("state") && updates.get("state").equals(2)) {
+            context.setIsFinished(true);
+        }
+    }
+
+    /**
+     * 处理变量设置
+     */
+    private void handleVariableSettings(TaskEvent taskEvent, ProcessContext context) {
+        if (!TaskEventType.create.eq(taskEvent.getEventType())) {
+            return;
+        }
+
+        try {
+            FlwTask flwTask = taskEvent.getFlwTask();
+            Optional<NodeModel> nextNodeOpt = Optional.ofNullable(flowLongEngine.queryService()
+                    .getExtInstance(context.getInstanceId())
+                    .model()
+                    .getNode(flwTask.getTaskKey())
+                    .getChildNode());
+
+            if (!nextNodeOpt.isPresent()) {
+                return;
+            }
+
+            NodeModel nodeModel = nextNodeOpt.get();
+            List<ConditionNode> conditionNodes = getConditionNodes(nodeModel);
+
+            if (ObjectUtils.isNotEmpty(conditionNodes)) {
+                Map<String, Object> fields = extractFieldsFromConditions(conditionNodes);
+                if (!fields.isEmpty()) {
+                    Map<String, Object> variables = queryTable(context.getTableName(), context.getBusinessKey(), fields);
+                    if (variables != null && !variables.isEmpty()) {
+                        flowLongEngine.runtimeService().addVariable(context.getInstanceId(), variables);
+                    }
                 }
             }
+        } catch (Exception e) {
+            log.error("处理变量设置失败", e);
+        }
+    }
+
+    /**
+     * 获取条件节点列表
+     */
+    private List<ConditionNode> getConditionNodes(NodeModel nodeModel) {
+        if (nodeModel.conditionNode()) {
+            return nodeModel.getConditionNodes();
+        } else if (nodeModel.parallelNode()) {
+            return nodeModel.getParallelNodes();
+        } else if (nodeModel.inclusiveNode()) {
+            return nodeModel.getInclusiveNodes();
+        } else if (nodeModel.routeNode()) {
+            return nodeModel.getRouteNodes();
+        }
+        return Collections.emptyList();
+    }
+
+    /**
+     * 从条件中提取字段
+     */
+    private Map<String, Object> extractFieldsFromConditions(List<ConditionNode> conditionNodes) {
+        return conditionNodes.stream()
+                .filter(ObjectUtils::isNotEmpty)
+                .flatMap(node -> Optional.ofNullable(node.getConditionList())
+                        .orElse(Collections.emptyList())
+                        .stream()
+                        .flatMap(innerList -> Optional.ofNullable(innerList)
+                                .orElse(Collections.emptyList())
+                                .stream()))
+                .filter(ObjectUtils::isNotEmpty)
+                .map(NodeExpression::getField)
+                .filter(ObjectUtils::isNotEmpty)
+                .collect(Collectors.toMap(
+                        field -> field,
+                        field -> 0,
+                        (v1, v2) -> v1
+                ));
+    }
+
+    /**
+     * 发送通知消息
+     */
+    private void sendNotificationMessage(TaskEvent taskEvent, ProcessContext context) {
+        try {
+            TaskEventType eventType = taskEvent.getEventType();
+            String templateCode = NOTIFY_TEMPLATE_MAPPING.get(eventType);
+
+            if (templateCode == null) {
+                return;
+            }
+
+            NotificationInfo notificationInfo = buildNotificationInfo(taskEvent, context, templateCode);
+            if (notificationInfo != null && !notificationInfo.getReceiverIds().isEmpty()) {
+                sendNotification(notificationInfo);
+            }
+        } catch (Exception e) {
+            log.error("发送通知消息失败", e);
+        }
+    }
+
+    /**
+     * 构建通知信息
+     */
+    private NotificationInfo buildNotificationInfo(TaskEvent taskEvent, ProcessContext context, String templateCode) {
+        TaskEventType eventType = taskEvent.getEventType();
+        Map<String, Object> templateParams = new HashMap<>();
+        Set<Long> receiverIds = new HashSet<>();
+
+        // 根据不同事件类型构建通知信息
+        switch (eventType) {
+            case create:
+            case recreate:
+            case reApproveCreate:
+            case assignment:
+                // 新任务通知处理人
+                templateParams.put("userName", getInitiatorName(taskEvent));
+                templateParams.put("processName", context.getProcessName());
+                receiverIds.addAll(getTaskActorIds(taskEvent));
+                break;
+
+            case complete:
+            case autoComplete:
+                // 流程真正结束时通知发起人
+                if (context.getIsFinished()) {
+                    templateParams.put("processName", context.getProcessName());
+                    receiverIds.add(Long.valueOf(taskEvent.getFlowCreator().getCreateId()));
+                }
+                break;
+
+            case reject:
+            case autoReject:
+                // 驳回通知发起人
+                templateParams.put("processName", context.getProcessName());
+                receiverIds.add(Long.valueOf(taskEvent.getFlowCreator().getCreateId()));
+                break;
+
+            case delegateResolve:
+                // 转交通知新处理人
+                templateParams.put("userName", getCurrentUserName());
+                receiverIds.addAll(getTaskActorIds(taskEvent));
+                break;
+
+            case timeout:
+                // 超时通知处理人
+                templateParams.put("processName", context.getProcessName());
+                receiverIds.addAll(getTaskActorIds(taskEvent));
+                break;
+
+            case cc:
+            case createCc:
+                // 抄送通知抄送人
+                templateParams.put("processName", context.getProcessName());
+                receiverIds.addAll(getTaskActorIds(taskEvent));
+                break;
+
+            default:
+                return null;
         }
 
-        // 递归检查子节点
-        JSONObject childNode = node.getJSONObject("childNode");
-        if (childNode != null) {
-            findNodeConfigRecursive(childNode, processId, result);
+        if (receiverIds.isEmpty()) {
+            return null;
         }
+
+        return NotificationInfo.builder()
+                .templateCode(templateCode)
+                .templateParams(templateParams)
+                .receiverIds(receiverIds)
+                .build();
+    }
+
+
+    /**
+     * 发送通知
+     */
+    private void sendNotification(NotificationInfo notificationInfo) {
+        for (Long receiverId : notificationInfo.getReceiverIds()) {
+            try {
+                NotifySendSingleToUserReqDTO request = new NotifySendSingleToUserReqDTO()
+                        .setUserId(receiverId)
+                        .setTemplateCode(notificationInfo.getTemplateCode())
+                        .setTemplateParams(notificationInfo.getTemplateParams());
+
+                notifySendApi.sendSingleMessageToAdmin(request);
+                log.info("发送通知成功: 用户[{}], 模板[{}]", receiverId, notificationInfo.getTemplateCode());
+            } catch (Exception e) {
+                log.error("发送通知失败: 用户[{}], 模板[{}]", receiverId, notificationInfo.getTemplateCode(), e);
+            }
+        }
+    }
+
+    /**
+     * 获取发起人姓名
+     */
+    private String getInitiatorName(TaskEvent taskEvent) {
+        try {
+            Long initiatorId = Long.valueOf(taskEvent.getFlowCreator().getCreateId());
+            AdminUserRespDTO user = adminUserApi.getUser(initiatorId);
+            return user != null ? user.getNickname() : "未知用户";
+        } catch (Exception e) {
+            log.error("获取发起人姓名失败", e);
+            return "未知用户";
+        }
+    }
+
+    /**
+     * 获取当前用户姓名
+     */
+    private String getCurrentUserName() {
+        try {
+            return SecurityFrameworkUtils.getLoginUserNickname();
+        } catch (Exception e) {
+            log.error("获取当前用户姓名失败", e);
+            return "未知用户";
+        }
+    }
+
+    /**
+     * 获取任务处理人ID列表
+     */
+    private Set<Long> getTaskActorIds(TaskEvent taskEvent) {
+        return Optional.ofNullable(taskEvent.getTaskActors())
+                .orElse(Arrays.asList(FlwTaskActor.ofFlwTask(taskEvent.getFlwTask())))
+                .stream()
+                .map(FlwTaskActor::getActorId)
+                .map(Long::valueOf)
+                .collect(Collectors.toSet());
     }
 
     private Map<TaskEventType, BiConsumer<TaskEvent, Map<String, Object>>> initEventHandlers() {
@@ -329,63 +462,40 @@ public class ProcessListener {
         // 处理需要设置处理人的事件
         BiConsumer<TaskEvent, Map<String, Object>> setHandlerAction = this::setHandler;
 
-        // 基础创建和分配类事件
         handlers.put(TaskEventType.create, setHandlerAction);
         handlers.put(TaskEventType.recreate, setHandlerAction);
         handlers.put(TaskEventType.reApproveCreate, setHandlerAction);
         handlers.put(TaskEventType.assignment, setHandlerAction);
-
-        // 认领相关事件
         handlers.put(TaskEventType.claimRole, setHandlerAction);
         handlers.put(TaskEventType.claimDepartment, setHandlerAction);
+        handlers.put(TaskEventType.delegateResolve, setHandlerAction);
+        handlers.put(TaskEventType.resume, setHandlerAction);
+        handlers.put(TaskEventType.addTaskActor, setHandlerAction);
+        handlers.put(TaskEventType.removeTaskActor, setHandlerAction);
+        handlers.put(TaskEventType.jump, setHandlerAction);
+        handlers.put(TaskEventType.routeJump, setHandlerAction);
+        handlers.put(TaskEventType.reApproveJump, setHandlerAction);
 
-        //// 跳转相关事件
-        //handlers.put(TaskEventType.rejectJump, (event, updates) -> {
-        //    setHandler(event, updates);
-        //    handleRejectToInitiator(event, updates);
-        //});
-
-        // 驳回相关事件
-        handlers.put(TaskEventType.reject, (event, updates) -> {
-            handleRejectToInitiator(event, updates);
-        });
+        // 处理驳回事件
+        handlers.put(TaskEventType.reject, this::handleRejectEvent);
 
         // 需要清空处理人的事件
         BiConsumer<TaskEvent, Map<String, Object>> clearHandlerAction = (event, updates) ->
                 updates.put("handler", "");
 
-        // 终止类事件
         handlers.put(TaskEventType.terminate, mergeActions(handlers.get(TaskEventType.terminate), clearHandlerAction));
         handlers.put(TaskEventType.autoReject, mergeActions(handlers.get(TaskEventType.autoReject), clearHandlerAction));
         handlers.put(TaskEventType.revoke, mergeActions(handlers.get(TaskEventType.revoke), clearHandlerAction));
-
-        // 自动完成
         handlers.put(TaskEventType.autoComplete, mergeActions(handlers.get(TaskEventType.autoComplete), clearHandlerAction));
-
-        // 委派和唤醒任务
-        handlers.put(TaskEventType.delegateResolve, setHandlerAction);
-        handlers.put(TaskEventType.resume, setHandlerAction);
-
-        // 任务加签、减签可能改变处理人
-        handlers.put(TaskEventType.addTaskActor, setHandlerAction);
-        handlers.put(TaskEventType.removeTaskActor, setHandlerAction);
-
-        // 撤回指定任务
         handlers.put(TaskEventType.withdraw, clearHandlerAction);
 
         // 处理完成事件
         handlers.put(TaskEventType.complete, this::handleCompleteEvent);
 
-        // 各种跳转事件
-        handlers.put(TaskEventType.jump, setHandlerAction);
-        //handlers.put(TaskEventType.autoJump, setHandlerAction);
-        handlers.put(TaskEventType.routeJump, setHandlerAction);
-        handlers.put(TaskEventType.reApproveJump, setHandlerAction);
-
         // 结束事件
         handlers.put(TaskEventType.end, (event, updates) -> {
-            updates.put("state", 2); // 设置为已完成状态
-            updates.put("handler", ""); // 清空处理人
+            updates.put("state", 2);
+            updates.put("handler", "");
         });
 
         return handlers;
@@ -403,127 +513,6 @@ public class ProcessListener {
         };
     }
 
-    @Async
-    @EventListener
-    public void onTaskEvent(TaskEvent taskEvent) {
-        try {
-            if (taskEvent.getEventType().eq(TaskEventType.update)) {
-                return;
-            }
-            FlwTask flwTask = taskEvent.getFlwTask();
-            Long instanceId = flwTask.getInstanceId();
-            TaskEventType eventType = taskEvent.getEventType();
-
-            FlwInstance instance = flowLongEngine.queryService().getInstance(instanceId);
-            FlwProcess process = flowLongEngine.processService().getProcessById(instance.getProcessId());
-
-            String businessKey = instance.getBusinessKey();
-            if (ObjectUtils.isEmpty(businessKey)) {
-                businessKey = ChainWrappers.lambdaQueryChain(flwHisInstanceMapper)
-                        .select(FlwHisInstance::getBusinessKey)
-                        .eq(FlwHisInstance::getId, instance.getParentInstanceId())
-                        .last("limit 1")
-                        .one().getBusinessKey();
-                //if(TaskEventType.start.eq(eventType)) {
-                //    String modelContent = ChainWrappers.lambdaQueryChain(flwExtInstanceMapper)
-                //            .select(FlwExtInstance::getModelContent)
-                //            .eq(FlwExtInstance::getId, instance.getParentInstanceId())
-                //            .last("limit 1")
-                //            .one().getModelContent();
-                //    JSONObject root = JSON.parseObject(modelContent);
-                //    JSONObject nodeConfig = findNodeConfig(root.getJSONObject("nodeConfig"), instance.getProcessId().toString());
-                //    JSONObject model = JSON.parseObject(process.getModelContent());
-                //    model.put("nodeConfig", nodeConfig);
-                //    ChainWrappers.lambdaUpdateChain(flwExtInstanceMapper)
-                //            .set(FlwExtInstance::getModelContent, model.toJSONString())
-                //            .eq(FlwExtInstance::getId, instanceId)
-                //            .update();
-                //}
-            }
-            String tableName = process.getProcessType();
-            String processKey = process.getProcessKey();
-
-            log.info("处理流程[{}]处理事件[{}]表[{}]业务ID[{}]", processKey, eventType.name(), tableName, businessKey);
-
-            Map<String, Object> updates = new HashMap<>();
-
-            // 调用对应的事件处理器
-            BiConsumer<TaskEvent, Map<String, Object>> handler = eventHandlers.get(eventType);
-            if (handler != null) {
-                handler.accept(taskEvent, updates);
-            }
-
-            // 执行更新
-            if (!updates.isEmpty()) {
-                updateTable(tableName, businessKey, updates);
-            }
-
-            // 统计total
-            updateUserTaskCount(taskEvent);
-
-            // 发消息
-            printMessage(taskEvent, process);
-
-            if (TaskEventType.create.eq(eventType)) {
-                Optional<NodeModel> optional = Optional.ofNullable(flowLongEngine.queryService()
-                        .getExtInstance(instanceId)
-                        .model()
-                        .getNode(flwTask.getTaskKey())
-                        .getChildNode());
-                if (optional.isPresent()) {
-                    boolean isConditionNode = optional.get().conditionNode();
-                    if (isConditionNode) {
-                        Map<String, Object> collect = optional.get().getConditionNodes().stream()
-                                .filter(ObjectUtils::isNotEmpty)
-                                .flatMap(conditionNode -> Optional.ofNullable(conditionNode.getConditionList())
-                                        .orElse(Collections.emptyList())
-                                        .stream()
-                                        .flatMap(innerList -> Optional.ofNullable(innerList)
-                                                .orElse(Collections.emptyList())
-                                                .stream()))
-                                .filter(ObjectUtils::isNotEmpty)
-                                .map(NodeExpression::getField)
-                                .filter(ObjectUtils::isNotEmpty)
-                                .collect(Collectors.toMap(
-                                        field -> field,
-                                        field -> 0,
-                                        (v1, v2) -> v1
-                                ));
-
-                        Map<String, Object> variable = queryTable(tableName, businessKey, collect);
-                        flowLongEngine.runtimeService()
-                                .addVariable(instanceId, variable);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            log.error("流程事件处理失败", e);
-        }
-    }
-
-    private void printMessage(TaskEvent event, FlwProcess process) {
-        TaskEventType eventType = event.getEventType();
-        String[] templates = MESSAGE_TEMPLATES.get(eventType);
-        if (templates == null) {
-            return; // 无消息模板的事件跳过
-        }
-
-        String title = templates[0];
-        String content = templates[1];
-
-        // 获取变量
-        String user = event.getFlowCreator() != null ? event.getFlowCreator().getCreateBy() : "未知用户";
-        String processName = process != null ? process.getProcessName() : "未知流程";
-
-        // 替换占位符
-        content = content.replace("{user}", user).replace("{process}", processName);
-
-        // 打印消息（可替换为实际消息发送接口）
-        log.info(">>> [消息标题] {}", title);
-        log.info(">>> [消息内容] {}", content);
-    }
-
-
     /**
      * 设置处理人
      */
@@ -531,75 +520,144 @@ public class ProcessListener {
         String handler = Optional.ofNullable(event.getTaskActors())
                 .orElse(Arrays.asList(FlwTaskActor.ofFlwTask(event.getFlwTask())))
                 .stream()
-                .map(FlwTaskActor::getActorName) // 后续需要改成ID
+                .map(FlwTaskActor::getActorName)
                 .collect(Collectors.joining(","));
         updates.put("handler", handler);
 
+        // 设置活跃状态
         if (InstanceState.active.eq(flowLongEngine.queryService()
                 .getHistInstance(event.getFlwTask().getInstanceId()).getInstanceState())) {
             updates.put("state", 1);
         }
-        Optional.ofNullable(event.getNodeModel())
-                .ifPresent(nodeModel -> {
-                    // 判断是否需要审批提醒
-                    if (nodeModel.getRemind()) {
-                        event.getFlwTask().setRemindTime(new Date());
-                        flwTaskMapper.updateById(event.getFlwTask());
-                    }
 
-                    if (NodeApproveSelf.initiatorThemselves.ne(nodeModel.getApproveSelf())) {
-                        // 判断审批人与提交人为同一人时
-                        if (event.getTaskActors().stream().anyMatch(e -> Objects.equals(e.getActorId(), event.getFlowCreator().getCreateId()))) {
-                            // 判断是否自动跳过
-                            if (NodeApproveSelf.AutoSkip.eq(nodeModel.getApproveSelf())) {
-                                flowLongEngine.autoJumpTask(event.getFlwTask().getId(), event.getFlowCreator());
-                                // 转交给直接上级审批
-                            } else if (NodeApproveSelf.TransferDirectSuperior.eq(nodeModel.getApproveSelf())) {
-                                AdminUserRespDTO leaderInfo = adminUserApi.getNthLevelLeader(Long.valueOf(event.getFlowCreator().getCreateId()), 1);
-                                flowLongEngine.taskService()
-                                        .transferTask(event.getFlwTask().getId(), getFlowCreator(),
-                                                FlowCreator.of(leaderInfo.getId().toString(), leaderInfo.getNickname()));
-                                // 转交给部门负责人审批
-                            } else if (NodeApproveSelf.TransferDepartmentHead.eq(nodeModel.getApproveSelf())) {
-                                Long deptId = adminUserApi.getUser(Long.valueOf(event.getFlowCreator().getCreateId())).getDeptId();
-                                Long leaderUserId = deptApi.getDept(deptId).getLeaderUserId();
-                                String nickname = adminUserApi.getUser(leaderUserId).getNickname();
-                                flowLongEngine.taskService()
-                                        .transferTask(event.getFlwTask().getId(), getFlowCreator(),
-                                                FlowCreator.of(leaderUserId.toString(), nickname));
-                            }
-                        }
-                    }
-                });
-    }
-
-    private FlowCreator getFlowCreator() {
-        return FlowCreator.of(SecurityFrameworkUtils.getLoginUserId().toString(), SecurityFrameworkUtils.getLoginUserNickname());
+        // 处理节点特殊逻辑
+        handleNodeSpecialLogic(event);
     }
 
     /**
-     * 处理驳回至发起人事件
+     * 处理节点特殊逻辑（自动跳过、转交等）
      */
-    private void handleRejectToInitiator(TaskEvent event, Map<String, Object> updates) {
-        FlwTask flwTask = event.getFlwTask();
-        Long instanceId = flwTask.getInstanceId();
+    private void handleNodeSpecialLogic(TaskEvent event) {
+        Optional.ofNullable(event.getNodeModel()).ifPresent(nodeModel -> {
+            // 设置提醒时间
+            if (nodeModel.getRemind()) {
+                event.getFlwTask().setRemindTime(new Date());
+                flwTaskMapper.updateById(event.getFlwTask());
+            }
+
+            // 处理审批人与提交人相同的情况
+            if (NodeApproveSelf.initiatorThemselves.ne(nodeModel.getApproveSelf())) {
+                handleSameApproveLogic(event, nodeModel);
+            }
+        });
+    }
+
+    /**
+     * 处理审批人与提交人相同的逻辑
+     */
+    private void handleSameApproveLogic(TaskEvent event, NodeModel nodeModel) {
+        boolean isSameUser = event.getTaskActors().stream()
+                .anyMatch(actor -> Objects.equals(actor.getActorId(), event.getFlowCreator().getCreateId()));
+
+        if (!isSameUser) {
+            return;
+        }
 
         try {
+            if (NodeApproveSelf.AutoSkip.eq(nodeModel.getApproveSelf())) {
+                // 自动跳过
+                flowLongEngine.autoJumpTask(event.getFlwTask().getId(), event.getFlowCreator());
+            } else if (NodeApproveSelf.TransferDirectSuperior.eq(nodeModel.getApproveSelf())) {
+                // 转交给直接上级
+                transferToDirectSuperior(event);
+            } else if (NodeApproveSelf.TransferDepartmentHead.eq(nodeModel.getApproveSelf())) {
+                // 转交给部门负责人
+                transferToDepartmentHead(event);
+            }
+        } catch (Exception e) {
+            log.error("处理相同审批人逻辑失败", e);
+        }
+    }
+
+    /**
+     * 转交给直接上级
+     */
+    private void transferToDirectSuperior(TaskEvent event) {
+        try {
+            AdminUserRespDTO leader = adminUserApi.getNthLevelLeader(
+                    Long.valueOf(event.getFlowCreator().getCreateId()), 1);
+            if (leader != null) {
+                flowLongEngine.taskService().transferTask(
+                        event.getFlwTask().getId(),
+                        getFlowCreator(),
+                        FlowCreator.of(leader.getId().toString(), leader.getNickname())
+                );
+            }
+        } catch (Exception e) {
+            log.error("转交给直接上级失败", e);
+        }
+    }
+
+    /**
+     * 转交给部门负责人
+     */
+    private void transferToDepartmentHead(TaskEvent event) {
+        try {
+            Long userId = Long.valueOf(event.getFlowCreator().getCreateId());
+            AdminUserRespDTO user = adminUserApi.getUser(userId);
+            if (user != null && user.getDeptId() != null) {
+                Long leaderUserId = deptApi.getDept(user.getDeptId()).getLeaderUserId();
+                if (leaderUserId != null) {
+                    String nickname = adminUserApi.getUser(leaderUserId).getNickname();
+                    flowLongEngine.taskService().transferTask(
+                            event.getFlwTask().getId(),
+                            getFlowCreator(),
+                            FlowCreator.of(leaderUserId.toString(), nickname)
+                    );
+                }
+            }
+        } catch (Exception e) {
+            log.error("转交给部门负责人失败", e);
+        }
+    }
+
+    private FlowCreator getFlowCreator() {
+        return FlowCreator.of(
+                SecurityFrameworkUtils.getLoginUserId().toString(),
+                SecurityFrameworkUtils.getLoginUserNickname()
+        );
+    }
+
+    /**
+     * 处理驳回事件
+     */
+    private void handleRejectEvent(TaskEvent event, Map<String, Object> updates) {
+        // 设置基本的驳回状态
+        updates.put("state", 3);
+
+        try {
+            FlwTask flwTask = event.getFlwTask();
+            Long instanceId = flwTask.getInstanceId();
+
             ProcessModel processModel = flowLongEngine.queryService()
                     .getExtInstance(instanceId).model();
             NodeModel currentNode = processModel.getNode(flwTask.getTaskKey());
-            if (currentNode == null) return;
 
-            NodeModel parentNode = currentNode.getParentNode();
-            if (parentNode.conditionNode()) {
-                parentNode = parentNode.getParentNode();
+            if (currentNode != null) {
+                NodeModel parentNode = currentNode.getParentNode();
+                if (parentNode != null && parentNode.conditionNode()) {
+                    parentNode = parentNode.getParentNode();
+                }
+
+                // 如果驳回到发起节点
+                if (parentNode != null && TaskType.major.eq(parentNode.getType())) {
+                    updates.put("state", 4);  // 驳回到发起节点状态
+                }
             }
-            if (parentNode != null && TaskType.major.eq(parentNode.getType())) {
-                updates.put("state", 4);  // 驳回到发起节点状态
-                updates.put("handler", "");  // 清空处理人
-            }
+
+            updates.put("handler", "");  // 清空处理人
         } catch (Exception e) {
-            log.error("处理驳回至发起人事件失败", e);
+            log.error("处理驳回事件失败", e);
         }
     }
 
@@ -607,31 +665,9 @@ public class ProcessListener {
      * 处理完成事件
      */
     private void handleCompleteEvent(TaskEvent event, Map<String, Object> updates) {
-        FlwTask flwTask = event.getFlwTask();
-        Long instanceId = flwTask.getInstanceId();
-
         try {
-            ProcessModel processModel = flowLongEngine.queryService()
-                    .getExtInstance(instanceId).model();
-
-            Optional<NodeModel> nextNode = processModel
-                    .getNode(flwTask.getTaskKey())
-                    .nextNode()
-                    .filter(ObjectUtils::isNotEmpty);
-            //List<NodeModel> nextChildNodes = ModelHelper.getNextChildNodes(
-            //        flowLongEngine.getContext(),
-            //        new Execution(FlowCreator.of(flwTask.getCreateId(), flwTask.getCreateBy(),
-            //                flwTask.getCreateBy()), null),
-            //        processModel.getNodeConfig(),
-            //        flwTask.getTaskKey()
-            //);
-
-            Optional<List<FlwTask>> activeTaskList = flowLongEngine.queryService()
-                    .getActiveTasksByInstanceId(instanceId)
-                    .filter(ObjectUtils::isNotEmpty);
-
             // 仅在最终步骤设置状态为2
-            if (isFinalStep(nextNode) && !activeTaskList.isPresent()) {
+            if (isFinalStep(event)) {
                 updates.put("state", 2);  // 审批通过状态
                 updates.put("handler", "");  // 清空处理人
             }
@@ -641,40 +677,61 @@ public class ProcessListener {
     }
 
     /**
-     * 判断是否是最终步骤
+     * 判断是否是流程的最终完成节点
      */
-    private boolean isFinalStep(List<NodeModel> nextNodes) {
-        return nextNodes.isEmpty() ||
-                nextNodes.stream().noneMatch(ModelHelper::checkExistApprovalNode);
-    }
+    private boolean isFinalStep(TaskEvent event) {
+        try {
+            FlwTask flwTask = event.getFlwTask();
+            Long instanceId = flwTask.getInstanceId();
 
-    private boolean isFinalStep(Optional<NodeModel> optional) {
-        if (optional.isPresent()) {
-            return !ModelHelper.checkExistApprovalNode(optional.get());
+            ProcessModel processModel = flowLongEngine.queryService()
+                    .getExtInstance(instanceId).model();
+
+            Optional<NodeModel> nextNode = processModel
+                    .getNode(flwTask.getTaskKey())
+                    .nextNode()
+                    .filter(ObjectUtils::isNotEmpty);
+
+            List<FlwTask> activeTasks = flowLongEngine.queryService()
+                    .getActiveTasksByInstanceId(instanceId)
+                    .orElse(Collections.emptyList());
+
+            return (!nextNode.isPresent() || !ModelHelper.checkExistApprovalNode(nextNode.get()))
+                    && activeTasks.isEmpty();
+        } catch (Exception e) {
+            log.error("判断流程是否已最终完成失败", e);
+            return false;
         }
-        return true;
     }
 
+    /**
+     * 更新用户任务统计
+     */
     private void updateUserTaskCount(TaskEvent event) {
         TaskEventType eventType = event.getEventType();
         String category = TASK_COUNT_CATEGORY.get(eventType);
         if (category == null) {
-            return; // 非统计类事件跳过
+            return;
         }
 
         String redisKey = "wf:count:" + category;
-        AtomicInteger num = new AtomicInteger(1);
-        switch (category) {
-            case "submit":
-            case "about":
-                event.getTaskActors().forEach(actor -> {
-                    redisService.incrementZSetScore(redisKey, Long.valueOf(actor.getActorId()), num.get());
-                    num.getAndIncrement();
-                });
-                break;
-            case "done":
-                redisService.incrementZSetScore(redisKey, Long.valueOf(event.getFlowCreator().getCreateId()), num.get());
-                break;
+        AtomicInteger increment = new AtomicInteger(1);
+
+        try {
+            switch (category) {
+                case "submit":
+                case "about":
+                    event.getTaskActors().forEach(actor -> {
+                        redisService.incrementZSetScore(redisKey, Long.valueOf(actor.getActorId()), increment.get());
+                        increment.getAndIncrement();
+                    });
+                    break;
+                case "done":
+                    redisService.incrementZSetScore(redisKey, Long.valueOf(event.getFlowCreator().getCreateId()), increment.get());
+                    break;
+            }
+        } catch (Exception e) {
+            log.error("更新用户任务统计失败", e);
         }
     }
 

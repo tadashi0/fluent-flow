@@ -65,7 +65,7 @@ onMounted(() => {
                 <img alt="" class="message-icon" src="@/assets/imgs/avatar.gif" />
                 <div class="message-content">
                   <span class="message-title">
-                    {{ item.templateNickname }}：{{ item.templateContent }}
+                    {{ !item.templateCode?.startsWith('flow-') ? `${item.templateNickname}：` : ''}}{{ item.templateContent }}
                   </span>
                   <span class="message-date">
                     {{ formatDate(item.createTime) }}

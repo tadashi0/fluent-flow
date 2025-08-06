@@ -3,7 +3,6 @@ package cn.tdx.module.workflow.dal;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AccessLevel;
 import lombok.Data;
-import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
 
 import java.util.Date;
@@ -14,7 +13,6 @@ import java.util.Date;
  * description
  */
 @Data
-@Accessors(chain = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TodoListVO {
     // 实例ID

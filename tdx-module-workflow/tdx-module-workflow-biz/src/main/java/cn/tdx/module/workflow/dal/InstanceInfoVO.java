@@ -2,7 +2,6 @@ package cn.tdx.module.workflow.dal;
 
 import lombok.AccessLevel;
 import lombok.Data;
-import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
 
 /**
@@ -11,7 +10,6 @@ import lombok.experimental.FieldDefaults;
  * description
  */
 @Data
-@Accessors(chain = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class InstanceInfoVO {
     // 实例ID

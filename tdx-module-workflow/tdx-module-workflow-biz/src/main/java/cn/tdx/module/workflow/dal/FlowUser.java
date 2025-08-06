@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AccessLevel;
 import lombok.Data;
-import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
 
 import java.util.Date;
@@ -18,7 +17,6 @@ import java.util.Date;
  * @date 2025-04-22
  */
 @Data
-@Accessors(chain = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TableName(value = "flow_user", autoResultMap = true)
