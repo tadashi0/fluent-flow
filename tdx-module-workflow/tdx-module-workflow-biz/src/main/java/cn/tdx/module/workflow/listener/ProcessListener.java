@@ -1,14 +1,16 @@
 package cn.tdx.module.workflow.listener;
 
-import cn.qhdl.framework.security.core.util.SecurityFrameworkUtils;
-import cn.qhdl.module.system.api.dept.DeptApi;
-import cn.qhdl.module.system.api.notify.NotifyMessageSendApi;
-import cn.qhdl.module.system.api.notify.dto.NotifySendSingleToUserReqDTO;
-import cn.qhdl.module.system.api.user.AdminUserApi;
-import cn.qhdl.module.system.api.user.dto.AdminUserRespDTO;
-import cn.qhdl.module.workflow.dal.NotificationInfo;
-import cn.qhdl.module.workflow.dal.ProcessContext;
-import cn.qhdl.module.workflow.service.impl.RedisService;
+import cn.tdx.framework.security.core.util.SecurityFrameworkUtils;
+import cn.tdx.module.system.api.dept.DeptApi;
+import cn.tdx.module.system.api.mail.MailSendApi;
+import cn.tdx.module.system.api.mail.dto.MailSendSingleToUserReqDTO;
+import cn.tdx.module.system.api.notify.NotifyMessageSendApi;
+import cn.tdx.module.system.api.notify.dto.NotifySendSingleToUserReqDTO;
+import cn.tdx.module.system.api.user.AdminUserApi;
+import cn.tdx.module.system.api.user.dto.AdminUserRespDTO;
+import cn.tdx.module.workflow.dal.NotificationInfo;
+import cn.tdx.module.workflow.dal.ProcessContext;
+import cn.tdx.module.workflow.service.impl.RedisService;
 import com.aizuda.bpm.engine.FlowLongEngine;
 import com.aizuda.bpm.engine.assist.ObjectUtils;
 import com.aizuda.bpm.engine.core.FlowCreator;
@@ -63,6 +65,8 @@ public class ProcessListener {
     private final AdminUserApi adminUserApi;
     private final DeptApi deptApi;
     private final NotifyMessageSendApi notifySendApi;
+    private final MailSendApi mailSendApi;
+
     /**
      * 事件处理器映射
      */
@@ -400,12 +404,20 @@ public class ProcessListener {
     private void sendNotification(NotificationInfo notificationInfo) {
         for (Long receiverId : notificationInfo.getReceiverIds()) {
             try {
-                NotifySendSingleToUserReqDTO request = new NotifySendSingleToUserReqDTO()
+                NotifySendSingleToUserReqDTO notifyRequest = new NotifySendSingleToUserReqDTO()
                         .setUserId(receiverId)
                         .setTemplateCode(notificationInfo.getTemplateCode())
                         .setTemplateParams(notificationInfo.getTemplateParams());
 
-                notifySendApi.sendSingleMessageToAdmin(request);
+                notifySendApi.sendSingleMessageToAdmin(notifyRequest);
+
+                MailSendSingleToUserReqDTO mailRequest = new MailSendSingleToUserReqDTO()
+                        .setUserId(receiverId)
+                        .setTemplateCode(notificationInfo.getTemplateCode())
+                        .setTemplateParams(notificationInfo.getTemplateParams());
+
+                mailSendApi.sendSingleMailToAdmin(mailRequest);
+
                 log.info("发送通知成功: 用户[{}], 模板[{}]", receiverId, notificationInfo.getTemplateCode());
             } catch (Exception e) {
                 log.error("发送通知失败: 用户[{}], 模板[{}]", receiverId, notificationInfo.getTemplateCode(), e);
