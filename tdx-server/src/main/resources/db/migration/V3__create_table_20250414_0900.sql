@@ -22,7 +22,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ----------------------------
 DROP TABLE IF EXISTS `flw_ext_instance`;
 CREATE TABLE `flw_ext_instance` (
-  `id` bigint(20) NOT NULL COMMENT '主键ID',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `tenant_id` varchar(50) DEFAULT NULL COMMENT '租户ID',
   `process_id` bigint(20) NOT NULL COMMENT '流程定义ID',
   `process_name` varchar(100) DEFAULT NULL COMMENT '流程名称',
@@ -38,7 +38,7 @@ CREATE TABLE `flw_ext_instance` (
 -- ----------------------------
 DROP TABLE IF EXISTS `flw_his_instance`;
 CREATE TABLE `flw_his_instance` (
-  `id` bigint(20) NOT NULL COMMENT '主键ID',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `tenant_id` varchar(50) DEFAULT NULL COMMENT '租户ID',
   `create_id` varchar(50) NOT NULL COMMENT '创建人ID',
   `create_by` varchar(50) NOT NULL COMMENT '创建人名称',
@@ -70,7 +70,7 @@ CREATE TABLE `flw_his_instance` (
 -- ----------------------------
 DROP TABLE IF EXISTS `flw_his_task`;
 CREATE TABLE `flw_his_task` (
-  `id` bigint(20) NOT NULL COMMENT '主键ID',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `tenant_id` varchar(50) DEFAULT NULL COMMENT '租户ID',
   `create_id` varchar(50) NOT NULL COMMENT '创建人ID',
   `create_by` varchar(50) NOT NULL COMMENT '创建人名称',
@@ -106,7 +106,7 @@ CREATE TABLE `flw_his_task` (
 -- ----------------------------
 DROP TABLE IF EXISTS `flw_his_task_actor`;
 CREATE TABLE `flw_his_task_actor` (
-  `id` bigint(20) NOT NULL COMMENT '主键 ID',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `tenant_id` varchar(50) DEFAULT NULL COMMENT '租户ID',
   `instance_id` bigint(20) NOT NULL COMMENT '流程实例ID',
   `task_id` bigint(20) NOT NULL COMMENT '任务ID',
@@ -128,7 +128,7 @@ CREATE TABLE `flw_his_task_actor` (
 -- ----------------------------
 DROP TABLE IF EXISTS `flw_instance`;
 CREATE TABLE `flw_instance` (
-  `id` bigint(20) NOT NULL COMMENT '主键ID',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `tenant_id` varchar(50) DEFAULT NULL COMMENT '租户ID',
   `create_id` varchar(50) NOT NULL COMMENT '创建人ID',
   `create_by` varchar(50) NOT NULL COMMENT '创建人名称',
@@ -154,7 +154,7 @@ CREATE TABLE `flw_instance` (
 -- ----------------------------
 DROP TABLE IF EXISTS `flw_process`;
 CREATE TABLE `flw_process` (
-  `id` bigint(20) NOT NULL COMMENT '主键ID',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `tenant_id` varchar(50) DEFAULT NULL COMMENT '租户ID',
   `create_id` varchar(50) NOT NULL COMMENT '创建人ID',
   `create_by` varchar(50) NOT NULL COMMENT '创建人名称',
@@ -179,7 +179,7 @@ CREATE TABLE `flw_process` (
 -- ----------------------------
 DROP TABLE IF EXISTS `flw_task`;
 CREATE TABLE `flw_task` (
-  `id` bigint(20) NOT NULL COMMENT '主键ID',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `tenant_id` varchar(50) DEFAULT NULL COMMENT '租户ID',
   `create_id` varchar(50) NOT NULL COMMENT '创建人ID',
   `create_by` varchar(50) NOT NULL COMMENT '创建人名称',
@@ -208,7 +208,7 @@ CREATE TABLE `flw_task` (
 -- ----------------------------
 DROP TABLE IF EXISTS `flw_task_actor`;
 CREATE TABLE `flw_task_actor` (
-  `id` bigint(20) NOT NULL COMMENT '主键 ID',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `tenant_id` varchar(50) DEFAULT NULL COMMENT '租户ID',
   `instance_id` bigint(20) NOT NULL COMMENT '流程实例ID',
   `task_id` bigint(20) NOT NULL COMMENT '任务ID',
@@ -232,7 +232,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- ----------------------------
 DROP TABLE IF EXISTS `flow_user`;
 CREATE TABLE `flow_user` (
-  `id` bigint(20) NOT NULL COMMENT '主键',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `name` varchar(255) DEFAULT NULL COMMENT '名字',
   `age` int(11) DEFAULT NULL COMMENT '年龄',
   `state` int(2) DEFAULT 0 COMMENT '审批状态',
