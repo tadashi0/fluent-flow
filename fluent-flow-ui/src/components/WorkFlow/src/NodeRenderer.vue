@@ -333,18 +333,6 @@
     </div>
   </div>
 
-  <!-- 未知节点类型 -->
-  <div v-else class="workflow-item">
-    <div class="workflow-icon">
-      <span>?</span>
-    </div>
-    <div class="workflow-line"></div>
-    <div class="workflow-content">
-      <div class="workflow-title">{{ node.nodeName || '未知节点类型' }}</div>
-      <div class="workflow-desc">类型: {{ node.type }}</div>
-    </div>
-  </div>
-
   <node-renderer v-if="node.childNode && ![3].includes(node.type)" :node="node.childNode" :mode="mode" />
 
   <!-- 添加用户/角色选择模态框 -->
