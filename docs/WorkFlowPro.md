@@ -6,7 +6,7 @@
 ## ✅ 引入组件
 
 ```vue
-import WorkFlowPro from '@/components/WorkFlowPro.vue'
+import { WorkFlowPro } from '@/components/WorkFlow'
 ```
 
 ## 🧩 基本用法
