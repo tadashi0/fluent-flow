@@ -10,7 +10,6 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-*.local
 
 # Editor directories and files
 .vscode/*
@@ -24,7 +23,6 @@ dist-ssr
 *.log
 *.lock
 package-lock.json
-pnpm-lock.yaml
 
 HELP.md
 target/
