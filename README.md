@@ -44,15 +44,15 @@
 
 | 接口功能           | 方法 | 路径                                 |
 |--------------------|------|--------------------------------------|
-| 保存流程实例       | POST | `/task/save`                         |
-| 发起流程           | POST | `/task/start`                        |
-| 获取流程实例状态   | GET  | `/task/status`                      |
-| 同意流程           | PUT  | `/task/agree`                       |
-| 驳回流程           | PUT  | `/task/reject`                      |
-| 终止流程           | PUT  | `/task/terminate`                   |
-| 回退任务           | PUT  | `/task/rollback`                    |
-| 转交任务           | PUT  | `/task/transfer`                    |
-| 加签任务           | PUT  | `/task/countersign`                 |
+| 保存流程实例       | POST | `/flow/task/save`                         |
+| 发起流程           | POST | `/flow/task/start`                        |
+| 获取流程实例状态   | GET  | `/flow/task/status`                      |
+| 同意流程           | PUT  | `/flow/task/agree`                       |
+| 驳回流程           | PUT  | `/flow/task/reject`                      |
+| 终止流程           | PUT  | `/flow/task/terminate`                   |
+| 回退任务           | PUT  | `/flow/task/rollback`                    |
+| 转交任务           | PUT  | `/flow/task/transfer`                    |
+| 加签任务           | PUT  | `/flow/task/countersign`                 |
 
 ---
 
@@ -70,14 +70,13 @@
 
 ## 🛠️ 项目部署指南（简要）
 
-1. 初始化数据库并执行 Flyway 自动建表。
-2. 配置数据库、Redis 等相关连接信息。
-3. 启动后端 Spring Boot 服务。
-4. 启动前端项目：
+1. 配置项目数据库、Redis 等相关连接信息。
+2. 启动后端 Spring Boot 服务后自动创建数据库和表。
+3. 启动前端项目：
 
 ```bash
-cd front
-npm install
+cd fluent-flow-ui
+pnpm install
 npm run dev
 ``` 
 ---
