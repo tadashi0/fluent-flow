@@ -553,61 +553,20 @@ const handleSelectorClosed = () => {
     // 创建一个更新函数，描述如何更新当前节点
     const updateFn = (rootNode) => {
       // 辅助函数用于递归查找和更新节点
-      const findAndUpdateNode = (node) => {
+      const traverseAndUpdate = (node, matcher, updater) => {
         if (!node) return node;
+        if (matcher(node)) return updater(node);
 
-        // 如果找到了当前正在编辑的节点
-        if (node === currentEditingNode.value) {
-          // 更新当前节点
-          return {
-            ...node,
-            nodeAssigneeList: selectedItems
-          };
-        }
-
-        // 递归检查childNode
-        if (node.childNode) {
-          const updatedChildNode = findAndUpdateNode(node.childNode);
-          if (updatedChildNode !== node.childNode) {
-            return { ...node, childNode: updatedChildNode };
+        const childProps = ['childNode', 'conditionNodes', 'parallelNodes', 'inclusiveNodes', 'routeNodes'];
+        for (const prop of childProps) {
+          if (Array.isArray(node[prop])) {
+            node[prop] = node[prop].map(n => traverseAndUpdate(n, matcher, updater));
+          } else if (node[prop]) {
+            node[prop] = traverseAndUpdate(node[prop], matcher, updater);
           }
         }
-
-        // 处理条件分支节点
-        if (node.conditionNodes) {
-          const newConditionNodes = [...node.conditionNodes];
-          let updated = false;
-
-          for (let i = 0; i < newConditionNodes.length; i++) {
-            const updatedNode = findAndUpdateNode(newConditionNodes[i]);
-            if (updatedNode !== newConditionNodes[i]) {
-              newConditionNodes[i] = updatedNode;
-              updated = true;
-            }
-
-            // 还需要检查每个条件节点的childNode
-            if (newConditionNodes[i].childNode) {
-              const updatedChildNode = findAndUpdateNode(newConditionNodes[i].childNode);
-              if (updatedChildNode !== newConditionNodes[i].childNode) {
-                newConditionNodes[i] = { ...newConditionNodes[i], childNode: updatedChildNode };
-                updated = true;
-              }
-            }
-          }
-
-          if (updated) {
-            return { ...node, conditionNodes: newConditionNodes };
-          }
-        }
-
-        // 处理其他类型的分支节点
-        // ... (为其他节点类型添加类似的处理逻辑)
-
         return node;
       };
-
-      // 从根节点开始查找
-      return findAndUpdateNode(rootNode);
     };
 
     // 调用父组件提供的更新函数
