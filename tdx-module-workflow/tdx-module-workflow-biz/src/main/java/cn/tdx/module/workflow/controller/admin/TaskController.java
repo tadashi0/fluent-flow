@@ -1,14 +1,13 @@
 package cn.tdx.module.workflow.controller.admin;
 
-import cn.tdx.framework.common.pojo.CommonResult;
-import cn.tdx.framework.security.core.util.SecurityFrameworkUtils;
-import cn.tdx.module.system.api.user.AdminUserApi;
-import cn.tdx.module.system.api.user.dto.AdminUserRespDTO;
-import cn.tdx.module.workflow.dal.*;
-import cn.tdx.module.workflow.service.TaskService;
+import cn.qhdl.framework.common.pojo.CommonResult;
+import cn.qhdl.framework.security.core.util.SecurityFrameworkUtils;
+import cn.qhdl.module.system.api.user.AdminUserApi;
+import cn.qhdl.module.system.api.user.dto.AdminUserRespDTO;
+import cn.qhdl.module.workflow.dal.*;
+import cn.qhdl.module.workflow.service.TaskService;
 import com.aizuda.bpm.engine.FlowLongEngine;
 import com.aizuda.bpm.engine.TaskActorProvider;
-import com.aizuda.bpm.engine.assist.DateUtils;
 import com.aizuda.bpm.engine.assist.ObjectUtils;
 import com.aizuda.bpm.engine.core.Execution;
 import com.aizuda.bpm.engine.core.FlowCreator;
@@ -30,6 +29,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.toolkit.ChainWrappers;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -48,10 +48,6 @@ public class TaskController implements TaskActorProvider {
     private final FlwExtInstanceMapper flwExtInstanceMapper;
     private final FlwHisTaskMapper flwHisTaskMapper;
     private final AdminUserApi adminUserApi;
-    
-    private FlowCreator getFlowCreator() {
-        return FlowCreator.of(SecurityFrameworkUtils.getLoginUserId().toString(), SecurityFrameworkUtils.getLoginUserNickname());
-    }
 
     public static JSONObject findNodeConfig(JSONObject root, String processId) {
         JSONObject result = new JSONObject();
@@ -107,6 +103,10 @@ public class TaskController implements TaskActorProvider {
         if (childNode != null) {
             findInNode(childNode, targetKey, result);
         }
+    }
+
+    private FlowCreator getFlowCreator() {
+        return FlowCreator.of(SecurityFrameworkUtils.getLoginUserId().toString(), SecurityFrameworkUtils.getLoginUserNickname());
     }
 
     /**
@@ -498,6 +498,9 @@ public class TaskController implements TaskActorProvider {
                                                 if (parentNode.conditionNode()) {
                                                     parentNode = parentNode.getParentNode();
                                                 }
+                                                if (parentNode.getTermAuto()) {
+                                                    task.setExpireTime(DateUtils.addHours(new Date(), parentNode.getTerm()));
+                                                }
                                                 flowLongEngine.executeRejectTask(
                                                         task,
                                                         null,
@@ -650,7 +653,7 @@ public class TaskController implements TaskActorProvider {
                                             .ifPresent(task -> {
                                                 NodeModel nodeModel = new NodeModel();
                                                 nodeModel.setNodeName(data.getNodeName());
-                                                nodeModel.setNodeKey("flk" + DateUtils.getCurrentDate().getTime());
+                                                nodeModel.setNodeKey("flk" + new Date().getTime());
                                                 nodeModel.setType(1);
                                                 nodeModel.setSetType(1);
                                                 nodeModel.setExamineMode(1);

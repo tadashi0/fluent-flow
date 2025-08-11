@@ -25,7 +25,7 @@ public class FlowUser {
     /**
      * 主键
      */
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId
     Long id;
 
     /**

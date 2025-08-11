@@ -1,6 +1,5 @@
 package cn.tdx.module.workflow.config;
 
-import com.aizuda.bpm.engine.FlowLongScheduler;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.scheduling.support.CronTrigger;

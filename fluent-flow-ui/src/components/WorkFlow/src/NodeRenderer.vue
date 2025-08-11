@@ -1,353 +1,354 @@
 <template>
-<div class="workflow-container">
-  <!-- 发起人节点 -->
-  <div v-if="node.type === 0" class="workflow-item">
-    <div class="workflow-icon">
-      <!-- <span>发</span>
+  <div class="workflow-container">
+    <!-- 发起人节点 -->
+    <div v-if="node.type === 0" class="workflow-item">
+      <div class="workflow-icon">
+        <!-- <span>发</span>
       <div v-if="node.taskState !== undefined" class="status-indicator" :class="getStatusIndicatorClass(node)"></div> -->
-      <span>{{ node.nodeAssigneeList?.[0].name?.substring(0, 1) || '发' }}</span>
-      <div v-if="node.taskState !== undefined" class="status-indicator" :class="getStatusIndicatorClass(node)"></div>
-    </div>
-    <div class="workflow-line"></div>
-    <div class="workflow-content">
-      <div class="workflow-title">{{ node.nodeName || '发起人' }}</div>
-      <div class="workflow-desc">
-        {{ formatAssignees(node.nodeAssigneeList) || '发起人自己' }}
+        <span>{{ node.nodeAssigneeList?.[0].name?.substring(0, 1) || '发' }}</span>
+        <div v-if="node.taskState !== undefined" class="status-indicator" :class="getStatusIndicatorClass(node)"></div>
       </div>
-      <!-- 任务历史记录 -->
-      <div v-if="node.taskList && node.taskList.length > 0" class="task-history">
-        <div v-for="(task, index) in node.taskList" :key="index" class="task-history-item">
-          <div class="task-history-avatar">
-            <span>{{ task?.assignor?.substring(0, 1) || 'a' }}</span>
-            <div class="status-indicator" :class="getStatusIndicatorClass({taskState: task.taskState})"></div>
-          </div>
-          <div class="task-history-content">
-            <div class="task-history-header">
-              <span class="task-history-user">{{ task?.assignor || 'admin' }}</span>
-              <span class="task-history-time">{{ getStartNodeStateText({taskState: task.taskState}) }} {{ formatTime(task.finishTime) }}</span>
+      <div class="workflow-line"></div>
+      <div class="workflow-content">
+        <div class="workflow-title">{{ node.nodeName || '发起人' }}</div>
+        <div class="workflow-desc">
+          {{ formatAssignees(node.nodeAssigneeList) || '发起人自己' }}
+        </div>
+        <!-- 任务历史记录 -->
+        <div v-if="node.taskList && node.taskList.length > 0" class="task-history">
+          <div v-for="(task, index) in node.taskList" :key="index" class="task-history-item">
+            <div class="task-history-avatar">
+              <span>{{ task?.assignor?.substring(0, 1) || 'a' }}</span>
+              <div class="status-indicator" :class="getStatusIndicatorClass({ taskState: task.taskState })"></div>
             </div>
-            <div v-if="task.duration" class="task-history-duration">
-              处理耗时: {{ formatDuration(task.duration) }}
-            </div>
-            <div v-if="task.variable && JSON.parse(task.variable)?.comment && task.taskState !== 0" class="task-history-comment">
-              {{ JSON.parse(task.variable)?.comment || '' }}
+            <div class="task-history-content">
+              <div class="task-history-header">
+                <span class="task-history-user">{{ task?.assignor || 'admin' }}</span>
+                <span class="task-history-time">{{ getStartNodeStateText({ taskState: task.taskState }) }} {{
+                  formatTime(task.finishTime) }}</span>
+              </div>
+              <div v-if="task.duration" class="task-history-duration">
+                处理耗时: {{ formatDuration(task.duration) }}
+              </div>
+              <div v-if="task.variable && JSON.parse(task.variable)?.comment && task.taskState !== 0"
+                class="task-history-comment">
+                {{ JSON.parse(task.variable)?.comment || '' }}
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- 审批人节点 -->
-  <div v-else-if="node.type === 1" class="workflow-item">
-    <div class="workflow-icon">
-      <!-- <span>审</span> -->
-      <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
-      <div v-if="node.taskState !== undefined" class="status-indicator" :class="getStatusIndicatorClass(node)"></div>
-    </div>
-    <div class="workflow-line"></div>
-    <div class="workflow-content">
-      <div class="workflow-title">{{ node.nodeName || '审批人' }} <span v-if="node.taskState !== undefined" class="state-tag">{{ getNodeStateText(node) }}</span></div>
-      <div class="workflow-desc">
-        <div>{{ getApproveTypeText(node.setType) }}</div>
-        <div v-if="node.examineMode">{{ getExamineModeText(node.examineMode) }}</div>
-        <div v-if="showAssignees(node)">
-          {{ formatAssignees(node.nodeAssigneeList)}}
-        </div>
-        <div v-if="node.nodeCandidate && node.nodeCandidate.assignees?.length">
-          {{ getCandidateTypeText(node.nodeCandidate.type) }}：
-          {{ formatAssignees(node.nodeCandidate.assignees) }}
-        </div>
-        <div v-if="node.setType === 2 || node.setType === 6">
-          {{ getLevelText(node) }}
-        </div>
-        <div v-if="node.examineMode === 4 && node.passWeight">
-          通过权重: {{ node.passWeight }}%
-        </div>
-        <div v-if="node.termAuto">
-          审批期限: {{ node.term }}小时
-          (超时{{ node.termMode === 0 ? '自动通过' : '自动拒绝' }})
-        </div>
+    <!-- 审批人节点 -->
+    <div v-else-if="node.type === 1" class="workflow-item">
+      <div class="workflow-icon">
+        <!-- <span>审</span> -->
+        <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
+        <div v-if="node.taskState !== undefined" class="status-indicator" :class="getStatusIndicatorClass(node)"></div>
       </div>
-      
-      <!-- 任务历史记录 -->
-      <div v-if="node.taskList && node.taskList.length > 0" class="task-history">
-        <div v-for="(task, index) in node.taskList" :key="index" class="task-history-item">
-          <div class="task-history-avatar">
-            <span>{{ task?.assignor?.substring(0, 1) || 'a' }}</span>
-            <div class="status-indicator" :class="getStatusIndicatorClass({taskState: task.taskState})"></div>
+      <div class="workflow-line"></div>
+      <div class="workflow-content">
+        <div class="workflow-title">{{ node.nodeName || '审批人' }} <span v-if="node.taskState !== undefined"
+            class="state-tag">{{ getNodeStateText(node) }}</span></div>
+        <div class="workflow-desc">
+          <div>{{ getApproveTypeText(node.setType) }}</div>
+          <div v-if="node.examineMode">{{ getExamineModeText(node.examineMode) }}</div>
+          <div v-if="showAssignees(node)">
+            {{ formatAssignees(node.nodeAssigneeList) }}
           </div>
-          <div class="task-history-content">
-            <div class="task-history-header">
-              <span class="task-history-user">{{ task?.assignor || 'admin' }}</span>
-              <span class="task-history-time">{{ getNodeStateText({taskState: task.taskState}) }} {{ formatTime(task.finishTime) }}</span>
-            </div>
-            <div v-if="task.duration" class="task-history-duration">
-              处理耗时: {{ formatDuration(task.duration) }}
-            </div>
-            <div v-if="task.variable && task.taskState !== 0" class="task-history-comment">
-              {{ JSON.parse(task.variable)?.comment || '' }}
-            </div>
-            <div v-if="task.taskState === 1 && task.variable && JSON.parse(task.variable)?.reclaimNodeName" class="task-history-reclaim">
-              回退至: {{ JSON.parse(task.variable)?.reclaimNodeName }}
-            </div>
-            <div v-if="task.expireTime" class="task-history-expire">
-              期望完成时间: {{ formatTime(task.expireTime) }}
-            </div>
-            <div v-if="task.nodeTransfer" class="task-history-transfer">
-              {{ task.nodeTransfer }}
-            </div>
+          <div v-if="node.nodeCandidate && node.nodeCandidate.assignees?.length">
+            {{ getCandidateTypeText(node.nodeCandidate.type) }}：
+            {{ formatAssignees(node.nodeCandidate.assignees) }}
+          </div>
+          <div v-if="node.setType === 2 || node.setType === 6">
+            {{ getLevelText(node) }}
+          </div>
+          <div v-if="node.examineMode === 4 && node.passWeight">
+            通过权重: {{ node.passWeight }}%
+          </div>
+          <div v-if="node.termAuto">
+            审批期限: {{ node.term }}小时
+            (超时{{ node.termMode === null ? '自动结束' : node.termMode === 0 ? '自动通过' : '自动拒绝' }})
           </div>
         </div>
+
+        <!-- 任务历史记录 -->
+        <div v-if="node.taskList && node.taskList.length > 0" class="task-history">
+          <div v-for="(task, index) in node.taskList" :key="index" class="task-history-item">
+            <div class="task-history-avatar">
+              <span>{{ task?.assignor?.substring(0, 1) || 'a' }}</span>
+              <div class="status-indicator" :class="getStatusIndicatorClass({ taskState: task.taskState })"></div>
+            </div>
+            <div class="task-history-content">
+              <div class="task-history-header">
+                <span class="task-history-user">{{ task?.assignor || 'admin' }}</span>
+                <span class="task-history-time">{{ getNodeStateText({ taskState: task.taskState }) }} {{
+                  formatTime(task.finishTime) }}</span>
+              </div>
+              <div v-if="task.duration" class="task-history-duration">
+                处理耗时: {{ formatDuration(task.duration) }}
+              </div>
+              <div v-if="task.variable && task.taskState !== 0" class="task-history-comment">
+                {{ JSON.parse(task.variable)?.comment || '' }}
+              </div>
+              <div v-if="task.taskState === 1 && task.variable && JSON.parse(task.variable)?.reclaimNodeName"
+                class="task-history-reclaim">
+                回退至: {{ JSON.parse(task.variable)?.reclaimNodeName }}
+              </div>
+              <div v-if="task.expireTime" class="task-history-expire">
+                期望完成时间: {{ formatTime(task.expireTime) }}
+              </div>
+              <div v-if="task.nodeTransfer" class="task-history-transfer">
+                {{ task.nodeTransfer }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 编辑模式下的添加按钮 -->
+      <div v-if="mode === 'edit' && node.setType === 4" class="edit-add-btn" @click="handleAddCandidate">
+        <div class="add-icon">+</div>
       </div>
     </div>
-    <!-- 编辑模式下的添加按钮 -->
-    <div v-if="mode === 'edit' && node.setType === 4" 
-       class="edit-add-btn"
-       @click="handleAddCandidate">
-      <div class="add-icon">+</div>
-    </div>
-  </div>
 
     <!-- 抄送人节点 -->
-  <div v-else-if="node.type === 2" class="workflow-item">
-    <div class="workflow-icon">
-      <span>抄</span>
-    </div>
-    <div class="workflow-line"></div>
-    <div class="workflow-content">
-      <div class="workflow-title">{{ node.nodeName || '抄送人' }}</div>
-      <div class="workflow-desc">
-        {{ formatAssignees(node.nodeAssigneeList) }}
-        <div v-if="node.allowSelection">允许发起人自选抄送人</div>
+    <div v-else-if="node.type === 2" class="workflow-item">
+      <div class="workflow-icon">
+        <span>抄</span>
+      </div>
+      <div class="workflow-line"></div>
+      <div class="workflow-content">
+        <div class="workflow-title">{{ node.nodeName || '抄送人' }}</div>
+        <div class="workflow-desc">
+          {{ formatAssignees(node.nodeAssigneeList) }}
+          <div v-if="node.allowSelection">允许发起人自选抄送人</div>
+        </div>
+      </div>
+      <!-- 编辑模式下的添加按钮 -->
+      <div v-if="mode === 'edit' && node.allowSelection" class="edit-add-btn" @click="handleAddCandidate">
+        <div class="add-icon">+</div>
       </div>
     </div>
-    <!-- 编辑模式下的添加按钮 -->
-    <div v-if="mode === 'edit' && node.allowSelection" 
-       class="edit-add-btn"
-       @click="handleAddCandidate">
-      <div class="add-icon">+</div>
-    </div>
-  </div>
 
-  <!-- 条件分支节点 -->
-  <div v-else-if="node.type === 4" class="workflow-item condition-branch">
-    <div class="workflow-icon">
-      <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
+    <!-- 条件分支节点 -->
+    <div v-else-if="node.type === 4" class="workflow-item condition-branch">
+      <div class="workflow-icon">
+        <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
+      </div>
+      <div class="workflow-line"></div>
+      <div class="workflow-content">
+        <div class="workflow-title">{{ node.nodeName || '条件分支' }}</div>
+        <div class="condition-groups">
+          <div v-for="(cn, index) in node.conditionNodes" :key="index" class="condition-group">
+            <div class="condition-title">{{ cn.nodeName || '条件' + (index + 1) }}</div>
+            <div class="condition-expressions">
+              <div v-for="(group, groupIndex) in cn.conditionList" :key="groupIndex" class="expression-group">
+                <div class="group-operator" v-if="groupIndex > 0">或</div>
+                <div class="expression-items">
+                  <div v-for="(expr, exprIndex) in group" :key="exprIndex" class="expression-item">
+                    <div class="item-operator" v-if="exprIndex > 0">且</div>
+                    <div class="item-content">
+                      {{ formatExpression(expr) }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <node-renderer v-if="cn.childNode" :node="cn.childNode" :mode="mode" />
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="workflow-line"></div>
-    <div class="workflow-content">
-      <div class="workflow-title">{{ node.nodeName || '条件分支' }}</div>
-      <div class="condition-groups">
-        <div v-for="(cn, index) in node.conditionNodes" :key="index" class="condition-group">
-          <div class="condition-title">{{ cn.nodeName || '条件' + (index + 1) }}</div>
-          <div class="condition-expressions">
-            <div v-for="(group, groupIndex) in cn.conditionList" :key="groupIndex" class="expression-group">
-              <div class="group-operator" v-if="groupIndex > 0">或</div>
-              <div class="expression-items">
-                <div v-for="(expr, exprIndex) in group" :key="exprIndex" class="expression-item">
-                  <div class="item-operator" v-if="exprIndex > 0">且</div>
-                  <div class="item-content">
-                    {{ formatExpression(expr) }}
+
+    <!-- 办理子流程 -->
+    <div v-else-if="node.type === 5" class="workflow-item">
+      <div class="workflow-icon">
+        <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
+        <div v-if="node.taskState !== undefined" class="status-indicator" :class="getStatusIndicatorClass(node)"></div>
+      </div>
+      <div class="workflow-line"></div>
+      <div class="workflow-content">
+        <div class="workflow-title">
+          {{ node.nodeName || '子流程' }}
+          <span v-if="node.taskState !== undefined" class="state-tag">{{ getNodeStateText(node) }}</span>
+        </div>
+        <div class="workflow-desc">
+          <div v-if="node.callProcess">
+            调用流程: {{ getProcessName(node.callProcess) }}
+          </div>
+          <div v-if="node.actionUrl">
+            表单URL: {{ node.actionUrl }}
+          </div>
+          <div v-if="node.state">
+            审批状态:流程{{ getProcessStateText(node.state) || '待发起' }}
+          </div>
+        </div>
+
+        <!-- 子流程内容渲染 -->
+        <div v-if="node.nodeConfig" class="sub-process-container">
+          <node-renderer :node="node.nodeConfig" :mode="mode" />
+        </div>
+      </div>
+    </div>
+
+    <!-- 定时器任务 -->
+    <div v-else-if="node.type === 6" class="workflow-item">
+      <div class="workflow-icon">
+        <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
+      </div>
+      <div class="workflow-line"></div>
+      <div class="workflow-content">
+        <div class="workflow-title">{{ node.nodeName || '延时处理' }}</div>
+        <div class="workflow-desc" v-if="node.extendConfig?.time">
+          触发时间: {{ displayTime(node) }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 触发器任务 -->
+    <div v-else-if="node.type === 7" class="workflow-item">
+      <div class="workflow-icon">
+        <span>触</span>
+      </div>
+      <div class="workflow-line"></div>
+      <div class="workflow-content">
+        <div class="workflow-title">{{ node.nodeName || '触发器' }} <span v-if="node.taskState !== undefined"
+            class="state-tag">{{ getNodeStateText(node) }}</span></div>
+        <div class="workflow-desc">
+          <div>
+            {{ node.triggerType === '1' ? '立即执行' : '延迟执行，' }}{{ displayTime(node) }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 并行分支 -->
+    <div v-else-if="node.type === 8" class="workflow-item parallel-branch">
+      <div class="workflow-icon">
+        <span>并</span>
+      </div>
+      <div class="workflow-line"></div>
+      <div class="workflow-content">
+        <div class="workflow-title">{{ node.nodeName || '并行分支' }}</div>
+        <div class="parallel-groups">
+          <div v-for="(pn, index) in node.parallelNodes" :key="index" class="parallel-group">
+            <node-renderer v-if="pn.childNode" :node="pn.childNode" :mode="mode" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 包容分支 -->
+    <div v-else-if="node.type === 9" class="workflow-item inclusive-branch">
+      <div class="workflow-icon">
+        <span>包</span>
+      </div>
+      <div class="workflow-line"></div>
+      <div class="workflow-content">
+        <div class="workflow-title">{{ node.nodeName || '包容分支' }}</div>
+        <div class="inclusive-groups">
+          <div v-for="(in_node, index) in node.inclusiveNodes" :key="index" class="inclusive-group">
+            <div class="inclusive-title">{{ in_node.nodeName || '条件' + (index + 1) }}</div>
+            <div class="inclusive-expressions">
+              <div v-for="(group, groupIndex) in in_node.conditionList" :key="groupIndex" class="expression-group">
+                <div class="group-operator" v-if="groupIndex > 0">或</div>
+                <div class="expression-items">
+                  <div v-for="(expr, exprIndex) in group" :key="exprIndex" class="expression-item">
+                    <div class="item-operator" v-if="exprIndex > 0">且</div>
+                    <div class="item-content">
+                      {{ formatExpression(expr) }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <node-renderer v-if="in_node.childNode" :node="in_node.childNode" :mode="mode" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 路由分支 -->
+    <div v-else-if="node.type === 23" class="workflow-item route-branch">
+      <div class="workflow-icon">
+        <span>路</span>
+      </div>
+      <div class="workflow-line"></div>
+      <div class="workflow-content">
+        <div class="workflow-title">{{ node.nodeName || '路由跳转' }}</div>
+        <div class="route-groups">
+          <div v-for="(rn, index) in node.routeNodes" :key="index" class="route-group">
+            <div class="route-title">{{ rn.nodeName || '路由' + (index + 1) }}</div>
+            <div class="route-info" v-if="rn.nodeKey">
+              目标节点: {{ rn.targetNodeName }}
+            </div>
+            <div class="route-expressions">
+              <div v-for="(group, groupIndex) in rn.conditionList" :key="groupIndex" class="expression-group">
+                <div class="group-operator" v-if="groupIndex > 0">或</div>
+                <div class="expression-items">
+                  <div v-for="(expr, exprIndex) in group" :key="exprIndex" class="expression-item">
+                    <div class="item-operator" v-if="exprIndex > 0">且</div>
+                    <div class="item-content">
+                      {{ formatExpression(expr) }}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <node-renderer v-if="cn.childNode" :node="cn.childNode" :mode="mode"/>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- 办理子流程 -->
-  <div v-else-if="node.type === 5" class="workflow-item">
-    <div class="workflow-icon">
-      <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
-      <div v-if="node.taskState !== undefined" class="status-indicator" :class="getStatusIndicatorClass(node)"></div>
-    </div>
-    <div class="workflow-line"></div>
-    <div class="workflow-content">
-      <div class="workflow-title">
-        {{ node.nodeName || '子流程' }}
-        <span v-if="node.taskState !== undefined" class="state-tag">{{ getNodeStateText(node) }}</span>
+    <!-- 自动通过 -->
+    <div v-else-if="node.type === 30" class="workflow-item">
+      <div class="workflow-icon">
+        <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
+        <div v-if="node.taskState !== undefined" class="status-indicator" :class="getStatusIndicatorClass(node)"></div>
       </div>
-      <div class="workflow-desc">
-        <div v-if="node.callProcess">
-          调用流程: {{ getProcessName(node.callProcess) }}
-        </div>
-        <div v-if="node.actionUrl">
-          表单URL: {{ node.actionUrl }}
-        </div>
-        <div v-if="node.state">
-          审批状态:流程{{getProcessStateText(node.state) || '待发起'}}
-        </div>
-      </div>
-      
-      <!-- 子流程内容渲染 -->
-      <div v-if="node.nodeConfig" class="sub-process-container">
-        <node-renderer :node="node.nodeConfig" :mode="mode" />
+      <div class="workflow-line"></div>
+      <div class="workflow-content">
+        <div class="workflow-title">{{ node.nodeName || '自动通过' }} <span v-if="node.taskState !== undefined"
+            class="state-tag">{{ getNodeStateText(node) }}</span></div>
       </div>
     </div>
-  </div>
-
-  <!-- 定时器任务 -->
-  <div v-else-if="node.type === 6" class="workflow-item">
-    <div class="workflow-icon">
-      <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
-    </div>
-    <div class="workflow-line"></div>
-    <div class="workflow-content">
-      <div class="workflow-title">{{ node.nodeName || '延时处理' }}</div>
-      <div class="workflow-desc" v-if="node.extendConfig?.time">
-        触发时间: {{ displayTime(node)  }}
-      </div>
-    </div>
-  </div>
-
-  <!-- 触发器任务 -->
-  <div v-else-if="node.type === 7" class="workflow-item">
-    <div class="workflow-icon">
-      <span>触</span>
-    </div>
-    <div class="workflow-line"></div>
-    <div class="workflow-content">
-      <div class="workflow-title">{{ node.nodeName || '触发器' }} <span v-if="node.taskState !== undefined" class="state-tag">{{ getNodeStateText(node) }}</span></div>
-      <div class="workflow-desc">
-        <div>
-          {{ node.triggerType === '1' ? '立即执行' : '延迟执行，' }}{{ displayTime(node) }}
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 并行分支 -->
-  <div v-else-if="node.type === 8" class="workflow-item parallel-branch">
-    <div class="workflow-icon">
-      <span>并</span>
-    </div>
-    <div class="workflow-line"></div>
-    <div class="workflow-content">
-      <div class="workflow-title">{{ node.nodeName || '并行分支' }}</div>
-      <div class="parallel-groups">
-        <div v-for="(pn, index) in node.parallelNodes" :key="index" class="parallel-group">
-          <node-renderer v-if="pn.childNode" :node="pn.childNode" :mode="mode"/>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 包容分支 -->
-  <div v-else-if="node.type === 9" class="workflow-item inclusive-branch">
-    <div class="workflow-icon">
-      <span>包</span>
-    </div>
-    <div class="workflow-line"></div>
-    <div class="workflow-content">
-      <div class="workflow-title">{{ node.nodeName || '包容分支' }}</div>
-      <div class="inclusive-groups">
-        <div v-for="(in_node, index) in node.inclusiveNodes" :key="index" class="inclusive-group">
-          <div class="inclusive-title">{{ in_node.nodeName || '条件' + (index + 1) }}</div>
-          <div class="inclusive-expressions">
-            <div v-for="(group, groupIndex) in in_node.conditionList" :key="groupIndex" class="expression-group">
-              <div class="group-operator" v-if="groupIndex > 0">或</div>
-              <div class="expression-items">
-                <div v-for="(expr, exprIndex) in group" :key="exprIndex" class="expression-item">
-                  <div class="item-operator" v-if="exprIndex > 0">且</div>
-                  <div class="item-content">
-                    {{ formatExpression(expr) }}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <node-renderer v-if="in_node.childNode" :node="in_node.childNode" :mode="mode"/>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 路由分支 -->
-  <div v-else-if="node.type === 23" class="workflow-item route-branch">
-    <div class="workflow-icon">
-      <span>路</span>
-    </div>
-    <div class="workflow-line"></div>
-    <div class="workflow-content">
-      <div class="workflow-title">{{ node.nodeName || '路由跳转' }}</div>
-      <div class="route-groups">
-        <div v-for="(rn, index) in node.routeNodes" :key="index" class="route-group">
-          <div class="route-title">{{ rn.nodeName || '路由' + (index + 1) }}</div>
-          <div class="route-info" v-if="rn.nodeKey">
-            目标节点: {{ rn.targetNodeName }}
-          </div>
-          <div class="route-expressions">
-            <div v-for="(group, groupIndex) in rn.conditionList" :key="groupIndex" class="expression-group">
-              <div class="group-operator" v-if="groupIndex > 0">或</div>
-              <div class="expression-items">
-                <div v-for="(expr, exprIndex) in group" :key="exprIndex" class="expression-item">
-                  <div class="item-operator" v-if="exprIndex > 0">且</div>
-                  <div class="item-content">
-                    {{ formatExpression(expr) }}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 自动通过 -->
-  <div v-else-if="node.type === 30" class="workflow-item">
-    <div class="workflow-icon">
-      <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
-      <div v-if="node.taskState !== undefined" class="status-indicator" :class="getStatusIndicatorClass(node)"></div>
-    </div>
-    <div class="workflow-line"></div>
-    <div class="workflow-content">
-      <div class="workflow-title">{{ node.nodeName || '自动通过' }} <span v-if="node.taskState !== undefined" class="state-tag">{{ getNodeStateText(node) }}</span></div>
-    </div>
-  </div>
 
     <!-- 自动拒绝 -->
     <div v-else-if="node.type === 31" class="workflow-item">
-    <div class="workflow-icon">
-      <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
-      <div v-if="node.taskState !== undefined" class="status-indicator" :class="getStatusIndicatorClass(node)"></div>
+      <div class="workflow-icon">
+        <span>{{ node.nodeAssigneeList?.[0]?.name?.substring(0, 1) || node.nodeName?.substring(0, 1) }}</span>
+        <div v-if="node.taskState !== undefined" class="status-indicator" :class="getStatusIndicatorClass(node)"></div>
+      </div>
+      <div class="workflow-line"></div>
+      <div class="workflow-content">
+        <div class="workflow-title">{{ node.nodeName || '自动拒绝' }} <span v-if="node.taskState !== undefined"
+            class="state-tag">{{ getNodeStateText(node) }}</span></div>
+      </div>
     </div>
-    <div class="workflow-line"></div>
-    <div class="workflow-content">
-      <div class="workflow-title">{{ node.nodeName || '自动拒绝' }} <span v-if="node.taskState !== undefined" class="state-tag">{{ getNodeStateText(node) }}</span></div>
+
+    <!-- 结束节点 -->
+    <div v-else-if="node.type === -1" class="workflow-item">
+      <div class="workflow-icon">
+        <span>结</span>
+      </div>
+      <div class="workflow-content">
+        <div class="workflow-title">流程结束</div>
+      </div>
     </div>
+
+    <node-renderer v-if="node.childNode && ![3].includes(node.type)" :node="node.childNode" :mode="mode" />
+
+    <!-- 添加用户/角色选择模态框 -->
+    <user-role-selector v-model="selectorVisible" ref="userRoleSelector" @closed="handleSelectorClosed" />
   </div>
-
-  <!-- 结束节点 -->
-  <div v-else-if="node.type === -1" class="workflow-item">
-    <div class="workflow-icon">
-      <span>结</span>
-    </div>
-    <div class="workflow-content">
-      <div class="workflow-title">流程结束</div>
-    </div>
-  </div>
-
-  <node-renderer v-if="node.childNode && ![3].includes(node.type)" :node="node.childNode" :mode="mode" />
-
-  <!-- 添加用户/角色选择模态框 -->
-  <user-role-selector
-    v-model="selectorVisible"
-    ref="userRoleSelector"
-    @closed="handleSelectorClosed"
-  />
-</div>
 </template>
 
 <script setup>
 import { defineProps, inject, provide, ref, watch, watchEffect } from 'vue';
 import UserRoleSelector from './select.vue';
 import { useUserStore } from '@/store/modules/user'
+import { getTenantId } from '@/utils/auth'
 
 const props = defineProps({
   node: {
@@ -368,20 +369,13 @@ const userStore = useUserStore()
 // 创建一个当前用户对象的变量
 const currentUserInfo = ref({
   id: userStore.user.id ?? '1',
-  name: userStore.user.nickname ?? 'Admin'
-})
-
-// 从local获取当前用户
-watchEffect(() => {
-  const userInfo = localStorage.getItem('userInfo');
-  if (userInfo) {
-    currentUserInfo.value = JSON.parse(userInfo);
-  }
+  name: userStore.user.nickname ?? 'Admin',
+  tenantId: getTenantId()
 })
 
 // 获取流程状态文本
 const getProcessStateText = (state) => {
-    const stateTexts = {
+  const stateTexts = {
     '-2': '已暂停',
     '-1': '待发起',
     0: '审批中',
@@ -393,7 +387,7 @@ const getProcessStateText = (state) => {
     6: '自动通过',
     7: '自动拒绝'
   };
-  
+
   return stateTexts[state.value] || '';
 };
 
@@ -426,7 +420,7 @@ provide('updateNodeConfig', updateNodeConfig);
 
 // 获取状态指示器的类名
 const getStatusIndicatorClass = (node) => {
-  
+
   const statusMap = {
     0: 'status-active',       // 活动
     1: 'status-skipped',      // 跳转
@@ -436,14 +430,14 @@ const getStatusIndicatorClass = (node) => {
     5: 'status-timeout',      // 超时
     6: 'status-terminated',   // 终止
     7: 'status-rejected-terminated', // 驳回终止
-    8: 'status-auto-completed', // 自动完成
+    8: 'status-auto-completed', // 自动通过
     9: 'status-auto-rejected',  // 自动驳回
     10: 'status-auto-skipped',  // 自动跳转
     11: 'status-rejected-skipped', // 驳回跳转
     12: 'status-rejected-reapproved-skipped', // 驳回重新审批跳转
     13: 'status-route-skipped' // 路由跳转
   };
-  
+
   return statusMap[node.taskState] || '';
 };
 
@@ -458,21 +452,21 @@ const getStartNodeStateText = (node) => {
     5: '已超时',
     6: '已终止',
     7: '驳回终止',
-    8: '自动完成',
+    8: '自动通过',
     9: '自动驳回',
     10: '自动跳转',
     11: '驳回跳转',
     12: '驳回重审跳转',
     13: '路由跳转'
   };
-  
+
   return stateTexts[node.taskState] || '';
 };
 
 // 获取节点状态文本
 const getNodeStateText = (node) => {
   const stateTexts = {
-    0: '审批中', 
+    0: '审批中',
     1: '回退跳转',
     2: '已通过',
     3: '已拒绝',
@@ -480,28 +474,28 @@ const getNodeStateText = (node) => {
     5: '已超时',
     6: '已终止',
     7: '驳回终止',
-    8: '自动完成',
+    8: '自动通过',
     9: '自动驳回',
     10: '自动跳转',
     11: '驳回跳转',
     12: '驳回重审跳转',
     13: '路由跳转'
   };
-  
+
   return stateTexts[node.taskState] || '';
 };
 
 // 格式化时间
 const formatTime = (time) => {
   if (!time) return '';
-  
+
   const date = new Date(time);
   const year = date.getFullYear();
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const day = date.getDate().toString().padStart(2, '0');
   const hours = date.getHours().toString().padStart(2, '0');
   const minutes = date.getMinutes().toString().padStart(2, '0');
-  
+
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 };
 
@@ -513,13 +507,13 @@ const formatDuration = (duration) => {
   if (typeof duration === 'string' && /^\d+$/.test(duration)) {
     duration = Number(duration);
   }
-  
+
   // 如果是数字，假设是毫秒
   if (typeof duration === 'number') {
     const seconds = Math.floor(duration / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
-    
+
     if (hours > 0) {
       return `${hours}小时${minutes % 60}分钟`;
     } else if (minutes > 0) {
@@ -528,7 +522,7 @@ const formatDuration = (duration) => {
       return `${seconds}秒`;
     }
   }
-  
+
   // 如果已经是字符串格式
   return duration;
 };
@@ -537,7 +531,7 @@ const formatDuration = (duration) => {
 const handleAddCandidate = () => {
   console.log('打开添加候选人弹窗', props.node);
   currentEditingNode.value = props.node;
-  
+
   // 打开选择器，传递类型和现有选择
   if (userRoleSelector.value) {
     // 根据节点类型决定打开的选择器类型 (1为人员，2为角色)
@@ -550,10 +544,10 @@ const handleAddCandidate = () => {
 const handleSelectorClosed = () => {
   // 如果关闭时没有选择，则不进行任何操作
   if (!userRoleSelector.value || !currentEditingNode.value) return;
-  
+
   // 获取选择的结果
   const selectedItems = userRoleSelector.value.value;
-  
+
   // 更新流程数据
   if (updateNodeConfig && selectedItems.length > 0) {
     // 创建一个更新函数，描述如何更新当前节点
@@ -561,7 +555,7 @@ const handleSelectorClosed = () => {
       // 辅助函数用于递归查找和更新节点
       const findAndUpdateNode = (node) => {
         if (!node) return node;
-        
+
         // 如果找到了当前正在编辑的节点
         if (node === currentEditingNode.value) {
           // 更新当前节点
@@ -570,7 +564,7 @@ const handleSelectorClosed = () => {
             nodeAssigneeList: selectedItems
           };
         }
-        
+
         // 递归检查childNode
         if (node.childNode) {
           const updatedChildNode = findAndUpdateNode(node.childNode);
@@ -578,19 +572,19 @@ const handleSelectorClosed = () => {
             return { ...node, childNode: updatedChildNode };
           }
         }
-        
+
         // 处理条件分支节点
         if (node.conditionNodes) {
           const newConditionNodes = [...node.conditionNodes];
           let updated = false;
-          
+
           for (let i = 0; i < newConditionNodes.length; i++) {
             const updatedNode = findAndUpdateNode(newConditionNodes[i]);
             if (updatedNode !== newConditionNodes[i]) {
               newConditionNodes[i] = updatedNode;
               updated = true;
             }
-            
+
             // 还需要检查每个条件节点的childNode
             if (newConditionNodes[i].childNode) {
               const updatedChildNode = findAndUpdateNode(newConditionNodes[i].childNode);
@@ -600,26 +594,26 @@ const handleSelectorClosed = () => {
               }
             }
           }
-          
+
           if (updated) {
             return { ...node, conditionNodes: newConditionNodes };
           }
         }
-        
+
         // 处理其他类型的分支节点
         // ... (为其他节点类型添加类似的处理逻辑)
-        
+
         return node;
       };
-      
+
       // 从根节点开始查找
       return findAndUpdateNode(rootNode);
     };
-    
+
     // 调用父组件提供的更新函数
     updateNodeConfig(updateFn, []);
   }
-  
+
   // 重置当前编辑节点
   currentEditingNode.value = null;
 };
@@ -787,7 +781,7 @@ const getOperatorText = (operator) => {
   border-radius: 50%;
   background-color: #fff;
   border: 1px solid #fff;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* 审批状态指示器样式 */
@@ -819,8 +813,16 @@ const getOperatorText = (operator) => {
 }
 
 @keyframes loading {
-  0%, 80%, 100% { opacity: 0; }
-  40% { opacity: 1; }
+
+  0%,
+  80%,
+  100% {
+    opacity: 0;
+  }
+
+  40% {
+    opacity: 1;
+  }
 }
 
 /* 完成状态 */
@@ -973,21 +975,21 @@ const getOperatorText = (operator) => {
 }
 
 .workflow-title {
- font-size: 14px;
- font-weight: 500;
- margin-bottom: 5px;
- display: flex;
- align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
 }
 
 .workflow-desc {
- font-size: 12px;
- color: #666;
- line-height: 1.5;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.5;
 }
 
 .workflow-desc>div {
- margin-bottom: 4px;
+  margin-bottom: 4px;
 }
 
 /* 子流程容器样式 */
@@ -1120,167 +1122,178 @@ const getOperatorText = (operator) => {
 .parallel-branch,
 .inclusive-branch,
 .route-branch {
- margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
 .condition-groups,
 .parallel-groups,
 .inclusive-groups,
 .route-groups {
- margin-top: 10px;
- border-left: 2px dashed #ddd;
- padding-left: 15px;
+  margin-top: 10px;
+  border-left: 2px dashed #ddd;
+  padding-left: 15px;
 }
 
 .condition-group,
 .parallel-group,
 .inclusive-group,
 .route-group {
- margin-bottom: 15px;
- padding: 10px;
- background-color: #f9f9f9;
- border-radius: 4px;
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
 }
 
 .condition-title,
 .inclusive-title,
 .route-title {
- font-weight: 500;
- font-size: 13px;
- margin-bottom: 8px;
- color: #333;
+  font-weight: 500;
+  font-size: 13px;
+  margin-bottom: 8px;
+  color: #333;
 }
 
 .condition-expressions,
 .inclusive-expressions,
 .route-expressions {
- font-size: 12px;
- color: #666;
- margin-bottom: 10px;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 10px;
 }
 
 .expression-group {
- margin-bottom: 8px;
+  margin-bottom: 8px;
 }
 
 .group-operator {
- color: #f56c6c;
- font-weight: 500;
- margin: 4px 0;
- font-size: 12px;
+  color: #f56c6c;
+  font-weight: 500;
+  margin: 4px 0;
+  font-size: 12px;
 }
 
 .expression-items {
- margin-left: 10px;
+  margin-left: 10px;
 }
 
 .item-operator {
- color: #67c23a;
- font-weight: 500;
- margin: 4px 0;
- font-size: 12px;
+  color: #67c23a;
+  font-weight: 500;
+  margin: 4px 0;
+  font-size: 12px;
 }
 
 .item-content {
- margin-left: 5px;
+  margin-left: 5px;
 }
 
 /* 根据节点类型设置不同颜色 */
 .workflow-item:nth-child(1) .workflow-icon {
- background-color: #2b7bdb; /* 发起人 */
+  background-color: #2b7bdb;
+  /* 发起人 */
 }
 
 .workflow-item:nth-child(2) .workflow-icon {
- background-color: #e6a23c; /* 审批人 */
+  background-color: #e6a23c;
+  /* 审批人 */
 }
 
 .workflow-item:nth-child(3) .workflow-icon {
- background-color: #909399; /* 抄送人 */
+  background-color: #909399;
+  /* 抄送人 */
 }
 
 .workflow-item:nth-child(4) .workflow-icon {
- background-color: #f56c6c; /* 条件分支 */
+  background-color: #f56c6c;
+  /* 条件分支 */
 }
 
 .workflow-item:nth-child(5) .workflow-icon {
- background-color: #67c23a; /* 子流程 */
+  background-color: #67c23a;
+  /* 子流程 */
 }
 
 .workflow-item:nth-child(6) .workflow-icon {
- background-color: #8e44ad; /* 定时器 */
+  background-color: #8e44ad;
+  /* 定时器 */
 }
 
 .workflow-item:nth-child(7) .workflow-icon {
- background-color: #16a085; /* 触发器 */
+  background-color: #16a085;
+  /* 触发器 */
 }
 
 .workflow-item:nth-child(8) .workflow-icon {
- background-color: #d35400; /* 并行分支 */
+  background-color: #d35400;
+  /* 并行分支 */
 }
 
 .workflow-item:nth-child(9) .workflow-icon {
- background-color: #c0392b; /* 包容分支 */
+  background-color: #c0392b;
+  /* 包容分支 */
 }
 
 .workflow-item:nth-child(10) .workflow-icon {
- background-color: #7f8c8d; /* 路由分支 */
+  background-color: #7f8c8d;
+  /* 路由分支 */
 }
 
 .workflow-item:nth-child(11) .workflow-icon {
- background-color: #34495e; /* 结束节点 */
+  background-color: #34495e;
+  /* 结束节点 */
 }
 
 /* 响应式调整 */
 @media (max-width: 480px) {
- .workflow-item {
-   padding-left: 15px;
- }
+  .workflow-item {
+    padding-left: 15px;
+  }
 
- .workflow-icon {
-   width: 32px;
-   height: 32px;
-   margin-right: 10px;
- }
+  .workflow-icon {
+    width: 32px;
+    height: 32px;
+    margin-right: 10px;
+  }
 
- .status-indicator {
-   width: 10px;
-   height: 10px;
- }
+  .status-indicator {
+    width: 10px;
+    height: 10px;
+  }
 
- .workflow-line {
-   left: 31px;
- }
+  .workflow-line {
+    left: 31px;
+  }
 
- .workflow-content {
-   padding-bottom: 15px;
- }
- 
- .edit-add-btn {
-   right: -20px;
-   bottom: 10px;
- }
- 
- .add-icon {
-   width: 20px;
-   height: 20px;
-   font-size: 16px;
- }
- 
- .state-tag {
-   font-size: 10px;
-   padding: 1px 6px;
- }
+  .workflow-content {
+    padding-bottom: 15px;
+  }
 
- .task-history-item {
+  .edit-add-btn {
+    right: -20px;
+    bottom: 10px;
+  }
+
+  .add-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 16px;
+  }
+
+  .state-tag {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
+
+  .task-history-item {
     padding-left: 5px;
   }
-  
+
   .task-history-avatar {
     width: 24px;
     height: 24px;
     margin-right: 8px;
   }
-  
+
   .task-history-content {
     font-size: 11px;
   }

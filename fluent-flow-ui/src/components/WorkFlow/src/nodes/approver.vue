@@ -71,14 +71,15 @@
             <el-divider></el-divider>
             <el-form-item label="">
               <el-checkbox v-model="form.termAuto" label="超时自动审批"></el-checkbox>
-              <el-checkbox v-model="form.remind" label="审批提醒"></el-checkbox>
+              <!-- <el-checkbox v-model="form.remind" label="审批提醒"></el-checkbox> -->
             </el-form-item>
             <template v-if="form.termAuto">
               <el-form-item label="审批期限（为 0 则不生效）">
-                <el-input-number v-model="form.term" :min="0"/> 小时
+                <el-input-number v-model="form.term" :min="1"/> 小时
               </el-form-item>
               <el-form-item label="审批期限超时后执行">
                 <el-radio-group v-model="form.termMode">
+                  <el-radio :label="null">自动结束</el-radio>
                   <el-radio :label="0">自动通过</el-radio>
                   <el-radio :label="1">自动拒绝</el-radio>
                 </el-radio-group>

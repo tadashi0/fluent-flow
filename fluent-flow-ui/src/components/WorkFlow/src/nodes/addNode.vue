@@ -89,10 +89,10 @@ export default {
 					examineLevel: 1,	//指定主管层级
 					directorLevel: 1,	//自定义连续主管审批层级
 					selectMode: 1,		//发起人自选类型
-					remind: true,		//审批提醒
+					remind: false,		//审批提醒
 					termAuto: false,	//审批期限超时自动审批
 					term: 0,			//审批期限
-					termMode: 1,		//审批期限超时后执行类型
+					termMode: 0,		//审批期限超时后执行类型
 					examineMode: 1,		//多人审批时审批方式
 					directorMode: 0,	//连续主管审批方式
 					approveSelf: 0,		//审批人与提交人为同一人时

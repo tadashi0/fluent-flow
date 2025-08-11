@@ -1,23 +1,21 @@
 package cn.tdx.module.workflow.listener;
 
-import cn.tdx.framework.security.core.util.SecurityFrameworkUtils;
-import cn.tdx.module.system.api.dept.DeptApi;
-import cn.tdx.module.system.api.mail.MailSendApi;
-import cn.tdx.module.system.api.mail.dto.MailSendSingleToUserReqDTO;
-import cn.tdx.module.system.api.notify.NotifyMessageSendApi;
-import cn.tdx.module.system.api.notify.dto.NotifySendSingleToUserReqDTO;
-import cn.tdx.module.system.api.user.AdminUserApi;
-import cn.tdx.module.system.api.user.dto.AdminUserRespDTO;
-import cn.tdx.module.workflow.dal.NotificationInfo;
-import cn.tdx.module.workflow.dal.ProcessContext;
-import cn.tdx.module.workflow.service.impl.RedisService;
+import cn.qhdl.framework.security.core.util.SecurityFrameworkUtils;
+import cn.qhdl.framework.tenant.core.context.TenantContextHolder;
+import cn.qhdl.module.system.api.dept.DeptApi;
+import cn.qhdl.module.system.api.mail.MailSendApi;
+import cn.qhdl.module.system.api.mail.dto.MailSendSingleToUserReqDTO;
+import cn.qhdl.module.system.api.notify.NotifyMessageSendApi;
+import cn.qhdl.module.system.api.notify.dto.NotifySendSingleToUserReqDTO;
+import cn.qhdl.module.system.api.user.AdminUserApi;
+import cn.qhdl.module.system.api.user.dto.AdminUserRespDTO;
+import cn.qhdl.module.workflow.dal.NotificationInfo;
+import cn.qhdl.module.workflow.dal.ProcessContext;
+import cn.qhdl.module.workflow.service.impl.RedisService;
 import com.aizuda.bpm.engine.FlowLongEngine;
 import com.aizuda.bpm.engine.assist.ObjectUtils;
 import com.aizuda.bpm.engine.core.FlowCreator;
-import com.aizuda.bpm.engine.core.enums.InstanceState;
-import com.aizuda.bpm.engine.core.enums.NodeApproveSelf;
-import com.aizuda.bpm.engine.core.enums.TaskEventType;
-import com.aizuda.bpm.engine.core.enums.TaskType;
+import com.aizuda.bpm.engine.core.enums.*;
 import com.aizuda.bpm.engine.entity.*;
 import com.aizuda.bpm.engine.model.*;
 import com.aizuda.bpm.mybatisplus.mapper.FlwExtInstanceMapper;
@@ -77,10 +75,10 @@ public class ProcessListener {
         stateValues.put(TaskEventType.start, 1);
         stateValues.put(TaskEventType.restart, 1);
         stateValues.put(TaskEventType.revoke, 0);
-        stateValues.put(TaskEventType.autoComplete, 2);
         stateValues.put(TaskEventType.reject, 3);
         stateValues.put(TaskEventType.autoReject, 3);
         stateValues.put(TaskEventType.terminate, 3);
+        stateValues.put(TaskEventType.timeout, 3);
         return Collections.unmodifiableMap(stateValues);
     }
 
@@ -125,7 +123,6 @@ public class ProcessListener {
 
         // 新的审批任务
         mapping.put(TaskEventType.create, "flow-task");
-        mapping.put(TaskEventType.recreate, "flow-task");
         mapping.put(TaskEventType.reApproveCreate, "flow-task");
         mapping.put(TaskEventType.assignment, "flow-task");
 
@@ -157,6 +154,8 @@ public class ProcessListener {
             if (TaskEventType.update.eq(taskEvent.getEventType())) {
                 return;
             }
+
+            TenantContextHolder.setIgnore(false);
 
             FlwTask flwTask = taskEvent.getFlwTask();
             TaskEventType eventType = taskEvent.getEventType();
@@ -320,6 +319,7 @@ public class ProcessListener {
 
             NotificationInfo notificationInfo = buildNotificationInfo(taskEvent, context, templateCode);
             if (notificationInfo != null && !notificationInfo.getReceiverIds().isEmpty()) {
+                log.info("通知对应的事件: 事件[{}], 模板[{}]", taskEvent.getEventType().name(), notificationInfo.getTemplateCode());
                 sendNotification(notificationInfo);
             }
         } catch (Exception e) {
@@ -338,7 +338,6 @@ public class ProcessListener {
         // 根据不同事件类型构建通知信息
         switch (eventType) {
             case create:
-            case recreate:
             case reApproveCreate:
             case assignment:
                 // 新任务通知处理人
@@ -490,18 +489,19 @@ public class ProcessListener {
 
         // 处理驳回事件
         handlers.put(TaskEventType.reject, this::handleRejectEvent);
+        handlers.put(TaskEventType.autoReject, this::handleRejectEvent);
 
         // 需要清空处理人的事件
         BiConsumer<TaskEvent, Map<String, Object>> clearHandlerAction = (event, updates) ->
                 updates.put("handler", "");
 
         handlers.put(TaskEventType.terminate, mergeActions(handlers.get(TaskEventType.terminate), clearHandlerAction));
-        handlers.put(TaskEventType.autoReject, mergeActions(handlers.get(TaskEventType.autoReject), clearHandlerAction));
+        handlers.put(TaskEventType.timeout, mergeActions(handlers.get(TaskEventType.terminate), clearHandlerAction));
         handlers.put(TaskEventType.revoke, mergeActions(handlers.get(TaskEventType.revoke), clearHandlerAction));
-        handlers.put(TaskEventType.autoComplete, mergeActions(handlers.get(TaskEventType.autoComplete), clearHandlerAction));
         handlers.put(TaskEventType.withdraw, clearHandlerAction);
 
         // 处理完成事件
+        handlers.put(TaskEventType.autoComplete, this::handleCompleteEvent);
         handlers.put(TaskEventType.complete, this::handleCompleteEvent);
 
         // 结束事件

@@ -1,7 +1,6 @@
 package cn.tdx.module.workflow.config;
 
 import com.aizuda.bpm.engine.FlowLongEngine;
-import com.aizuda.bpm.engine.FlowLongScheduler;
 import com.aizuda.bpm.engine.TaskReminder;
 import com.aizuda.bpm.engine.assist.DateUtils;
 import com.aizuda.bpm.engine.core.FlowLongContext;
@@ -28,16 +27,16 @@ import java.util.Date;
 @Slf4j
 public class TaskReminderConfig implements TaskReminder {
 
-     //@Bean
-     //@ConditionalOnBean(TaskReminder.class)
-     //@ConditionalOnMissingBean
-     //public FlowLongScheduler springBootScheduler(FlowLongEngine flowLongEngine, FlowLongProperties properties, JobLock jobLock) {
-     //    FlowLongScheduler scheduler = new FlowLongSchedulerConfig();
-     //    scheduler.setFlowLongEngine(flowLongEngine);
-     //    scheduler.setRemindParam(properties.getRemind());
-     //    scheduler.setJobLock(jobLock);
-     //    return scheduler;
-     //}
+     @Bean
+     @ConditionalOnBean(TaskReminder.class)
+     @ConditionalOnMissingBean
+     public FlowLongSchedulerConfig springBootScheduler(FlowLongEngine flowLongEngine, FlowLongProperties properties, JobLock jobLock) {
+         FlowLongSchedulerConfig scheduler = new FlowLongSchedulerConfig();
+         scheduler.setFlowLongEngine(flowLongEngine);
+         scheduler.setRemindParam(properties.getRemind());
+         scheduler.setJobLock(jobLock);
+         return scheduler;
+     }
 
     @Override
     public Date remind(FlowLongContext context, Long instanceId, FlwTask flwTask) {
