@@ -1,20 +1,23 @@
 <template>
-  <el-affix :offset="16" style="height: 74px; width: 100%">
-    <div class="btn-container">
-      <div class="zoom-control">
-        <el-button :icon="Minus" circle @click="decreaseZoom" />
-        <span class="zoom-percentage">{{ Math.round(zoom * 100) }}%</span>
-        <el-button :icon="Plus" circle @click="increaseZoom" />
-      </div>
+  <div class="btn-container">
+    <div class="zoom-control">
+      <el-button :icon="Minus" circle @click="decreaseZoom" />
+      <span class="zoom-percentage">{{ Math.round(zoom * 100) }}%</span>
+      <el-button :icon="Plus" circle @click="increaseZoom" />
     </div>
-  </el-affix>
+  </div>
   <div class="affix-container" :style="`transform: scale(${zoom}); transform-origin: 50% 0`">
-    <sc-workflow class="workflow" ref="workflowRef" id="content-to-capture" v-model="data.nodeConfig" />
+    <sc-workflow
+      class="workflow"
+      ref="workflowRef"
+      id="content-to-capture"
+      v-model="data.nodeConfig"
+    />
   </div>
 </template>
 <script setup>
 import { ref, reactive, onMounted, watch, computed } from 'vue'
-import {Minus, Plus } from '@element-plus/icons-vue'
+import { Minus, Plus } from '@element-plus/icons-vue'
 import scWorkflow from '@/components/WorkFlow/src/index.vue'
 
 const props = defineProps({
@@ -56,13 +59,13 @@ const defaultData = computed(() => ({
   key: props.processKey,
   module: props.module,
   nodeConfig: {
-    nodeName: "发起人",
-    nodeKey: "flk001",
+    nodeName: '发起人',
+    nodeKey: 'flk001',
     type: 0,
     nodeAssigneeList: [],
     childNode: {
-      nodeName: "审批人1",
-      nodeKey: "flk002",
+      nodeName: '审批人1',
+      nodeKey: 'flk002',
       type: 1,
       setType: 4,
       examineLevel: 1,
@@ -74,10 +77,10 @@ const defaultData = computed(() => ({
       termAuto: false,
       term: 0,
       termMode: 1,
-			approveSelf: 0,		
+      approveSelf: 0,
       childNode: {
-        nodeName: "审批人2",
-        nodeKey: "flk003",
+        nodeName: '审批人2',
+        nodeKey: 'flk003',
         type: 1,
         setType: 4,
         examineLevel: 1,
@@ -89,12 +92,12 @@ const defaultData = computed(() => ({
         termAuto: false,
         term: 0,
         termMode: 1,
-        approveSelf: 0,		
+        approveSelf: 0,
         childNode: {
           nodeName: '结束',
-          nodeKey: "flk004",
+          nodeKey: 'flk004',
           type: -1
-        },
+        }
       }
     }
   }
@@ -102,13 +105,17 @@ const defaultData = computed(() => ({
 
 const data = ref(defaultData.value)
 
-watch(() => props.modelContent, (newContent) => {
-  if (newContent) {
-    data.value = JSON.parse(newContent)
-  } else {
-    data.value = defaultData.value
-  }
-}, { immediate: true })
+watch(
+  () => props.modelContent,
+  (newContent) => {
+    if (newContent) {
+      data.value = JSON.parse(newContent)
+    } else {
+      data.value = defaultData.value
+    }
+  },
+  { immediate: true }
+)
 
 // 组件引用
 const workflowRef = ref(null)
@@ -137,14 +144,11 @@ body {
   display: flex;
   justify-content: center;
   flex-direction: row-reverse;
-  overflow: auto;
-  height: calc(100vh - 100px);
-  overflow: visible;
+  position: relative;
 }
 
 .editor {
   width: 500px;
-  height: calc(100vh - 36px);
 }
 
 .editor .jsoneditor-poweredBy,
@@ -158,12 +162,8 @@ body {
   padding: 10px;
 }
 
-.jsoneditor-menu>button.jsoneditor-copy {
+.jsoneditor-menu > button.jsoneditor-copy {
   background-position: -48px 0px;
-}
-
-.el-drawer__body {
-  padding: 0 !important;
 }
 
 .btn-container {
@@ -198,17 +198,15 @@ body {
     line-height: 2rem;
     border: 0;
   }
-  
+
   .el-button.is-circle {
     color: var(--el-button-text-color);
     background-color: var(--el-button-bg-color);
     border-radius: 50%;
     padding: 8px;
     width: 32px;
+  }
 }
-}
-
-
 
 .zoom-percentage {
   margin: 0 10px;

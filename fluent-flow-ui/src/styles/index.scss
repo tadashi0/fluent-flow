@@ -141,3 +141,16 @@
 .el-card__body {
   padding: 1rem !important;
 }
+.el-transfer-panel {
+  width: calc((100% - 112px) / 2);
+}
+.el-transfer .el-transfer__button {
+  width: 2.5rem;
+  padding: 0;
+}
+.el-transfer__buttons {
+  padding: 0 0.5rem;
+}
+// .el-button--default {
+//   min-width: 3.125rem;
+// }

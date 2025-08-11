@@ -41,8 +41,6 @@
         </div>
       </template>
 
-      <el-container>
-        <el-main>
           <el-form label-position="top">
             <el-form-item>
               <el-radio-group v-model="triggerType">
@@ -101,8 +99,6 @@
               />
             </el-form-item>
           </el-form>
-        </el-main>
-      </el-container>
     </el-drawer>
   </div>
 </template>

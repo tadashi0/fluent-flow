@@ -42,8 +42,6 @@
         </div>
       </template>
 
-      <el-container>
-        <el-main>
           <el-form label-position="top">
             <el-form-item label="选择子流程">
               <el-select
@@ -51,7 +49,7 @@
                 filterable
                 placeholder="请选择子流程"
                 :loading="loading"
-                style="width: 100%"
+                style="width: 200px"
                 @change="handleProcessChange"
               >
                 <el-option
@@ -73,8 +71,6 @@
               </el-button>
             </el-form-item>
           </el-form>
-        </el-main>
-      </el-container>
     </el-drawer>
 
     <!-- 预览对话框 -->
@@ -127,26 +123,10 @@ const previewVisible = ref(false)
 const previewFlowData = ref({})
 const previewProcessName = ref('')
 const previewRemark = ref('')
+const drawerLoading = ref(false)
+const previewLoading = ref(false)
 
-
-watch(() => props.modelValue, () => {
-  nodeConfig.value = props.modelValue;
-}, { immediate: true });
-
-// 计算属性
-const processName = computed(() => {
-  if (!nodeConfig.value.callProcess) return null
-  const parts = nodeConfig.value.callProcess.split(':')
-  return parts.length > 1 ? parts[1] : null
-})
-
-// 生命周期
-onMounted(() => {
-  initProcessData()
-  fetchProcessList()
-})
-
-// 方法
+// 方法 - 需要在 watch 之前声明
 const initProcessData = () => {
   if (nodeConfig.value.callProcess) {
     const parts = nodeConfig.value.callProcess.split(':')
@@ -158,6 +138,25 @@ const initProcessData = () => {
   }
 }
 
+// 计算属性
+const processName = computed(() => {
+  if (!nodeConfig.value.callProcess) return null
+  const parts = nodeConfig.value.callProcess.split(':')
+  return parts.length > 1 ? parts[1] : null
+})
+
+// 监听 props.modelValue 的变化
+watch(() => props.modelValue, (newVal) => {
+  nodeConfig.value = {...newVal}
+  initProcessData()
+}, { immediate: true })
+
+// 生命周期
+onMounted(() => {
+  fetchProcessList()
+})
+
+// 其他方法
 const show = async () => {
   form.value = JSON.parse(JSON.stringify(nodeConfig.value))
   drawer.value = true
@@ -189,9 +188,6 @@ const delNode = () => {
   emit('update:modelValue', nodeConfig.value.childNode)
 }
 
-const drawerLoading = ref(false)
-const previewLoading = ref(false)
-
 const fetchProcessList = async () => {
   try {
     drawerLoading.value = true
@@ -200,10 +196,13 @@ const fetchProcessList = async () => {
       size: -1,
       useScope: 1,
     })
-    processList.value = res.records || []
+    // 兼容两种数据结构：res.records 和 res.data.records
+    processList.value = res.records || res.data?.records || []
     validateSelectedProcess()
   } catch (error) {
     console.error('获取流程列表失败:', error)
+    processList.value = []
+    selectedProcessId.value = null
   } finally {
     drawerLoading.value = false
   }
@@ -225,24 +224,41 @@ const handleProcessChange = (id) => {
   form.value.callProcess = process ? `${process.id}:${process.processName}` : ''
 }
 
-const handlePreview = async () => {
-  try {
-    previewLoading.value = true
-    // 预览子流程的逻辑
-    previewVisible.value = true
-  } catch (error) {
-    console.error('预览失败:', error)
-  } finally {
-    previewLoading.value = false
+const handlePreview = () => {
+  const process = processList.value.find(
+    item => String(item.id) === selectedProcessId.value
+  )
+  
+  if (process) {
+    try {
+      previewLoading.value = true
+      
+      // 检查 modelContent 是否存在并尝试解析
+      if (process.modelContent) {
+        previewFlowData.value = JSON.parse(process.modelContent)
+      } else {
+        // 如果没有 modelContent，可能需要额外的 API 调用获取详细信息
+        previewFlowData.value = {}
+      }
+      
+      previewProcessName.value = process.processName
+      previewRemark.value = process.remark || ''
+      previewVisible.value = true
+    } catch (e) {
+      console.error('流程数据解析失败:', e)
+      // 使用 ElMessage 需要确保已经导入，或者用其他方式提示错误
+      if (typeof ElMessage !== 'undefined') {
+        ElMessage.error('流程数据格式错误')
+      } else {
+        console.error('流程数据格式错误')
+      }
+    } finally {
+      previewLoading.value = false
+    }
   }
 }
 
-// 监听器
-watch(() => props.modelValue, (newVal) => {
-  nodeConfig.value = {...newVal}
-  initProcessData()
-})
-
+// 监听 processList 变化
 watch(processList, validateSelectedProcess)
 </script>
 

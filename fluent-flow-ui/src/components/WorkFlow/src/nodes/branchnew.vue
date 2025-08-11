@@ -95,8 +95,6 @@
             @keyup.enter="saveTitle"></el-input>
         </div>
       </template>
-      <el-container>
-        <el-main>
           <div class="top-tips">满足以下条件时进入当前分支</div>
           <template v-for="(conditionGroup, conditionGroupIdx) in form.conditionList" :key="conditionGroupIdx">
             <div
@@ -196,7 +194,6 @@
             @click="addConditionGroup">
             添加条件组
           </el-button>
-        </el-main>
         <el-footer>
           <el-button
             type="primary"
@@ -205,7 +202,6 @@
           </el-button>
           <el-button @click="drawer = false">取消</el-button>
         </el-footer>
-      </el-container>
     </el-drawer>
   </div>
 </template>

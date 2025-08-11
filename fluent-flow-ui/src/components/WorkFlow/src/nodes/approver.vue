@@ -19,10 +19,7 @@
           <el-input v-if="isEditTitle" ref="nodeTitle" v-model="form.nodeName" clearable @blur="saveTitle" @keyup.enter="saveTitle"></el-input>
         </div>
       </template>
-      <el-container>
-        <el-main>
           <el-form label-position="top">
-
             <el-form-item label="审批人员类型">
               <div class="approver-type-grid">
                 <div 
@@ -105,8 +102,6 @@
               </el-radio-group>
             </el-form-item>
           </el-form>
-        </el-main>
-      </el-container>
     </el-drawer>
   </div>
 </template>

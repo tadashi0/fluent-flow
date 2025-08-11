@@ -34,8 +34,6 @@
           ></el-input>
         </div>
       </template>
-      <el-container>
-        <el-main>
           <el-form label-position="top">
             <el-form-item label="谁可以发起此审批">
               <el-button type="primary" :icon="Plus" round
@@ -57,8 +55,6 @@
               :closable="false" 
             />
           </el-form>
-        </el-main>
-      </el-container>
     </el-drawer>
   </div>
 </template>

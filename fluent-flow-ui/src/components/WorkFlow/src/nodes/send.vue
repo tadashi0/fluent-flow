@@ -35,8 +35,6 @@
           ></el-input>
         </div>
       </template>
-      <el-container>
-        <el-main>
           <el-form label-position="top">
             <el-form-item label="选择要抄送的人员">
               <el-button type="primary" :icon="Plus" round @click="selectHandle(1, form.nodeAssigneeList)">
@@ -57,8 +55,6 @@
               <el-checkbox v-model="form.allowSelection" label="允许发起人自选抄送人"></el-checkbox>
             </el-form-item>
           </el-form>
-        </el-main>
-      </el-container>
     </el-drawer>
   </div>
 </template>

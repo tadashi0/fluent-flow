@@ -41,8 +41,6 @@
         </div>
       </template>
 
-      <el-container>
-        <el-main>
           <el-form label-position="top">
             <div v-for="(routeNode, routeIndex) in form.routeNodes" :key="routeNode.nodeKey || routeIndex" class="route-branch-item">
               <div class="route-header">
@@ -164,8 +162,6 @@
               添加路由分支
             </el-button>
           </el-form>
-        </el-main>
-      </el-container>
     </el-drawer>
   </div>
 </template>

@@ -41,8 +41,6 @@
         </div>
       </template>
 
-      <el-container>
-        <el-main>
           <el-form label-position="top">
             <el-form-item label="延时方式">
               <el-radio-group v-model="delayType">
@@ -80,8 +78,6 @@
               <span style="margin-left: 10px;">后进入下一步</span>
             </el-form-item>
           </el-form>
-        </el-main>
-      </el-container>
     </el-drawer>
   </div>
 </template>

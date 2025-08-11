@@ -60,8 +60,6 @@
         </div>
       </template>
 
-      <el-container>
-        <el-main>
           <div class="top-tips">满足以下条件时进入当前分支</div>
 
           <template v-for="(conditionGroup, conditionGroupIdx) in form.conditionList" :key="conditionGroupIdx">
@@ -130,8 +128,6 @@
           <el-button style="width: 100%" type="info" :icon="Plus" text bg @click="addConditionGroup">
             添加条件组
           </el-button>
-        </el-main>
-      </el-container>
     </el-drawer>
   </div>
 </template>

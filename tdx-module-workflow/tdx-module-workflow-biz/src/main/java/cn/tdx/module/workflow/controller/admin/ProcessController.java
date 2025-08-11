@@ -84,6 +84,8 @@ public class ProcessController {
         map.put(3, "自动拒绝节点配置错误");
         map.put(4, "路由节点必须配置错误（未配置路由分支）");
         map.put(5, "子流程节点配置错误（未选择子流程）");
+        map.put(6, "抄送节点配置错误（未配置处理人，且不允许抄送自选）");
+        map.put(7, "指定成员审批（未配置处理人员）");
         return map.get(value);
     }
 
