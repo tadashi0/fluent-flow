@@ -1,5 +1,6 @@
 package cn.tdx.module.workflow.service.impl;
 
+import cn.tdx.framework.security.core.LoginUser;
 import cn.tdx.framework.security.core.util.SecurityFrameworkUtils;
 import cn.tdx.module.system.api.user.AdminUserApi;
 import cn.tdx.module.system.api.user.dto.AdminUserRespDTO;
@@ -35,8 +36,8 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public Long todoCount() {
         // 获取当前用户
-        Long userId = SecurityFrameworkUtils.getLoginUserId();
-        return mapper.todoCount(userId, null);
+        LoginUser loginUser = SecurityFrameworkUtils.getLoginUser();
+        return mapper.todoCount(loginUser.getId(), loginUser.getTenantId());
     }
 
     @Override
@@ -54,7 +55,7 @@ public class TaskServiceImpl implements TaskService {
         return redisService.getZSetScore("wf:count:submit", userId);
         //return mapper.submitCount(userId, null);
     }
-    
+
     @Override
     public Long aboutCount() {
         // 获取当前用户
@@ -66,46 +67,48 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public IPage<TodoListVO> todoList(Page page) {
         // 获取当前用户
-        Long userId = SecurityFrameworkUtils.getLoginUserId();
-        IPage<TodoListVO> pageResult = mapper.todoList(userId, null, page);
+        LoginUser loginUser = SecurityFrameworkUtils.getLoginUser();
+        IPage<TodoListVO> pageResult = mapper.todoList(loginUser.getId(), loginUser.getTenantId(), page);
         return pageResult;
     }
 
     @Override
     public IPage<DoneListVO> doneList(Page page) {
         // 获取当前用户
-        Long userId = SecurityFrameworkUtils.getLoginUserId();
+        LoginUser loginUser = SecurityFrameworkUtils.getLoginUser();
         page.setSearchCount(false);
-        IPage<DoneListVO> pageResult = mapper.doneList(userId, null, page);
-        pageResult.setTotal(redisService.getZSetScore("wf:count:done", userId));
+        IPage<DoneListVO> pageResult = mapper.doneList(loginUser.getId(), loginUser.getTenantId(), page);
+        pageResult.setTotal(redisService.getZSetScore("wf:count:done", loginUser.getId()));
         return pageResult;
     }
 
     @Override
     public IPage<SubmitListVO> submitList(boolean isAll, Page page) {
         // 获取当前用户
-        Long userId = SecurityFrameworkUtils.getLoginUserId();
+        LoginUser loginUser = SecurityFrameworkUtils.getLoginUser();
         Set<Long> userIds = new HashSet<>();
-        userIds.add(userId);
+        userIds.add(loginUser.getId());
         page.setSearchCount(false);
-        if(isAll) {
-            userIds.addAll(adminUserApi.getUserListBySubordinate(userId)
+        if (isAll) {
+            userIds.addAll(adminUserApi.getUserListBySubordinate(loginUser.getId())
                     .parallelStream()
                     .map(AdminUserRespDTO::getId)
                     .collect(Collectors.toSet()));
         }
-        IPage<SubmitListVO> pageResult = mapper.submitList(userIds, null, page);
-        pageResult.setTotal(redisService.getZSetScore("wf:count:submit", userId));
+        IPage<SubmitListVO> pageResult = mapper.submitList(userIds, loginUser.getTenantId(), page);
+        pageResult.setTotal(userIds.stream()
+                .map(e -> redisService.getZSetScore("wf:count:submit", e))
+                .reduce(0L, Long::sum));
         return pageResult;
     }
 
     @Override
     public IPage<AboutListVO> aboutList(Page page) {
         // 获取当前用户
-        Long userId = SecurityFrameworkUtils.getLoginUserId();
+        LoginUser loginUser = SecurityFrameworkUtils.getLoginUser();
         page.setSearchCount(false);
-        IPage<AboutListVO> pageResult = mapper.aboutList(userId, null, page);
-        pageResult.setTotal(redisService.getZSetScore("wf:count:about", userId));
+        IPage<AboutListVO> pageResult = mapper.aboutList(loginUser.getId(), loginUser.getTenantId(), page);
+        pageResult.setTotal(redisService.getZSetScore("wf:count:about", loginUser.getId()));
         return pageResult;
     }
 

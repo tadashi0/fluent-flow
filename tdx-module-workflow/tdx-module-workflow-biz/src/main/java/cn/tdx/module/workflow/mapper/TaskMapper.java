@@ -26,28 +26,28 @@ public interface TaskMapper {
                         "WHERE actor_id = #{userId} AND actor_type = 0 " +
                         "<if test='tenantId != null'> AND tenant_id = #{tenantId} </if>" +
                         "</script>")
-        Long todoCount(@Param("userId") Long userId, @Param("tenantId") String tenantId);
+        Long todoCount(@Param("userId") Long userId, @Param("tenantId") Long tenantId);
 
         @Select("<script>" +
                         "SELECT COUNT(1) FROM flw_his_task_actor " +
                         "WHERE actor_id = #{userId} AND actor_type = 0 " +
                         "<if test='tenantId != null'> AND tenant_id = #{tenantId} </if>" +
                         "</script>")
-        Long doneCount(@Param("userId") Long userId, @Param("tenantId") String tenantId);
+        Long doneCount(@Param("userId") Long userId, @Param("tenantId") Long tenantId);
 
         @Select("<script>" +
                         "SELECT COUNT(1) FROM flw_his_instance " +
                         "WHERE create_id = #{userId} " +
                         "<if test='tenantId != null'> AND tenant_id = #{tenantId} </if>" +
                         "</script>")
-        Long submitCount(@Param("userId") Long userId, @Param("tenantId") String tenantId);
+        Long submitCount(@Param("userId") Long userId, @Param("tenantId") Long tenantId);
 
         @Select("<script>" +
                         "SELECT COUNT(1) FROM flw_his_task_actor " +
                         "WHERE actor_id = #{userId} AND actor_type = 0 AND weight = 6 " +
                         "<if test='tenantId != null'> AND tenant_id = #{tenantId} </if>" +
                         "</script>")
-        Long aboutCount(@Param("userId") Long userId, @Param("tenantId") String tenantId);
+        Long aboutCount(@Param("userId") Long userId, @Param("tenantId") Long tenantId);
 
         /**
          * SELECT
@@ -93,7 +93,7 @@ public interface TaskMapper {
                 "  <if test='tenantId != null'> AND hi.tenant_id = #{tenantId} </if> " +
                 "ORDER BY ta.id DESC " +
                 "</script>")
-        IPage<TodoListVO> todoList(@Param("userId") Long userId, @Param("tenantId") String tenantId, Page page);
+        IPage<TodoListVO> todoList(@Param("userId") Long userId, @Param("tenantId") Long tenantId, Page page);
 
         /**
          * SELECT
@@ -142,7 +142,7 @@ public interface TaskMapper {
                 "  <if test='tenantId != null'> AND hi.tenant_id = #{tenantId} </if> " +
                 "ORDER BY hta.id DESC " +
                 "</script>")
-        IPage<DoneListVO> doneList(@Param("userId") Long userId, @Param("tenantId") String tenantId, Page page);
+        IPage<DoneListVO> doneList(@Param("userId") Long userId, @Param("tenantId") Long tenantId, Page page);
 
         /**
          * SELECT
@@ -190,7 +190,7 @@ public interface TaskMapper {
                 "</where> " +
                 "ORDER BY hi.id DESC " +
                 "</script>")
-        IPage<SubmitListVO> submitList(@Param("userIds") Set<Long> userIds, @Param("tenantId") String tenantId, Page<SubmitListVO> page);
+        IPage<SubmitListVO> submitList(@Param("userIds") Set<Long> userIds, @Param("tenantId") Long tenantId, Page<SubmitListVO> page);
 
         /**
          * select
@@ -231,7 +231,7 @@ public interface TaskMapper {
                 "</if> " +
                 "ORDER BY hta.id DESC " +
                 "</script>")
-        IPage<AboutListVO> aboutList(@Param("userId") Long userId, @Param("tenantId") String tenantId, Page page);
+        IPage<AboutListVO> aboutList(@Param("userId") Long userId, @Param("tenantId") Long tenantId, Page page);
 
         @Select("<script>" +
                 "SELECT i.business_key " +
@@ -241,5 +241,5 @@ public interface TaskMapper {
                 "<if test='tenantId != null'> AND i.tenant_id = #{tenantId} </if> " +
                 "LIMIT #{current}, #{size} " +
                 "</script>")
-        List<Long> getBusinessKeys(@Param("userId") Long userId, @Param("tenantId") String tenantId, @Param("size") long size, @Param("current") long current);
+        List<Long> getBusinessKeys(@Param("userId") Long userId, @Param("tenantId") Long tenantId, @Param("size") long size, @Param("current") long current);
 }
