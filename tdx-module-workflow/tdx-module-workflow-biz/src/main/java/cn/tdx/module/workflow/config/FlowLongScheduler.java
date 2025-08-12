@@ -4,8 +4,8 @@
  */
 package cn.tdx.module.workflow.config;
 
-import cn.qhdl.framework.tenant.core.context.TenantContextHolder;
-import cn.qhdl.framework.tenant.core.util.TenantUtils;
+import cn.tdx.framework.tenant.core.context.TenantContextHolder;
+import cn.tdx.framework.tenant.core.util.TenantUtils;
 import com.aizuda.bpm.engine.FlowLongEngine;
 import com.aizuda.bpm.engine.TaskReminder;
 import com.aizuda.bpm.engine.TaskService;
