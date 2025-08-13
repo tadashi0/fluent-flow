@@ -498,7 +498,7 @@ public class TaskController implements TaskActorProvider {
                                                 if (parentNode.conditionNode()) {
                                                     parentNode = parentNode.getParentNode();
                                                 }
-                                                if (parentNode.getTermAuto()) {
+                                                if (ObjectUtils.isNotEmpty(parentNode.getTermAuto()) && parentNode.getTermAuto()) {
                                                     task.setExpireTime(DateUtils.addHours(new Date(), parentNode.getTerm()));
                                                 }
                                                 flowLongEngine.executeRejectTask(
