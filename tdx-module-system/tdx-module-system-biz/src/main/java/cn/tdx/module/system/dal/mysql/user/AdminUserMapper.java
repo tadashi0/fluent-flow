@@ -54,7 +54,7 @@ public interface AdminUserMapper extends BaseMapperX<AdminUserDO> {
     default List<AdminUserDO> getUserListByRoleIds(Collection<String> roles){
         MPJLambdaWrapperX<AdminUserDO> query = new MPJLambdaWrapperX<>();
         query.innerJoin(UserRoleDO.class,
-                on -> on.eq(UserRoleDO::getRoleId, AdminUserDO::getId).in(UserRoleDO::getRoleId, roles));
+                on -> on.eq(UserRoleDO::getUserId, AdminUserDO::getId).in(UserRoleDO::getRoleId, roles));
         return selectList(query);
     }
 
