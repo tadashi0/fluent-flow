@@ -15,7 +15,6 @@
         <!-- 各种 module 拓展 -->
         <module>tdx-module-system</module>
         <module>tdx-module-infra</module>
-        <module>tdx-module-mcp</module>
         <module>tdx-module-workflow</module>
     </modules>
 

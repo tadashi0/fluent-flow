@@ -36,11 +36,6 @@
             <artifactId>tdx-module-infra-biz</artifactId>
             <version>${revision}</version>
         </dependency>
-        <dependency>
-            <groupId>cn.tdx.boot</groupId>
-            <artifactId>tdx-module-mcp</artifactId>
-            <version>${revision}</version>
-        </dependency>
 
         <!-- 数据报表。默认注释，保证编译速度 -->
         <!--        <dependency>-->
