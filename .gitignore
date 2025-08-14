@@ -68,5 +68,5 @@ logs/
 
 
 # 忽略核心代码
-/tdx-module-workflow/tdx-module-workflow-biz
+/tdx-module-workflow/tdx-module-workflow-biz/src/main/java/cn/tdx/module/workflow/
 /fluent-flow-ui/src/components/WorkFlow/
