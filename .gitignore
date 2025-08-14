@@ -7,7 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
+#node_modules
 dist
 dist-ssr
 
@@ -64,3 +64,10 @@ auto-*.d.ts
 ### log ###
 logs/
 *.log
+
+
+
+# 忽略核心代码
+/tdx-module-workflow/tdx-module-workflow-biz/src/main/java/cn/tdx/module/workflow/controller/admin/
+/tdx-module-workflow/tdx-module-workflow-biz/src/main/java/cn/tdx/module/workflow/listener/
+/fluent-flow-ui/src/components/WorkFlow/
