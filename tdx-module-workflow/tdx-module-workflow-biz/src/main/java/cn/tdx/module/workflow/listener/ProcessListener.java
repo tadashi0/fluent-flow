@@ -1,17 +1,17 @@
 package cn.tdx.module.workflow.listener;
 
-import cn.qhdl.framework.security.core.util.SecurityFrameworkUtils;
-import cn.qhdl.framework.tenant.core.context.TenantContextHolder;
-import cn.qhdl.module.system.api.dept.DeptApi;
-import cn.qhdl.module.system.api.mail.MailSendApi;
-import cn.qhdl.module.system.api.mail.dto.MailSendSingleToUserReqDTO;
-import cn.qhdl.module.system.api.notify.NotifyMessageSendApi;
-import cn.qhdl.module.system.api.notify.dto.NotifySendSingleToUserReqDTO;
-import cn.qhdl.module.system.api.user.AdminUserApi;
-import cn.qhdl.module.system.api.user.dto.AdminUserRespDTO;
-import cn.qhdl.module.workflow.dal.NotificationInfo;
-import cn.qhdl.module.workflow.dal.ProcessContext;
-import cn.qhdl.module.workflow.service.impl.RedisService;
+import cn.tdx.framework.security.core.util.SecurityFrameworkUtils;
+import cn.tdx.framework.tenant.core.context.TenantContextHolder;
+import cn.tdx.module.system.api.dept.DeptApi;
+import cn.tdx.module.system.api.mail.MailSendApi;
+import cn.tdx.module.system.api.mail.dto.MailSendSingleToUserReqDTO;
+import cn.tdx.module.system.api.notify.NotifyMessageSendApi;
+import cn.tdx.module.system.api.notify.dto.NotifySendSingleToUserReqDTO;
+import cn.tdx.module.system.api.user.AdminUserApi;
+import cn.tdx.module.system.api.user.dto.AdminUserRespDTO;
+import cn.tdx.module.workflow.dal.NotificationInfo;
+import cn.tdx.module.workflow.dal.ProcessContext;
+import cn.tdx.module.workflow.service.impl.RedisService;
 import com.aizuda.bpm.engine.FlowLongEngine;
 import com.aizuda.bpm.engine.assist.ObjectUtils;
 import com.aizuda.bpm.engine.core.FlowCreator;
@@ -72,6 +72,7 @@ public class ProcessListener {
 
     private static Map<TaskEventType, Integer> initStateValues() {
         Map<TaskEventType, Integer> stateValues = new EnumMap<>(TaskEventType.class);
+        stateValues.put(TaskEventType.startAsDraft, 0);
         stateValues.put(TaskEventType.start, 1);
         stateValues.put(TaskEventType.restart, 1);
         stateValues.put(TaskEventType.revoke, 0);
