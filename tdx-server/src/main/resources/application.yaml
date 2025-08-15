@@ -244,7 +244,7 @@ tdx:
     publicKeysStoreFile: /home/crb/server/publicStore.keystore
   xss:
     enable: true
-    exclude-urls:
+    exclude-urls: /admin-api/flow/process
   security:
     permit-all_urls:
       - /admin-api/mp/open/** # 微信公众号开放平台，微信回调接口，不需要登录
