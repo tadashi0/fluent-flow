@@ -43,7 +43,7 @@
             </el-form-item>
 
             <el-form-item label="流程类型" prop="useScope" required>
-              <el-radio-group v-model="formData.useScope" :disabled="formData.processId">
+              <el-radio-group v-model="formData.useScope" :disabled="formData.id">
                 <el-radio :value="0">业务流程</el-radio>
                 <el-radio :value="1">子流程</el-radio>
               </el-radio-group>
@@ -200,7 +200,7 @@ const handleSubmit = async () => {
         ...workflowData,
         key:
           formData.value.useScope === 1
-            ? formData.value.processId
+            ? formData.value.id
               ? formData.value.processKey
               : formData.value.processKey + '-' + Date.now()
             : formData.value.processKey
