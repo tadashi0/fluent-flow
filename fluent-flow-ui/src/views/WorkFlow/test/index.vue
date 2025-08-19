@@ -61,22 +61,18 @@
           </template>
         </el-table-column>
         <el-table-column label="操作" align="left" width="240">
-          <template #default="{ row }">
+          <template #default="{ scop }">
             <div style="display: flex; gap: 8px;">
-              <div v-if="row.state === 1">
-                <el-button link type="primary" @click="handleEdit(row)">
+                <el-button v-show="['1'].includes(scope.row.state)" link type="primary" @click="handleEdit(row)">
                   审批
                 </el-button>
-                <el-button link type="danger" @click="handleRevoke(row)">撤销</el-button>
-              </div>
-              <div v-else-if="[0, 4].includes(row.state)">
-                <el-button link type="primary" @click="handleEdit(row)">
+                <el-button v-show="['1'].includes(scope.row.state) && userStore.user.id === scope.row.creator" link type="danger" @click="handleRevoke(row)">撤销</el-button>
+                <el-button v-show="['4', '0'].includes(scope.row.state)" link type="primary" @click="handleEdit(row)">
                   编辑
                 </el-button>
-                <el-button link type="danger" @click="handleDelete(row)">
+                <el-button v-show="['0'].includes(scope.row.state)" link type="danger" @click="handleDelete(row)">
                   删除
                 </el-button>
-              </div>
               <el-button link type="primary" @click="handleDetail(row)">详情</el-button>
             </div>
           </template>
@@ -101,7 +97,7 @@
           <el-input-number v-model="formData.age" :min="0" :controls="false" />
         </el-form-item>
       </el-form>
-      <WorkFlowPro :processKey="formData.processKey" :businessKey="formData.id" :status="formData.state" :on-submit="submitForm"
+      <WorkFlowPro :processKey="formData.processKey" :businessKey="formData.id" :status="Number(formData.state)" :on-submit="submitForm"
         :on-save="submitForm" :on-approve="submitForm" @cancel="dialog.visible = false" @refresh="resetQuery" />
     </el-dialog>
 
@@ -115,7 +111,7 @@
           </el-tag>
         </el-descriptions-item>
       </el-descriptions>
-      <WorkFlowPro :businessKey="formData.id" :status="formData.state" :readonly="true" />
+      <WorkFlowPro :businessKey="formData.id" :status="Number(formData.state)" :readonly="true" />
     </el-drawer>
   </div>
 </template>
@@ -132,6 +128,9 @@ import {
   delUserBatch
 } from '@/api/workflow'
 import { revokeProcess } from '@/api/workflow'
+import { useUserStore } from '@/store/modules/user'
+
+const userStore = useUserStore()
 
 // 状态选项配置
 const stateOptions = [
@@ -314,11 +313,7 @@ const handleBatchDelete = async () => {
 
 const handleRevoke = async (row) => {
   try {
-    await ElMessageBox.confirm(`确认撤销用户【${row.name}】流程吗？`, '提示', {
-      confirmButtonText: '确认',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
+    await message.confirm('确认要撤销' + row.taskName + '吗?')
     await revokeProcess(row.id)
     ElMessage.success('撤销成功')
     getList()
