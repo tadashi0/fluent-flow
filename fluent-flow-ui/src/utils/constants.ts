@@ -1,5 +1,5 @@
 /**
- * Created by 嗒哒西源码
+ * Created by 安迈信科源码
  *
  * 枚举类
  */
@@ -453,7 +453,7 @@ export const BpmModelFormType = {
 export const BpmProcessInstanceStatus = {
   NOT_START: -1, // 未开始
   RUNNING: 1, // 审批中
-  APPROVE: 2, // 审批通过
+  APPROVE: 2, // 审批完成
   REJECT: 3, // 审批不通过
   CANCEL: 4 // 已取消
 }

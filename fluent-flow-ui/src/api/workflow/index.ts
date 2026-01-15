@@ -103,6 +103,11 @@ export const reclaimProcess = (businessKey: string, data: any) => {
   return request.put({ url: `/flow/task/reclaim/${businessKey}`, data })
 }
 
+// 根据businessKey认领流程
+export const claimProcess = (businessKey: string) => {
+  return request.put({ url: `/flow/task/claim/${businessKey}` })
+}
+
 // 根据businessKey和转交人转交任务
 export const transferProcess = (businessKey: string, data: any) => {
   return request.put({ url: `/flow/task/transfer/${businessKey}`, data })

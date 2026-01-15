@@ -39,12 +39,8 @@
           </template>
         </el-table-column>
       </el-table>
-      <Pagination
-        v-model:page="queryParams.current"
-        v-model:limit="queryParams.size"
-        :total="total"
-        @pagination="fetchData"
-      />
+      <Pagination v-model:page="queryParams.current" v-model:limit="queryParams.size" :total="total"
+        @pagination="fetchData" />
     </ContentWrap>
     <el-drawer :title="drawer.title" v-model="drawer.visible" size="40%">
       <WorkFlowPro :businessKey="drawer.instanceId" :status="1" :readonly="true" />
@@ -69,7 +65,7 @@ const props = defineProps({
 // 状态标签类型映射
 const stateTagMap = {
   '审批中': 'warning',
-  '审批通过': 'success',
+  '审批完成': 'success',
   '审批拒绝【 驳回结束流程 】': 'danger',
   '撤销审批': 'info',
   '超时结束': 'danger',
@@ -100,7 +96,7 @@ const taskStateMap = {
   '-2': '已暂停',
   '-1': '待发起',
   0: '审批中',
-  1: '审批通过',
+  1: '审批完成',
   2: '审批拒绝【 驳回结束流程 】',
   3: '撤销审批',
   4: '超时结束',
@@ -177,5 +173,4 @@ const fetchData = async () => {
 onMounted(fetchData);
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

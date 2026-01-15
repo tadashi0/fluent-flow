@@ -49,9 +49,9 @@
               <el-tooltip :content="row.handlerName" placement="top">
                 <span>待
                   <span class="handler-text">
-                    {{ row.handlerName.slice(0, 2) }}...
+                    {{ row.handlerName ? row.handlerName.slice(0, 2) : '' }}...
                   </span>
-                  处理
+                  {{ row.state === 1 ? '认领' : '处理' }}
                 </span>
               </el-tooltip>
             </template>
@@ -61,30 +61,35 @@
           </template>
         </el-table-column>
         <el-table-column label="操作" align="left" width="240">
-          <template #default="{ scop }">
+          <template #default="{ row }">
             <div style="display: flex; gap: 8px;">
-                <el-button v-show="['1'].includes(scope.row.state)" link type="primary" @click="handleEdit(row)">
+              <div v-if="row.state === 1">
+                <el-button link type="primary" @click="handleClaim(row)">
+                  认领
+                </el-button>
+              </div>
+              <div v-else-if="row.state === 2">
+                <el-button link type="primary" @click="handleEdit(row)">
                   审批
                 </el-button>
-                <el-button v-show="['1'].includes(scope.row.state) && userStore.user.id === scope.row.creator" link type="danger" @click="handleRevoke(row)">撤销</el-button>
-                <el-button v-show="['4', '0'].includes(scope.row.state)" link type="primary" @click="handleEdit(row)">
+                <el-button link type="danger" @click="handleRevoke(row)">撤销</el-button>
+              </div>
+              <div v-else-if="[0, 5].includes(row.state)">
+                <el-button link type="primary" @click="handleEdit(row)">
                   编辑
                 </el-button>
-                <el-button v-show="['0'].includes(scope.row.state)" link type="danger" @click="handleDelete(row)">
+                <el-button link type="danger" @click="handleDelete(row)">
                   删除
                 </el-button>
+              </div>
               <el-button link type="primary" @click="handleDetail(row)">详情</el-button>
             </div>
           </template>
         </el-table-column>
       </el-table>
 
-      <Pagination
-        v-model:page="queryParams.current"
-        v-model:limit="queryParams.size"
-        :total="total"
-        @pagination="getList"
-      />
+      <Pagination v-model:page="queryParams.current" v-model:limit="queryParams.size" :total="total"
+        @pagination="getList" />
     </ContentWrap>
 
     <!-- 新增/编辑弹窗 -->
@@ -97,8 +102,9 @@
           <el-input-number v-model="formData.age" :min="0" :controls="false" />
         </el-form-item>
       </el-form>
-      <WorkFlowPro :processKey="formData.processKey" :businessKey="formData.id" :status="Number(formData.state)" :on-submit="submitForm"
-        :on-save="submitForm" :on-approve="submitForm" @cancel="dialog.visible = false" @refresh="resetQuery" />
+      <WorkFlowPro :processKey="formData.processKey" :businessKey="formData.id" :status="formData.state"
+        :on-submit="submitForm" :on-save="submitForm" :on-approve="submitForm" @cancel="dialog.visible = false"
+        @refresh="resetQuery" />
     </el-dialog>
 
     <el-drawer :title="drawer.title" v-model="drawer.visible" size="40%">
@@ -111,7 +117,7 @@
           </el-tag>
         </el-descriptions-item>
       </el-descriptions>
-      <WorkFlowPro :businessKey="formData.id" :status="Number(formData.state)" :readonly="true" />
+      <WorkFlowPro :businessKey="formData.id" :status="formData.state" :readonly="true" />
     </el-drawer>
   </div>
 </template>
@@ -125,28 +131,28 @@ import {
   addUser,
   updateUser,
   delUser,
-  delUserBatch
+  delUserBatch,
+  revokeProcess,
+  claimProcess
 } from '@/api/workflow'
-import { revokeProcess } from '@/api/workflow'
-import { useUserStore } from '@/store/modules/user'
-
-const userStore = useUserStore()
 
 // 状态选项配置
 const stateOptions = [
   { value: 0, label: '暂存' },
-  { value: 1, label: '审批中' },
-  { value: 2, label: '审批通过' },
-  { value: 3, label: '审批拒绝' },
-  { value: 4, label: '已驳回' }
+  { value: 1, label: '待认领' },
+  { value: 2, label: '审批中' },
+  { value: 3, label: '审批完成' },
+  { value: 4, label: '审批拒绝' },
+  { value: 5, label: '已驳回' }
 ]
 
 const stateTagType = {
   0: 'info',
-  1: 'warning',
-  2: 'success',
-  3: 'danger',
-  4: 'danger'
+  1: 'primary',
+  2: 'warning',
+  3: 'success',
+  4: 'danger',
+  5: 'danger'
 }
 
 // 数据列表相关
@@ -199,7 +205,8 @@ const getList = async () => {
   try {
     loading.value = true
     const res = await pageUser({
-      ...queryParams
+      ...queryParams,
+      _t: new Date().getTime() // 防止缓存
     })
     userList.value = res.records
     total.value = res.total
@@ -313,17 +320,33 @@ const handleBatchDelete = async () => {
 
 const handleRevoke = async (row) => {
   try {
-    await message.confirm('确认要撤销' + row.taskName + '吗?')
+    await ElMessageBox.confirm(`确认撤销用户【${row.name}】流程吗？`, '提示', {
+      confirmButtonText: '确认',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
     await revokeProcess(row.id)
     ElMessage.success('撤销成功')
     getList()
   } catch { }
 };
+
+const handleClaim = async (row) => {
+  try {
+    await ElMessageBox.confirm(`确认认领用户【${row.name}】流程吗？`, '提示', {
+      confirmButtonText: '确认',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    await claimProcess(row.id)
+    ElMessage.success('认领成功')
+    getList()
+  } catch { }
+}
 </script>
 
 <style scoped>
-.app-container {
-}
+.app-container {}
 
 .handler-text {
   color: #245ff2;

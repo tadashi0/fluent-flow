@@ -454,7 +454,7 @@ export const APPROVE_TYPE: DictDataVO[] = [
 
 export const APPROVE_METHODS: DictDataVO[] = [
   { label: '按顺序依次审批', value: ApproveMethodType.SEQUENTIAL_APPROVE },
-  { label: '会签（可同时审批，至少 % 人必须审批通过）', value: ApproveMethodType.APPROVE_BY_RATIO },
+  { label: '会签（可同时审批，至少 % 人必须审批完成）', value: ApproveMethodType.APPROVE_BY_RATIO },
   { label: '或签(可同时审批，有一人通过即可)', value: ApproveMethodType.ANY_APPROVE },
   { label: '随机挑选一人审批', value: ApproveMethodType.RANDOM_SELECT_ONE_APPROVE }
 ]
